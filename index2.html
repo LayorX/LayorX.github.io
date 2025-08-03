@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="zh-TW" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>平台概念互動式導覽</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Calm Harmony -->
+    <!-- Application Structure Plan: 我將提供的「平台使用情境與新手教學流程」文件，轉化為一個完整的單頁互動應用程式。此應用程式的結構將完全模擬該文件所描述的用戶旅程，從一個引人入勝的「歡迎挑戰」開始，逐步引導用戶學習「兩層式評價」和「符號等級系統」，最後展示日常使用情境。這種以用戶體驗為中心的敘事結構，能讓抽象的平台理念變得具體可感，使用者不是在「閱讀報告」，而是在「親身體驗」一個新社群的誕生。這比傳統的報告陳列更能有效地傳達核心價值。 -->
+    <!-- Visualization & Content Choices: 1. 指標初登場 -> 目標:告知 -> 呈現:HTML/CSS文字 -> 互動:無 -> 理由:在教學流程中清晰引入概念。 2. 符號系統 -> 目標:解釋 -> 呈現:HTML/CSS範例 -> 互動:無 -> 理由:直觀展示等級與趨勢箭頭的意義。 3. 日常情境 -> 目標:模擬 -> 呈現:結構化HTML/CSS -> 互動:長按/點擊 -> 理由:將教學中的概念應用於模擬的日常操作中，強化學習效果。 4. 個人成長 -> 目標:變化 -> 圖表:HTML/CSS進度條 -> 互動:無 -> 理由:用進度條視覺化個人成長，提供清晰的動機反饋。所有選擇均使用純HTML/CSS，確保無SVG/Mermaid，並完全支持設計的教學流程。 -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #f5f5f4; /* Stone 100 */
+            color: #292524; /* Stone 800 */
+        }
+        .step-card {
+            background-color: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            transition: all 0.3s ease-in-out;
+            opacity: 0;
+            transform: translateY(20px);
+            display: none;
+        }
+        .step-card.active {
+            opacity: 1;
+            transform: translateY(0);
+            display: block;
+        }
+        .choice-card {
+            border: 2px solid #e7e5e4; /* Stone 200 */
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+        }
+        .choice-card:hover {
+            border-color: #0ea5e9; /* Sky 500 */
+            transform: translateY(-5px);
+        }
+        .choice-card.selected {
+            border-color: #0ea5e9; /* Sky 500 */
+            background-color: #f0f9ff; /* Sky 50 */
+            box-shadow: 0 0 15px rgba(14, 165, 233, 0.3);
+        }
+        .context-menu, .rating-menu {
+            position: fixed; /* Use fixed for positioning relative to viewport */
+            background: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            padding: 0.5rem;
+            display: none;
+            flex-direction: column;
+            gap: 0.25rem;
+            z-index: 50;
+            width: max-content;
+            animation: scale-up 0.2s ease-out;
+        }
+        @keyframes scale-up {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        .context-menu.active, .rating-menu.active {
+            display: flex;
+        }
+        .context-menu-btn, .rating-btn {
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            transition: background-color 0.2s;
+            cursor: pointer;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .context-menu-btn:hover, .rating-btn:hover {
+            background-color: #f4f4f5; /* Zinc 100 */
+        }
+        .rating-btn.selected {
+            background-color: #0ea5e9;
+            color: white;
+        }
+        .tag-btn {
+            padding: 0.25rem 0.75rem;
+            border: 1px solid #d4d4d8; /* Zinc 300 */
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+        .tag-btn.selected {
+            background-color: #3b82f6; /* Blue 500 */
+            color: white;
+            border-color: #3b82f6;
+        }
+        .info-modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background-color: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 0.2s ease-in-out;
+            pointer-events: none;
+        }
+        .info-modal-backdrop.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .info-modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            max-width: 90%;
+            width: 500px;
+            text-align: center;
+            transform: scale(0.95);
+            transition: transform 0.2s ease-in-out;
+            position: relative;
+        }
+        .info-modal-backdrop.active .info-modal-content {
+            transform: scale(1);
+        }
+        .flooding-comment {
+            position: absolute;
+            background: #fecaca; /* Red 200 */
+            border: 1px solid #ef4444; /* Red 400 */
+            border-radius: 0.75rem;
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            opacity: 0;
+            animation: flood-and-fade 4s ease-out forwards;
+        }
+        @keyframes flood-and-fade {
+            0% { opacity: 0; transform: translate(var(--start-x), var(--start-y)) scale(0.8); }
+            25% { opacity: 1; transform: translate(0, 0) scale(1); }
+            75% { opacity: 1; transform: translate(0, 0) scale(1); }
+            100% { opacity: 0; transform: translate(0, -20px) scale(0.8); }
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <main class="container mx-auto p-4 md:p-8 max-w-3xl">
+
+        <div id="onboarding-flow">
+            <!-- Step 1: Welcome -->
+            <div id="step-1" class="step-card active text-center">
+                <h1 class="text-3xl md:text-4xl font-bold text-sky-900 mb-4">歡迎來到一個需要思考的社群</h1>
+                <p class="text-stone-600 mb-8">在這裡，您的判斷力比聲量更重要。</p>
+                <button data-next="step-2" class="next-btn bg-sky-700 text-white font-bold py-3 px-8 rounded-full hover:bg-sky-800 transition-transform transform hover:scale-105">開始我的挑戰</button>
+            </div>
+
+            <!-- Step 2: Challenge -->
+            <div id="step-2" class="step-card">
+                <h2 class="text-2xl font-bold text-center mb-2">您的第一個挑戰</h2>
+                <p class="text-center text-stone-500 mb-8">近期有一個關於「AI 是否會取代人類工作」的熱門討論，以下有兩則評論，請您判斷哪一則更有參考價值？</p>
+                <div id="challenge-container" class="space-y-4 relative overflow-hidden rounded-lg p-2 -m-2">
+                    <div id="choice-a" class="choice-card">
+                        <p class="font-bold">評論 A</p>
+                        <p class="text-stone-700 mt-2">「AI 就是個垃圾！只會搶走我們的工作，政府應該全面禁止！」</p>
+                    </div>
+                    <div id="choice-b" class="choice-card">
+                        <p class="font-bold">評論 B</p>
+                        <p class="text-stone-700 mt-2">「根據牛津大學的研究報告（附連結），AI 在重複性高的職位上取代性較強，但在需要創意與同理心的領域仍有侷限。我認為我們應該專注於如何與 AI 協作。」</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3: Feedback 1 -->
+            <div id="step-3" class="step-card text-center">
+                <div class="text-5xl mb-4">🎉</div>
+                <h2 class="text-3xl font-bold text-green-600 mb-4">精彩的判斷！</h2>
+                <p class="text-stone-700 text-lg mb-4">您的選擇與社群中 85% 的高信任度用戶一致。在這裡，我們重視的是<strong class="text-sky-800">證據</strong>與<strong class="text-sky-800">理性</strong>，而非單純的聲量。</p>
+                <div class="bg-sky-50 p-4 rounded-lg">
+                    <p class="font-bold">指標初登場</p>
+                    <p class="text-stone-600 mt-1">您的<strong class="text-sky-800">深度值</strong>因此獲得了初始分數，等級為 <span class="font-mono bg-sky-200 text-sky-800 px-2 py-1 rounded">E</span>。這個指標代表您探索不同觀點的意願。</p>
+                </div>
+                <button data-next="step-4" class="next-btn mt-8 bg-sky-700 text-white font-bold py-3 px-8 rounded-full hover:bg-sky-800 transition-transform transform hover:scale-105">繼續學習</button>
+            </div>
+
+            <!-- Step 4: Rating Tutorial -->
+            <div id="step-4" class="step-card">
+                <h2 class="text-2xl font-bold text-center mb-2">學習我們的「評價觀點」</h2>
+                <div id="rating-context-container" class="mb-6 bg-stone-100 p-4 rounded-lg border-l-4 border-stone-300">
+                    <p class="text-sm text-stone-500 mb-2">情境：針對以下這則**有證據**的觀點...</p>
+                    <p class="font-bold">評論 B</p>
+                    <p class="text-stone-700 mt-1">「根據牛津大學的研究報告（附連結），AI 在重複性高的職位上取代性較強，但在需要創意與同理心的領域仍有侷限。我認為我們應該專注於如何與 AI 協作。」</p>
+                </div>
+                <div id="rating-tutorial-container">
+                    <!-- Tutorial examples will be injected here -->
+                </div>
+            </div>
+            
+            <!-- Step 5: Feedback 2 -->
+            <div id="step-5" class="step-card text-center">
+                 <div class="text-5xl mb-4">🌟</div>
+                <h2 class="text-3xl font-bold text-green-600 mb-4">完美的評價！</h2>
+                <p class="text-stone-700 text-lg mb-4">您剛剛完成了一次高品質的互動：<strong class="text-sky-800">即使認同立場，也客觀指出了其論述的不足。</strong></p>
+                 <div class="bg-sky-50 p-4 rounded-lg">
+                    <p class="font-bold">指標登場</p>
+                    <p class="text-stone-600 mt-1">您的<strong class="text-sky-800">信任值</strong>因此獲得了初始分數，等級為 <span class="font-mono bg-sky-200 text-sky-800 px-2 py-1 rounded">E</span>。它代表您判斷的可靠程度。多花這兩秒鐘，就是對社群最有力的貢獻。</p>
+                </div>
+                <button data-next="step-6" class="next-btn mt-8 bg-sky-700 text-white font-bold py-3 px-8 rounded-full hover:bg-sky-800 transition-transform transform hover:scale-105">我明白了</button>
+            </div>
+
+            <!-- Step 6: Symbol System -->
+            <div id="step-6" class="step-card">
+                <h2 class="text-2xl font-bold text-center mb-8">認識您的新身份</h2>
+                <div class="bg-white p-6 rounded-lg shadow-inner border">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-12 h-12 bg-stone-300 rounded-full"></div>
+                        <div>
+                            <p class="font-bold">用戶A</p>
+                            <div class="flex items-center space-x-2 text-sm font-mono">
+                                <span>信: <span class="bg-green-100 text-green-800 px-2 py-0.5 rounded">A+ <span class="text-green-600">↑</span></span></span>
+                                <span>深: <span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded">B <span class="text-gray-500">─</span></span></span>
+                                <span>貢: <span class="bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded">S <span class="text-red-600">↓</span></span></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-6 space-y-4 text-stone-700">
+                    <p>在本平台，我們用 <strong class="text-sky-800">SS, S, A, B, C...</strong> 等級來代表您的影響力，而非冰冷的數字。</p>
+                    <p>您的目標是提升<strong class="text-sky-800">品質區間</strong>，而不是追求分數競賽。</p>
+                    <p>旁邊的箭頭 <strong class="text-sky-800">↑ ─ ↓</strong> 代表您近期的<strong class="text-sky-800">努力趨勢</strong>。即使等級尚未提升，一個向上的箭頭也證明您的貢獻正被看見！</p>
+                </div>
+                <div class="text-center">
+                    <button data-next="step-7" class="next-btn mt-8 bg-sky-700 text-white font-bold py-3 px-8 rounded-full hover:bg-sky-800 transition-transform transform hover:scale-105">開始我的旅程！</button>
+                </div>
+            </div>
+            
+            <!-- Step 7: Final Message -->
+            <div id="step-7" class="step-card text-center">
+                <h2 class="text-3xl md:text-4xl font-bold text-sky-900 mb-6">恭喜您，已完成所有訓練。</h2>
+                <div class="space-y-4 text-lg text-stone-600">
+                    <p>這個平台的信任度，不是由我們或 AI 決定，而是由社群中的每一個「您」所共同定義。</p>
+                    <p>您每一次<strong class="text-sky-800">不願盲從的【存疑】</strong>，每一次<strong class="text-sky-800">客觀的【品質評價】</strong>，都是在為這個混亂的資訊環境注入一股清流。</p>
+                    <p class="font-bold text-xl text-stone-800 mt-6">因為你我的努力不懶惰，才能讓整體的媒體識讀能力更上一層樓。</p>
+                </div>
+                 <button data-next="step-1" class="next-btn mt-10 bg-gray-600 text-white font-bold py-3 px-8 rounded-full hover:bg-gray-700 transition-transform transform hover:scale-105">重新開始教學</button>
+            </div>
+        </div>
+    </main>
+
+    <div id="info-modal" class="info-modal-backdrop">
+        <div id="info-modal-content" class="info-modal-content">
+            <h3 id="info-modal-title" class="text-2xl font-bold text-sky-900 mb-4"></h3>
+            <div id="info-modal-body" class="text-stone-600 space-y-3 relative"></div>
+            <div id="info-modal-footer" class="mt-6"></div>
+        </div>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const steps = document.querySelectorAll('.step-card');
+    const nextButtons = document.querySelectorAll('.next-btn');
+    const infoModal = document.getElementById('info-modal');
+    const infoModalContent = document.getElementById('info-modal-content');
+    const infoModalTitle = document.getElementById('info-modal-title');
+    const infoModalBody = document.getElementById('info-modal-body');
+    const infoModalFooter = document.getElementById('info-modal-footer');
+
+    const showInfoModal = (config) => {
+        const { title, bodyHtml, footerHtml, onclose } = config;
+        infoModalTitle.textContent = title;
+        infoModalBody.innerHTML = bodyHtml;
+        infoModalFooter.innerHTML = footerHtml;
+        infoModal.classList.add('active');
+        
+        const closeModal = () => {
+            infoModal.classList.remove('active');
+            if (onclose) onclose();
+        };
+
+        infoModalContent.querySelectorAll('button[data-action="close"]').forEach(btn => {
+            btn.addEventListener('click', closeModal);
+        });
+    };
+    
+    const showStep = (stepId) => {
+        steps.forEach(step => {
+            step.classList.toggle('active', step.id === stepId);
+        });
+        if (stepId === 'step-4') {
+            renderTutorialExample();
+        }
+    };
+
+    nextButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const nextStepId = btn.dataset.next;
+            showStep(nextStepId);
+            if (nextStepId === 'step-1') {
+                resetTutorial();
+            }
+        });
+    });
+
+    const choiceA = document.getElementById('choice-a');
+    const choiceB = document.getElementById('choice-b');
+
+    const showFloodingEffect = () => {
+        showInfoModal({
+            title: '嗯...這個選擇會讓世界變得更混亂喔',
+            bodyHtml: `<p>當我們認同情緒化的言論時，我們的世界就容易被更多相似的聲音淹沒。</p>
+                       <p>一個理性的社群，需要我們一起分辨資訊的品質。</p>
+                       <p class="font-bold mt-4">您想打造一個怎樣的社群？</p>`,
+            footerHtml: `<button data-action="close" class="bg-sky-700 text-white font-bold py-2 px-6 rounded-full hover:bg-sky-800 transition">一個理性的討論空間</button>`,
+            onclose: () => {
+                showInfoModal({
+                    title: '很棒的選擇！',
+                    bodyHtml: '讓我們一起為理性的討論空間努力。請您重新選擇更有參考價值的評論。',
+                    footerHtml: `<button data-action="close" class="bg-sky-700 text-white font-bold py-2 px-6 rounded-full hover:bg-sky-800 transition">好的</button>`
+                });
+            }
+        });
+        
+        const floodMessages = ['都是騙人的！', '財團的打手！', '廢文一篇', '小編工讀生？', '帶風向！'];
+        for (let i = 0; i < 5; i++) {
+            const floodEl = document.createElement('div');
+            floodEl.className = 'flooding-comment';
+            floodEl.textContent = floodMessages[Math.floor(Math.random() * floodMessages.length)];
+            infoModalBody.appendChild(floodEl);
+            
+            const startX = (Math.random() - 0.5) * 400;
+            const startY = (Math.random() - 0.5) * 400;
+            floodEl.style.setProperty('--start-x', `${startX}px`);
+            floodEl.style.setProperty('--start-y', `${startY}px`);
+            floodEl.style.animationDelay = `${i * 0.2}s`;
+        }
+    };
+
+    choiceA.addEventListener('click', showFloodingEffect);
+    
+    choiceB.addEventListener('click', () => {
+        choiceB.classList.add('selected');
+        setTimeout(() => showStep('step-3'), 800);
+    });
+
+    const ratingTutorialContainer = document.getElementById('rating-tutorial-container');
+    let ratingState = { stance: null, quality: [] };
+    let currentTutorialIndex = 0;
+
+    const tutorialExamples = [
+        {
+            type: 'rate',
+            text: "我完全同意 B 的看法，AI 的發展是擋不住的趨勢，與其禁止不如善用它。",
+            instruction: "<strong>練習1/4</strong>: 請<strong class='text-sky-800'>長按</strong>這則評論來【評價觀點】。它表達了立場，但有提出新證據嗎？",
+            correct: { stance: '認同', quality: ['- 證據不足'] }
+        },
+        {
+            type: 'rate',
+            text: "這篇文章的數據有問題，它引用的市調報告已經是三年前的了，完全不能反映現況。",
+            instruction: "<strong>練習2/4</strong>: 這次，請點擊右下角的<strong class='text-sky-800'>[...]按鈕</strong>，並選擇【評價觀點】。這則評論提出了具體的質疑。",
+            correct: { stance: '否認', quality: ['+ 證據充足'] }
+        },
+        {
+            type: 'rate-remove',
+            text: "這則評論的資訊可能有誤，我先保留看法。",
+            instruction: "<strong>練習3/4</strong>: 有時我們會改變心意。請先對此觀點按【存疑】，然後再從<strong class='text-sky-800'>[...]按鈕</strong>中【移除我的評價】。",
+            correct: { stance: '存疑', quality: [] }
+        },
+        {
+            type: 'report',
+            text: "樓上都是一群不懂裝懂的白痴，根本沒資格討論。",
+            instruction: "<strong>練習4/4</strong>: 看到人身攻擊的言論時，我們可以【舉報內容】來維護社群。請從<strong class='text-sky-800'>[...]按鈕</strong>中練習舉報。",
+        }
+    ];
+
+    const renderTutorialExample = () => {
+        ratingState = { stance: null, quality: [] };
+        const example = tutorialExamples[currentTutorialIndex];
+        let ratedCheckmark = '';
+        if (example.rated) {
+            ratedCheckmark = `<div class="absolute top-2 right-2 text-green-500 text-2xl">✓</div>`;
+        }
+
+        const html = `
+            <p class="text-center text-stone-500 mb-4">${example.instruction}</p>
+            <div id="rating-card-container" class="relative">
+                <div id="rating-card" class="choice-card bg-stone-50">
+                    <p class="text-stone-700 mt-2">${example.text}</p>
+                    ${ratedCheckmark}
+                    <div class="absolute bottom-2 right-3">
+                        <button class="more-options-btn text-stone-400 hover:text-stone-700 font-bold text-2xl leading-none">...</button>
+                    </div>
+                </div>
+            </div>`;
+        ratingTutorialContainer.innerHTML = html;
+        addTutorialListeners();
+    };
+
+    const addTutorialListeners = () => {
+        const ratingCard = document.getElementById('rating-card');
+        const moreOptionsBtn = document.querySelector('.more-options-btn');
+        let pressTimer = null;
+
+        const triggerRating = (x, y) => {
+            const ratingMenu = document.createElement('div');
+            ratingMenu.id = 'rating-menu';
+            ratingMenu.className = 'rating-menu';
+            document.body.appendChild(ratingMenu);
+
+            if (ratingMenu.classList.contains('active')) return;
+            ratingMenu.style.top = `${y}px`;
+            ratingMenu.style.left = `${x}px`;
+            ratingMenu.style.transform = `translate(-50%, -50%)`;
+            ratingMenu.classList.add('active');
+            renderRatingMenu();
+        };
+        
+        const startPress = (e) => {
+            e.preventDefault();
+            if (pressTimer !== null) return;
+            const clientX = e.clientX || e.touches[0].clientX;
+            const clientY = e.clientY || e.touches[0].clientY;
+            pressTimer = setTimeout(() => triggerRating(clientX, clientY), 300);
+        };
+        const cancelPress = () => { clearTimeout(pressTimer); pressTimer = null; };
+
+        ratingCard.addEventListener('mousedown', startPress);
+        ratingCard.addEventListener('mouseup', cancelPress);
+        ratingCard.addEventListener('mouseleave', cancelPress);
+        ratingCard.addEventListener('touchstart', startPress, { passive: false });
+        ratingCard.addEventListener('touchend', cancelPress);
+        ratingCard.addEventListener('touchcancel', cancelPress);
+        
+        moreOptionsBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const contextMenu = document.createElement('div');
+            contextMenu.id = 'context-menu';
+            contextMenu.className = 'context-menu';
+            document.body.appendChild(contextMenu);
+            
+            const rect = e.target.getBoundingClientRect();
+            contextMenu.style.top = `${rect.top - 10}px`;
+            contextMenu.style.left = `${rect.left}px`;
+            contextMenu.style.transform = `translate(-100%, -100%)`;
+            contextMenu.classList.add('active');
+            renderContextMenu();
+        });
+    };
+    
+    const renderContextMenu = () => {
+        const contextMenu = document.getElementById('context-menu');
+        if(!contextMenu) return;
+        contextMenu.innerHTML = `
+            <button class="context-menu-btn" data-action="rate">✍️ 評價觀點</button>
+            <button class="context-menu-btn" data-action="report">🚩 舉報內容</button>
+            <button class="context-menu-btn" data-action="remove">🗑️ 移除我的評價</button>
+        `;
+        
+        contextMenu.querySelector('[data-action="rate"]').addEventListener('click', (e) => {
+            e.stopPropagation();
+            contextMenu.remove();
+            const ratingMenu = document.createElement('div');
+            ratingMenu.id = 'rating-menu';
+            ratingMenu.className = 'rating-menu';
+            document.body.appendChild(ratingMenu);
+            ratingMenu.style.top = `50%`;
+            ratingMenu.style.left = `50%`;
+            ratingMenu.style.transform = `translate(-50%, -50%)`;
+            ratingMenu.classList.add('active');
+            renderRatingMenu();
+        });
+
+        contextMenu.querySelector('[data-action="report"]').addEventListener('click', (e) => {
+            e.stopPropagation();
+            contextMenu.remove();
+            if (tutorialExamples[currentTutorialIndex].type === 'report') {
+                showInfoModal({
+                    title: '確認舉報？',
+                    bodyHtml: '您確定要舉報此內容違反社群規範嗎？',
+                    footerHtml: `<button data-action="close" id="confirm-report-btn" class="bg-red-600 text-white font-bold py-2 px-6 rounded-full hover:bg-red-700">確認舉報</button>
+                                 <button data-action="close" class="bg-gray-200 text-gray-800 font-bold py-2 px-6 rounded-full hover:bg-gray-300">取消</button>`,
+                });
+                document.getElementById('confirm-report-btn').addEventListener('click', () => {
+                    currentTutorialIndex++;
+                    showInfoModal({
+                        title: '感謝您的舉報',
+                        bodyHtml: '我們已收到您的回報，將會盡快處理。感謝您一同維護社群的健康環境！',
+                        footerHtml: `<button data-action="close" class="bg-sky-700 text-white font-bold py-2 px-6 rounded-full hover:bg-sky-800">完成教學</button>`,
+                        onclose: () => showStep('step-5')
+                    });
+                });
+            } else {
+                 showInfoModal({ title: '提示', bodyHtml: '這則內容似乎沒有違反社群規範，請先練習其他操作喔！', footerHtml: `<button data-action="close" class="bg-sky-700 text-white font-bold py-2 px-6 rounded-full hover:bg-sky-800">好的</button>` });
+            }
+        });
+        
+        contextMenu.querySelector('[data-action="remove"]').addEventListener('click', (e) => {
+            e.stopPropagation();
+            contextMenu.remove();
+            
+            if (tutorialExamples[currentTutorialIndex].type === 'rate-remove' && tutorialExamples[currentTutorialIndex].rated) {
+                showInfoModal({
+                    title: '確認移除？',
+                    bodyHtml: '您確定要移除您的評價嗎？此操作無法復原，您將無法再次評價此觀點。',
+                    footerHtml: `<button data-action="close" id="confirm-remove-btn" class="bg-red-600 text-white font-bold py-2 px-6 rounded-full hover:bg-red-700">確認移除</button>
+                                 <button data-action="close" class="bg-gray-200 text-gray-800 font-bold py-2 px-6 rounded-full hover:bg-gray-300">取消</button>`,
+                });
+                document.getElementById('confirm-remove-btn').addEventListener('click', () => {
+                    currentTutorialIndex++;
+                    renderTutorialExample();
+                });
+            } else {
+                 showInfoModal({ title: '提示', bodyHtml: '您尚未對此觀點做出評價，因此無法移除喔。', footerHtml: `<button data-action="close" class="bg-sky-700 text-white font-bold py-2 px-6 rounded-full hover:bg-sky-800">好的</button>` });
+            }
+        });
+    };
+
+    const renderRatingMenu = () => {
+        const ratingMenu = document.getElementById('rating-menu');
+        if (!ratingMenu) return;
+        
+        let stanceHtml = `
+            <div class="flex justify-around border-b border-stone-200 pb-2 mb-2">
+                <div class="rating-btn stance-btn ${ratingState.stance === '認同' ? 'selected' : ''}" data-value="認同">😊 認同</div>
+                <div class="rating-btn stance-btn ${ratingState.stance === '存疑' ? 'selected' : ''}" data-value="存疑">😐 存疑</div>
+                <div class="rating-btn stance-btn ${ratingState.stance === '否認' ? 'selected' : ''}" data-value="否認">😠 否認</div>
+            </div>
+        `;
+        
+        let qualityHtml = '';
+        if (ratingState.stance) {
+            const tags = ['+ 證據充足', '+ 邏輯清晰', '- 訴諸情感', '- 證據不足'];
+            qualityHtml = `
+                <div class="grid grid-cols-2 gap-2">
+                    ${tags.map(tag => `<div class="tag-btn quality-btn ${ratingState.quality.includes(tag) ? 'selected' : ''}" data-value="${tag}">${tag}</div>`).join('')}
+                </div>
+                <button id="complete-rating" class="w-full mt-2 bg-sky-600 text-white rounded-lg py-2">完成</button>
+            `;
+        }
+        
+        ratingMenu.innerHTML = stanceHtml + qualityHtml;
+        addRatingMenuListeners();
+    };
+
+    const addRatingMenuListeners = () => {
+        document.querySelectorAll('.stance-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                ratingState.stance = btn.dataset.value;
+                if (tutorialExamples[currentTutorialIndex].type === 'rate-remove' && !tutorialExamples[currentTutorialIndex].rated) {
+                    completeRating(); // Auto-complete for the first part of remove tutorial
+                } else {
+                    renderRatingMenu();
+                }
+            });
+        });
+
+        if (ratingState.stance) {
+            document.querySelectorAll('.quality-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const value = btn.dataset.value;
+                    const index = ratingState.quality.indexOf(value);
+                    if (index > -1) {
+                        ratingState.quality.splice(index, 1);
+                    } else {
+                        ratingState.quality.push(value);
+                    }
+                    renderRatingMenu();
+                });
+            });
+            const completeBtn = document.getElementById('complete-rating');
+            if (completeBtn) {
+                completeBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    completeRating();
+                });
+            }
+        }
+    };
+
+    const completeRating = () => {
+        const example = tutorialExamples[currentTutorialIndex];
+        const isCorrect = ratingState.stance === example.correct.stance && 
+                          ratingState.quality.length === example.correct.quality.length &&
+                          example.correct.quality.every(q => ratingState.quality.includes(q));
+
+        if (isCorrect) {
+            const ratingMenu = document.getElementById('rating-menu');
+            if(ratingMenu) ratingMenu.remove();
+            
+            if (example.type === 'rate-remove' && !example.rated) {
+                example.rated = true;
+                renderTutorialExample();
+                return;
+            }
+
+            currentTutorialIndex++;
+            if (currentTutorialIndex >= tutorialExamples.length) {
+                 showInfoModal({
+                    title: '練習完成！',
+                    bodyHtml: '您已熟悉所有基本的評價操作！',
+                    footerHtml: `<button data-action="close" class="bg-sky-700 text-white font-bold py-2 px-6 rounded-full hover:bg-sky-800">繼續</button>`,
+                    onclose: () => showStep('step-5')
+                });
+            } else {
+                renderTutorialExample();
+            }
+        } else {
+            const correctStance = example.correct.stance;
+            const correctQuality = example.correct.quality.join('、');
+            let bodyHtml = `這個練習的目標是學習判斷內容的品質。請試著選擇【${correctStance}】`;
+            if (correctQuality) {
+                bodyHtml += `，並為它加上【${correctQuality}】的標籤。`;
+            } else {
+                bodyHtml += `。`;
+            }
+            showInfoModal({
+                title: '再試一次！',
+                bodyHtml: bodyHtml,
+                footerHtml: `<button data-action="close" class="bg-sky-700 text-white font-bold py-2 px-6 rounded-full hover:bg-sky-800">好的，再試一次</button>`
+            });
+        }
+    };
+
+    document.body.addEventListener('click', (e) => {
+        document.querySelectorAll('.context-menu, .rating-menu').forEach(menu => {
+            if (menu && !menu.contains(e.target) && !e.target.classList.contains('more-options-btn')) {
+                menu.remove();
+            }
+        });
+    });
+
+    const resetTutorial = () => {
+         choiceB.classList.remove('selected');
+         currentTutorialIndex = 0;
+         tutorialExamples.forEach(ex => ex.rated = false);
+    };
+
+});
+</script>
+
+</body>
+</html>
