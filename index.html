@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>社群平台概念互動導覽 (v5 整合版)</title>
+    <title>社群平台概念互動導覽 </title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -11,14 +11,14 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     
     <style>
-        /* --- Base Styles (From Explorer) --- */
+        /* --- 基礎樣式 --- */
         body {
             font-family: 'Noto Sans TC', sans-serif;
-            background-color: #f5f5f4; /* Warm Neutral: Stone 100 */
+            background-color: #f5f5f4; /* 暖色中性: Stone 100 */
             color: #292524; /* Stone 800 */
         }
         .tab-active {
-            background-color: #0c4a6e; /* Accent: Sky 900 */
+            background-color: #0c4a6e; /* 強調色: Sky 900 */
             color: #f0f9ff;
         }
         .tab-inactive {
@@ -52,13 +52,13 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* --- Tutorial Styles (Integrated) --- */
+        /* --- 教學導覽樣式 (整合自 index2.html) --- */
         .tutorial-backdrop {
             position: fixed;
             inset: 0;
             background-color: rgba(0,0,0,0.6);
             z-index: 100;
-            display: none; /* Hidden by default */
+            display: none; /* 預設隱藏 */
             align-items: center;
             justify-content: center;
             padding: 1rem;
@@ -120,7 +120,7 @@
             position: fixed; background: white; border-radius: 0.75rem;
             box-shadow: 0 10px 25px rgba(0,0,0,0.1); padding: 0.5rem;
             display: none; flex-direction: column; gap: 0.25rem;
-            z-index: 150; /* Higher than tutorial backdrop */
+            z-index: 150; /* 比教學背景更高 */
             width: max-content; animation: scale-up 0.2s ease-out;
         }
         .menu-template.active { display: flex; }
@@ -142,7 +142,7 @@
         .info-modal-backdrop {
             position: fixed; inset: 0; background-color: rgba(0,0,0,0.5);
             display: flex; align-items: center; justify-content: center;
-            z-index: 200; /* Highest z-index */
+            z-index: 200; /* 最高層級 */
             opacity: 0; transition: opacity 0.2s ease-in-out; pointer-events: none;
         }
         .info-modal-backdrop.active { opacity: 1; pointer-events: auto; }
@@ -175,7 +175,7 @@
                 <a href="#concept" class="hover:text-sky-300 transition duration-300">核心理念</a>
                 <a href="#metrics" class="hover:text-sky-300 transition duration-300">三大指標</a>
                 <a href="#preview" class="hover:text-sky-300 transition duration-300">介面預覽</a>
-                <a href="#challenges" class="hover:text-sky-300 transition duration-300">挑戰與未來</a>
+                <a href="#about" class="hover:text-sky-300 transition duration-300">關於我們</a>
             </div>
             <button id="mobile-menu-button" class="md:hidden focus:outline-none">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
@@ -185,7 +185,7 @@
             <a href="#concept" class="block py-2 hover:text-sky-300">核心理念</a>
             <a href="#metrics" class="block py-2 hover:text-sky-300">三大指標</a>
             <a href="#preview" class="block py-2 hover:text-sky-300">介面預覽</a>
-            <a href="#challenges" class="block py-2 hover:text-sky-300">挑戰與未來</a>
+            <a href="#about" class="block py-2 hover:text-sky-300">關於我們</a>
         </div>
     </header>
 
@@ -223,7 +223,6 @@
             </div>
         </section>
 
-        <!-- Sections for metrics, preview, challenges remain the same -->
         <section id="metrics" class="my-24 scroll-mt-20">
             <h2 class="text-3xl font-bold text-center text-sky-900 mb-12">三大核心指標互動解析</h2>
             
@@ -388,31 +387,9 @@
                 </div>
             </div>
         </section>
-
-        <section id="challenges" class="my-12 scroll-mt-20">
-             <h2 class="text-3xl font-bold text-center text-sky-900 mb-12">挑戰與未來展望</h2>
-             <div class="max-w-4xl mx-auto grid md:grid-cols-2 gap-8">
-                 <div class="bg-white p-6 rounded-lg shadow-md">
-                     <h3 class="text-2xl font-bold mb-3">關鍵挑戰</h3>
-                     <ul class="space-y-3 list-disc list-inside text-stone-700">
-                         <li><span class="font-semibold">演算法公正性：</span>指標計算需持續迭代，防止被濫用。</li>
-                         <li><span class="font-semibold">AI 成本與濫用：</span>需考慮 API 調用成本，並防止用戶濫用 AI 功能進行洗版或騷擾。</li>
-                         <li><span class="font-semibold">營運團隊角色：</span>需要人工介入處理重大爭議與監督 AI 內容。</li>
-                     </ul>
-                 </div>
-                 <div class="bg-white p-6 rounded-lg shadow-md">
-                     <h3 class="text-2xl font-bold mb-3">下一步建議</h3>
-                     <ul class="space-y-3 list-disc list-inside text-stone-700">
-                         <li><span class="font-semibold">確認MVP範圍：</span>初期聚焦在信任值建立與星球討論流程。</li>
-                         <li><span class="font-semibold">設計線框圖(Wireframe)：</span>繪製具體的UI/UX流程圖。</li>
-                         <li><span class="font-semibold">技術選型：</span>評估適合的後端、資料庫與App開發框架。</li>
-                     </ul>
-                 </div>
-             </div>
-        </section>
     </main>
     
-    <!-- AI Analysis Modal -->
+    <!-- AI 分析用彈出視窗 -->
     <div id="analysis-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center p-4">
         <div class="bg-white rounded-lg shadow-xl w-full max-w-lg p-6 relative">
             <button id="close-modal-btn" class="absolute top-3 right-3 text-stone-500 hover:text-stone-800">
@@ -424,11 +401,11 @@
         </div>
     </div>
 
-    <!-- Tutorial Modal -->
+    <!-- 教學導覽用彈出視窗 -->
     <div id="tutorial-backdrop" class="tutorial-backdrop">
         <div class="tutorial-container">
             <div id="onboarding-flow">
-                 <!-- The entire step-card flow from the tutorial version will be placed here by JS -->
+                 <!-- 教學流程的 HTML 將由 JS 動態注入此處 -->
             </div>
         </div>
          <button id="close-tutorial-btn" class="absolute top-4 right-4 text-white bg-black/50 rounded-full p-2 hover:bg-black/80 transition">
@@ -436,7 +413,7 @@
         </button>
     </div>
 
-    <!-- Reusable Menus for Tutorial -->
+    <!-- 教學導覽用的可複用選單 -->
     <div id="context-menu" class="menu-template">
         <button class="menu-btn" data-action="rate">✍️ 評價觀點</button>
         <button class="menu-btn" data-action="report">🚩 舉報內容</button>
@@ -444,7 +421,7 @@
     </div>
     <div id="rating-menu" class="menu-template"></div>
 
-    <!-- Info Modal for Tutorial -->
+    <!-- 教學導覽用的資訊彈出視窗 -->
     <div id="info-modal" class="info-modal-backdrop">
         <div class="info-modal-content">
             <h3 id="info-modal-title" class="text-2xl font-bold text-sky-900 mb-4"></h3>
@@ -453,21 +430,43 @@
         </div>
     </div>
 
-    <footer class="bg-stone-800 text-white mt-16">
-        <div class="container mx-auto p-6 text-center text-stone-400">
-            <p>&copy; 2025 概念導覽。此為根據專案構想文件建立的互動式網頁。</p>
+    <footer id="about" class="bg-stone-800 text-white mt-16 pt-12 pb-8 scroll-mt-20">
+        <div class="container mx-auto px-6 text-center">
+            <h2 class="text-2xl font-bold mb-4">關於我們</h2>
+            <p class="max-w-3xl mx-auto text-stone-300 mb-6">
+                我們是一群熱衷於改善網路討論風氣的開發者與設計師。這個專案的初衷，是想探索一種可能性：能否設計一個機制，在不犧牲言論自由的前提下，引導使用者進行更理性、更有建設性的溝通？我們相信，透過好的設計與技術，可以賦予使用者力量，共同塑造一個更高品質的資訊生態系。
+            </p>
+            <p class="text-stone-400 mb-2">
+                這個互動導覽是我們理念的具體呈現，用於展示核心功能與設計哲學。我們期待它能激發更多關於如何建立健康網路社群的討論。
+            </p>
+            <p class="text-stone-400">
+                有任何想法或建議？歡迎與我們聯絡：<a href="mailto:yor31117@gmail.com" class="text-sky-400 hover:text-sky-300 underline">yor31117@gmail.com</a>
+            </p>
+            <p class="mt-8 text-sm text-stone-500">&copy; 2025 概念導覽專案。此為概念展示網頁。</p>
         </div>
     </footer>
 
 <script>
-// Main Explorer Logic
+// 主頁面邏輯
 document.addEventListener('DOMContentLoaded', () => {
-    // Mobile Menu
+    // 行動版選單
     const mobileMenuButton = document.getElementById('mobile-menu-button');
     const mobileMenu = document.getElementById('mobile-menu');
     mobileMenuButton.addEventListener('click', () => mobileMenu.classList.toggle('hidden'));
 
-    // Tabs
+    // 導覽列點擊後自動收合行動版選單
+    document.querySelectorAll('#mobile-menu a, nav a').forEach(link => {
+        link.addEventListener('click', () => {
+            if (!link.href.includes('#')) return; // 只處理錨點連結
+            setTimeout(() => { // 延遲以確保滾動完成
+                 if (!mobileMenu.classList.contains('hidden')) {
+                    mobileMenu.classList.add('hidden');
+                 }
+            }, 100);
+        });
+    });
+
+    // 頁籤切換
     const tabs = document.querySelectorAll('.metric-tab');
     const contents = document.querySelectorAll('.metric-content');
     tabs.forEach(tab => {
@@ -479,7 +478,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Chart.js instances
+    // Chart.js 圖表實例
     let contributionChart, trustChart, depthRadarChart, depthBarChart;
 
     function createContributionChart() {
@@ -585,9 +584,9 @@ document.addEventListener('DOMContentLoaded', () => {
     createTrustChart();
     createDepthCharts();
 
-    // Gemini AI Call Logic
+    // Gemini AI 模擬呼叫邏輯
     async function callGeminiAPI(prompt) {
-        // This is a mock function. In a real scenario, this would call a backend.
+        // 這是一個模擬函式。在真實情境中，這裡會呼叫後端 API。
         const modalContent = document.getElementById('modal-content');
         const summaryContainer = document.getElementById('summary-container');
         
@@ -631,14 +630,14 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('close-modal-btn').addEventListener('click', () => analysisModal.classList.add('hidden'));
     analysisModal.addEventListener('click', (e) => { if (e.target === analysisModal) analysisModal.classList.add('hidden'); });
 
-    // --- Tutorial Integration Logic ---
+    // --- 互動教學整合邏輯 (從 index2.html 完整還原) ---
     const startTutorialBtn = document.getElementById('start-tutorial-btn');
     const tutorialBackdrop = document.getElementById('tutorial-backdrop');
     const closeTutorialBtn = document.getElementById('close-tutorial-btn');
     const onboardingFlowContainer = document.getElementById('onboarding-flow');
 
     function startTutorial() {
-        // Inject tutorial HTML
+        // 將 index2.html 的教學內容完整注入到彈出視窗中
         onboardingFlowContainer.innerHTML = `
             <div id="step-1" class="step-card active text-center">
                 <h1 class="text-3xl md:text-4xl font-bold text-sky-900 mb-4">歡迎來到一個需要思考的社群</h1>
@@ -654,49 +653,87 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             </div>
             <div id="step-3" class="step-card text-center">
-                <div class="text-5xl mb-4">🎉</div><h2 class="text-3xl font-bold text-green-600 mb-4">精彩的判斷！</h2>
+                <div class="text-5xl mb-4">🎉</div>
+                <h2 class="text-3xl font-bold text-green-600 mb-4">精彩的判斷！</h2>
                 <p class="text-stone-700 text-lg mb-4">您的選擇與社群中 85% 的高信任度用戶一致。在這裡，我們重視的是<strong class="text-sky-800">證據</strong>與<strong class="text-sky-800">理性</strong>，而非單純的聲量。</p>
-                <div class="bg-sky-50 p-4 rounded-lg"><p class="font-bold">指標初登場</p><p class="text-stone-600 mt-1">您的<strong class="text-sky-800">深度值</strong>因此獲得了初始分數，等級為 <span class="font-mono bg-sky-200 text-sky-800 px-2 py-1 rounded">E</span>。這個指標代表您探索不同觀點的意願。</p></div>
-                <button data-next="step-4" class="next-btn mt-8 bg-sky-700 text-white font-bold py-3 px-8 rounded-full hover:bg-sky-800">繼續學習</button>
+                <div class="bg-sky-50 p-4 rounded-lg">
+                    <p class="font-bold">指標初登場</p>
+                    <p class="text-stone-600 mt-1">您的<strong class="text-sky-800">深度值</strong>因此獲得了初始分數，等級為 <span class="font-mono bg-sky-200 text-sky-800 px-2 py-1 rounded">E</span>。這個指標代表您探索不同觀點的意願。</p>
+                </div>
+                <button data-next="step-4" class="next-btn mt-8 bg-sky-700 text-white font-bold py-3 px-8 rounded-full hover:bg-sky-800 transition-transform transform hover:scale-105">繼續學習</button>
             </div>
             <div id="step-4" class="step-card">
                 <h2 class="text-2xl font-bold text-center mb-2">學習我們的「評價觀點」</h2>
+                <div id="rating-context-container" class="mb-6 bg-stone-100 p-4 rounded-lg border-l-4 border-stone-300">
+                    <p class="text-sm text-stone-500 mb-2">情境：針對以下這則**有證據**的觀點...</p>
+                    <p class="font-bold">評論 B</p>
+                    <p class="text-stone-700 mt-1">「根據牛津大學的研究報告（附連結），AI 在重複性高的職位上取代性較強，但在需要創意與同理心的領域仍有侷限。我認為我們應該專注於如何與 AI 協作。」</p>
+                </div>
                 <div id="rating-tutorial-container"></div>
             </div>
             <div id="step-5" class="step-card text-center">
-                <div class="text-5xl mb-4">🌟</div><h2 class="text-3xl font-bold text-green-600 mb-4">完美的評價！</h2>
+                 <div class="text-5xl mb-4">🌟</div>
+                <h2 class="text-3xl font-bold text-green-600 mb-4">完美的評價！</h2>
                 <p class="text-stone-700 text-lg mb-4">您剛剛完成了一次高品質的互動：<strong class="text-sky-800">即使認同立場，也客觀指出了其論述的不足。</strong></p>
-                <div class="bg-sky-50 p-4 rounded-lg"><p class="font-bold">指標登場</p><p class="text-stone-600 mt-1">您的<strong class="text-sky-800">信任值</strong>因此獲得了初始分數，等級為 <span class="font-mono bg-sky-200 text-sky-800 px-2 py-1 rounded">E</span>。它代表您判斷的可靠程度。</p></div>
-                <button data-next="step-6" class="next-btn mt-8 bg-sky-700 text-white font-bold py-3 px-8 rounded-full hover:bg-sky-800">我明白了</button>
+                 <div class="bg-sky-50 p-4 rounded-lg">
+                    <p class="font-bold">指標登場</p>
+                    <p class="text-stone-600 mt-1">您的<strong class="text-sky-800">信任值</strong>因此獲得了初始分數，等級為 <span class="font-mono bg-sky-200 text-sky-800 px-2 py-1 rounded">E</span>。它代表您判斷的可靠程度。多花這兩秒鐘，就是對社群最有力的貢獻。</p>
+                </div>
+                <button data-next="step-6" class="next-btn mt-8 bg-sky-700 text-white font-bold py-3 px-8 rounded-full hover:bg-sky-800 transition-transform transform hover:scale-105">我明白了</button>
             </div>
             <div id="step-6" class="step-card">
                 <h2 class="text-2xl font-bold text-center mb-8">認識您的新身份</h2>
-                <div class="bg-white p-6 rounded-lg shadow-inner border"><div class="flex items-center space-x-3"><div class="w-12 h-12 bg-stone-300 rounded-full"></div><div><p class="font-bold">用戶A</p><div class="flex items-center space-x-2 text-sm font-mono"><span>信: <span class="bg-green-100 text-green-800 px-2 py-0.5 rounded">A+ <span class="text-green-600">↑</span></span></span><span>深: <span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded">B <span class="text-gray-500">─</span></span></span><span>貢: <span class="bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded">S <span class="text-red-600">↓</span></span></span></div></div></div></div>
-                <div class="mt-6 space-y-4 text-stone-700"><p>在本平台，我們用 <strong class="text-sky-800">SS, S, A, B, C...</strong> 等級來代表您的影響力，而非冰冷的數字。</p><p>旁邊的箭頭 <strong class="text-sky-800">↑ ─ ↓</strong> 代表您近期的<strong class="text-sky-800">努力趨勢</strong>。</p></div>
-                <button data-next="step-7" class="next-btn mt-8 bg-sky-700 text-white font-bold py-3 px-8 rounded-full hover:bg-sky-800">開始我的旅程！</button>
+                <div class="bg-white p-6 rounded-lg shadow-inner border">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-12 h-12 bg-stone-300 rounded-full"></div>
+                        <div>
+                            <p class="font-bold">用戶A</p>
+                            <div class="flex items-center space-x-2 text-sm font-mono">
+                                <span>信: <span class="bg-green-100 text-green-800 px-2 py-0.5 rounded">A+ <span class="text-green-600">↑</span></span></span>
+                                <span>深: <span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded">B <span class="text-gray-500">─</span></span></span>
+                                <span>貢: <span class="bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded">S <span class="text-red-600">↓</span></span></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-6 space-y-4 text-stone-700">
+                    <p>在本平台，我們用 <strong class="text-sky-800">SS, S, A, B, C...</strong> 等級來代表您的影響力，而非冰冷的數字。</p>
+                    <p>您的目標是提升<strong class="text-sky-800">品質區間</strong>，而不是追求分數競賽。</p>
+                    <p>旁邊的箭頭 <strong class="text-sky-800">↑ ─ ↓</strong> 代表您近期的<strong class="text-sky-800">努力趨勢</strong>。即使等級尚未提升，一個向上的箭頭也證明您的貢獻正被看見！</p>
+                </div>
+                <div class="text-center">
+                    <button data-next="step-7" class="next-btn mt-8 bg-sky-700 text-white font-bold py-3 px-8 rounded-full hover:bg-sky-800 transition-transform transform hover:scale-105">開始我的旅程！</button>
+                </div>
             </div>
             <div id="step-7" class="step-card text-center">
                 <h2 class="text-3xl md:text-4xl font-bold text-sky-900 mb-6">恭喜您，已完成所有訓練。</h2>
-                <button data-action="close-tutorial" class="next-btn mt-10 bg-gray-600 text-white font-bold py-3 px-8 rounded-full hover:bg-gray-700">完成教學</button>
+                <div class="space-y-4 text-lg text-stone-600">
+                    <p>這個平台的信任度，不是由我們或 AI 決定，而是由社群中的每一個「您」所共同定義。</p>
+                    <p>您每一次<strong class="text-sky-800">不願盲從的【存疑】</strong>，每一次<strong class="text-sky-800">客觀的【品質評價】</strong>，都是在為這個混亂的資訊環境注入一股清流。</p>
+                    <p class="font-bold text-xl text-stone-800 mt-6">因為你我的努力不懶惰，才能讓整體的媒體識讀能力更上一層樓。</p>
+                </div>
+                 <button data-next="step-1" data-action="restart-tutorial" class="next-btn mt-10 bg-gray-600 text-white font-bold py-3 px-8 rounded-full hover:bg-gray-700 transition-transform transform hover:scale-105">重新開始教學</button>
             </div>
         `;
         tutorialBackdrop.style.display = 'flex';
-        document.body.style.overflow = 'hidden'; // Prevent background scroll
+        document.body.style.overflow = 'hidden'; // 防止背景滾動
         initializeTutorialLogic();
     }
 
     function closeTutorial() {
         tutorialBackdrop.style.display = 'none';
         document.body.style.overflow = '';
-        onboardingFlowContainer.innerHTML = ''; // Clear content to reset
+        onboardingFlowContainer.innerHTML = ''; // 清空內容以便重置
     }
 
     startTutorialBtn.addEventListener('click', startTutorial);
     closeTutorialBtn.addEventListener('click', closeTutorial);
 
-    // --- Tutorial Logic (self-contained) ---
+    // --- 教學導覽的獨立 JS 邏輯 (從 index2.html 完整還原) ---
     function initializeTutorialLogic() {
-        const steps = onboardingFlowContainer.querySelectorAll('.step-card');
+        const onboardingFlow = document.getElementById('onboarding-flow');
+        if (!onboardingFlow) return;
+
         const infoModal = document.getElementById('info-modal');
         const infoModalTitle = document.getElementById('info-modal-title');
         const infoModalBody = document.getElementById('info-modal-body');
@@ -711,34 +748,77 @@ document.addEventListener('DOMContentLoaded', () => {
         let menuJustOpened = false;
 
         const tutorialExamples = [
-            { type: 'rate', text: "我完全同意 B 的看法...", instruction: "<strong>練習1/4</strong>: 請<strong class='text-sky-800'>長按</strong>...", correct: { stance: '認同', quality: ['- 證據不足'] } },
-            { type: 'rate', text: "這篇文章的數據有問題...", instruction: "<strong>練習2/4</strong>: 這次，請點擊右下角的<strong class='text-sky-800'>[...]按鈕</strong>...", correct: { stance: '否認', quality: ['+ 證據充足'] } },
-            { type: 'rate-remove', text: "這則評論的資訊可能有誤...", instruction: "<strong>練習3/4</strong>: 有時我們會改變心意...", correct: { stance: '存疑', quality: [] } },
-            { type: 'report', text: "樓上都是一群不懂裝懂的白痴...", instruction: "<strong>練習4/4</strong>: 看到人身攻擊的言論時..." }
+            { type: 'rate', text: "我完全同意 B 的看法，AI 的發展是擋不住的趨勢，與其禁止不如善用它。", instruction: "<strong>練習1/4</strong>: 請<strong class='text-sky-800'>長按</strong>這則評論來【評價觀點】。它表達了立場，但有提出新證據嗎？", correct: { stance: '認同', quality: ['- 證據不足'] } },
+            { type: 'rate', text: "這篇文章的數據有問題，它引用的市調報告已經是三年前的了，完全不能反映現況。", instruction: "<strong>練習2/4</strong>: 這次，請點擊右下角的<strong class='text-sky-800'>[...]按鈕</strong>，並選擇【評價觀點】。這則評論提出了具體的質疑。", correct: { stance: '否認', quality: ['+ 證據充足'] } },
+            { type: 'rate-remove', text: "這則評論的資訊可能有誤，我先保留看法。", instruction: "<strong>練習3/4</strong>: 有時我們會改變心意。請先對此觀點按【存疑】，然後再從<strong class='text-sky-800'>[...]按鈕</strong>中【移除我的評價】。", correct: { stance: '存疑', quality: [] } },
+            { type: 'report', text: "樓上都是一群不懂裝懂的白痴，根本沒資格討論。", instruction: "<strong>練習4/4</strong>: 看到人身攻擊的言論時，我們可以【舉報內容】來維護社群。請從<strong class='text-sky-800'>[...]按鈕</strong>中練習舉報。" }
         ];
 
         const showStep = (stepId) => {
+            const steps = onboardingFlow.querySelectorAll('.step-card');
             steps.forEach(step => step.classList.toggle('active', step.id === stepId));
             if (stepId === 'step-4') renderTutorialExample();
         };
 
         const showInfoModal = (config) => {
-            infoModalTitle.textContent = config.title;
-            infoModalBody.innerHTML = config.bodyHtml;
-            infoModalFooter.innerHTML = config.footerHtml;
+            const { title, bodyHtml, footerHtml, onclose } = config;
+            infoModalTitle.textContent = title;
+            infoModalBody.innerHTML = bodyHtml;
+            infoModalFooter.innerHTML = footerHtml;
             infoModal.classList.add('active');
+            
+            const closeModal = () => {
+                infoModal.classList.remove('active');
+                if (onclose) onclose();
+            };
+
             infoModal.querySelectorAll('button[data-action="close"]').forEach(btn => {
-                btn.addEventListener('click', () => infoModal.classList.remove('active'), { once: true });
+                btn.addEventListener('click', closeModal, { once: true });
             });
         };
         
+        const showFloodingEffect = () => {
+            showInfoModal({
+                title: '嗯...這個選擇會讓世界變得更混亂喔',
+                bodyHtml: `<p>當我們認同情緒化的言論時，我們的世界就容易被更多相似的聲音淹沒。</p><p>一個理性的社群，需要我們一起分辨資訊的品質。</p><p class="font-bold mt-4">您想打造一個怎樣的社群？</p>`,
+                footerHtml: `<button data-action="close" class="bg-sky-700 text-white font-bold py-2 px-6 rounded-full hover:bg-sky-800 transition">一個理性的討論空間</button>`,
+                onclose: () => {
+                    showInfoModal({
+                        title: '很棒的選擇！',
+                        bodyHtml: '讓我們一起為理性的討論空間努力。請您重新選擇更有參考價值的評論。',
+                        footerHtml: `<button data-action="close" class="bg-sky-700 text-white font-bold py-2 px-6 rounded-full hover:bg-sky-800 transition">好的</button>`
+                    });
+                }
+            });
+            
+            setTimeout(() => {
+                const floodMessages = ['都是騙人的！', '財團的打手！', '廢文一篇', '小編工讀生？', '帶風向！'];
+                const modalBodyRect = infoModalBody.getBoundingClientRect();
+                if (modalBodyRect.width === 0 || modalBodyRect.height === 0) return;
+
+                for (let i = 0; i < 5; i++) {
+                    const floodEl = document.createElement('div');
+                    floodEl.className = 'flooding-comment';
+                    floodEl.textContent = floodMessages[Math.floor(Math.random() * floodMessages.length)];
+                    
+                    const top = Math.random() * (modalBodyRect.height - 40);
+                    const left = Math.random() * (modalBodyRect.width - 120);
+                    floodEl.style.top = `${top}px`;
+                    floodEl.style.left = `${left}px`;
+                    floodEl.style.animationDelay = `${i * 0.3}s`;
+                    infoModalBody.appendChild(floodEl);
+                }
+            }, 100);
+        };
+
         const renderTutorialExample = () => {
             ratingState = { stance: null, quality: [] };
             const example = tutorialExamples[currentTutorialIndex];
             const ratingTutorialContainer = document.getElementById('rating-tutorial-container');
             if (!ratingTutorialContainer) return;
             const ratedCheckmark = example.rated ? `<div class="absolute top-2 right-2 text-green-500 text-2xl">✓</div>` : '';
-            ratingTutorialContainer.innerHTML = `
+
+            const html = `
                 <p class="text-center text-stone-500 mb-4">${example.instruction}</p>
                 <div id="rating-card-container" class="relative">
                     <div id="rating-card" class="choice-card bg-stone-50 relative">
@@ -750,6 +830,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                     </div>
                 </div>`;
+            ratingTutorialContainer.innerHTML = html;
             addTutorialListeners();
         };
 
@@ -842,10 +923,19 @@ document.addEventListener('DOMContentLoaded', () => {
             const example = tutorialExamples[currentTutorialIndex];
             if (!example || !example.correct) {
                 hideAllMenus();
-                showInfoModal({ title: '提示', bodyHtml: '這個練習的目標是學習【舉報內容】...', footerHtml: `<button data-action="close" class="bg-sky-700 text-white font-bold py-2 px-6 rounded-full">好的</button>` });
+                showInfoModal({
+                    title: '提示',
+                    bodyHtml: '這個練習的目標是學習【舉報內容】，請從 [...] 選單中選擇喔！',
+                    footerHtml: `<button data-action="close" class="bg-sky-700 text-white font-bold py-2 px-6 rounded-full hover:bg-sky-800">好的</button>`
+                });
                 return;
             }
-            const isCorrect = ratingState.stance === example.correct.stance && (example.correct.quality.length === 0 || (ratingState.quality.length === example.correct.quality.length && example.correct.quality.every(q => ratingState.quality.includes(q))));
+
+            const isCorrect = ratingState.stance === example.correct.stance && 
+                              (example.correct.quality.length === 0 ||
+                              (ratingState.quality.length === example.correct.quality.length &&
+                               example.correct.quality.every(q => ratingState.quality.includes(q))));
+
             if (isCorrect) {
                 hideAllMenus();
                 if (example.type === 'rate-remove' && !example.rated) {
@@ -855,41 +945,57 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 currentTutorialIndex++;
                 if (currentTutorialIndex >= tutorialExamples.length) {
-                    showStep('step-5');
+                     showInfoModal({
+                        title: '練習完成！',
+                        bodyHtml: '您已熟悉所有基本的評價操作！',
+                        footerHtml: `<button data-action="close" class="bg-sky-700 text-white font-bold py-2 px-6 rounded-full hover:bg-sky-800">繼續</button>`,
+                        onclose: () => showStep('step-5')
+                    });
                 } else {
                     renderTutorialExample();
                 }
             } else {
-                 showInfoModal({ title: '再試一次！', bodyHtml: '您的選擇似乎不太符合這個練習的目標，要不要再想想？', footerHtml: `<button data-action="close" class="bg-sky-700 text-white font-bold py-2 px-6 rounded-full">好的</button>` });
+                const correctStance = example.correct.stance;
+                const correctQuality = example.correct.quality.join('、');
+                let bodyHtml = `這個練習的目標是學習判斷內容的品質。請試著選擇【${correctStance}】`;
+                if (correctQuality) bodyHtml += `，並為它加上【${correctQuality}】的標籤。`;
+                else bodyHtml += `。`;
+                showInfoModal({
+                    title: '再試一次！', bodyHtml,
+                    footerHtml: `<button data-action="close" class="bg-sky-700 text-white font-bold py-2 px-6 rounded-full hover:bg-sky-800">好的，再試一次</button>`
+                });
             }
         };
 
-        onboardingFlowContainer.addEventListener('click', (e) => {
+        onboardingFlow.addEventListener('click', (e) => {
             const nextBtn = e.target.closest('.next-btn');
             if (nextBtn) {
-                if (nextBtn.dataset.action === 'close-tutorial') {
-                    closeTutorial();
-                } else {
-                    showStep(nextBtn.dataset.next);
+                const nextStepId = nextBtn.dataset.next;
+                if (nextBtn.dataset.action === 'restart-tutorial') {
+                    // 重置教學狀態
+                    const choiceB = document.getElementById('choice-b');
+                    if(choiceB) choiceB.classList.remove('selected');
+                    currentTutorialIndex = 0;
+                    tutorialExamples.forEach(ex => ex.rated = false);
                 }
+                showStep(nextStepId);
+                return;
             }
-            if (e.target.closest('#choice-a')) {
-                 showInfoModal({
-                    title: '嗯...這個選擇會讓世界變得更混亂喔',
-                    bodyHtml: `<p>當我們認同情緒化的言論時，我們的世界就容易被更多相似的聲音淹沒。</p>`,
-                    footerHtml: `<button data-action="close" class="bg-sky-700 text-white font-bold py-2 px-6 rounded-full">一個理性的討論空間</button>`,
-                });
+
+            const choiceA = e.target.closest('#choice-a');
+            if (choiceA) {
+                 showFloodingEffect();
+                 return;
             }
-            if (e.target.closest('#choice-b')) {
-                e.target.closest('#choice-b').classList.add('selected');
+            const choiceB = e.target.closest('#choice-b');
+            if (choiceB) {
+                choiceB.classList.add('selected');
                 setTimeout(() => showStep('step-3'), 800);
+                return;
             }
         });
 
         document.addEventListener('click', (e) => {
-            if (!tutorialBackdrop.contains(e.target) || e.target === tutorialBackdrop) {
-                // This listener is for clicks outside the main content, but inside the tutorial
-            }
             if (menuJustOpened) {
                 menuJustOpened = false;
                 return;
@@ -910,29 +1016,37 @@ document.addEventListener('DOMContentLoaded', () => {
                      const example = tutorialExamples[currentTutorialIndex];
                      if (example.type === 'report') {
                         showInfoModal({
-                            title: '確認舉報？', bodyHtml: '您確定要舉報此內容嗎？',
-                            footerHtml: `<button id="confirm-report-btn" data-action="close" class="bg-red-600 text-white font-bold py-2 px-6 rounded-full">確認</button><button data-action="close" class="bg-gray-200 text-gray-800 font-bold py-2 px-6 rounded-full">取消</button>`,
+                            title: '確認舉報？',
+                            bodyHtml: '您確定要舉報此內容違反社群規範嗎？',
+                            footerHtml: `<button id="confirm-report-btn" data-action="close" class="bg-red-600 text-white font-bold py-2 px-6 rounded-full hover:bg-red-700">確認舉報</button>
+                                         <button data-action="close" class="bg-gray-200 text-gray-800 font-bold py-2 px-6 rounded-full hover:bg-gray-300">取消</button>`,
                         });
                         document.getElementById('confirm-report-btn').addEventListener('click', () => {
-                            currentTutorialIndex++;
-                            showStep('step-5');
+                            showInfoModal({
+                               title: '感謝您的舉報',
+                               bodyHtml: '我們已收到您的回報。感謝您一同維護社群的健康環境！',
+                               footerHtml: `<button data-action="close" class="bg-sky-700 text-white font-bold py-2 px-6 rounded-full hover:bg-sky-800">完成所有練習</button>`,
+                               onclose: () => showStep('step-5')
+                            });
                         }, { once: true });
                      } else {
-                         showInfoModal({ title: '提示', bodyHtml: '這個練習不是舉報內容喔。', footerHtml: `<button data-action="close" class="bg-sky-700 text-white font-bold py-2 px-6 rounded-full">好的</button>` });
+                         showInfoModal({ title: '提示', bodyHtml: '這則內容似乎沒有違反社群規範，請先練習其他操作喔！', footerHtml: `<button data-action="close" class="bg-sky-700 text-white font-bold py-2 px-6 rounded-full hover:bg-sky-800">好的</button>` });
                      }
                 } else if (action === 'remove') {
                      const example = tutorialExamples[currentTutorialIndex];
                      if (example.type === 'rate-remove' && example.rated) {
                         showInfoModal({
-                            title: '確認移除？', bodyHtml: '您確定要移除您的評價嗎？',
-                            footerHtml: `<button id="confirm-remove-btn" data-action="close" class="bg-red-600 text-white font-bold py-2 px-6 rounded-full">確認移除</button><button data-action="close" class="bg-gray-200 text-gray-800 font-bold py-2 px-6 rounded-full">取消</button>`,
+                            title: '確認移除？',
+                            bodyHtml: '您確定要移除您的評價嗎？此操作無法復原。',
+                            footerHtml: `<button id="confirm-remove-btn" data-action="close" class="bg-red-600 text-white font-bold py-2 px-6 rounded-full hover:bg-red-700">確認移除</button>
+                                         <button data-action="close" class="bg-gray-200 text-gray-800 font-bold py-2 px-6 rounded-full hover:bg-gray-300">取消</button>`,
                         });
                         document.getElementById('confirm-remove-btn').addEventListener('click', () => {
                             currentTutorialIndex++;
                             renderTutorialExample();
                         }, { once: true });
                      } else {
-                         showInfoModal({ title: '提示', bodyHtml: '您尚未評價，或現在不是移除評價的練習。', footerHtml: `<button data-action="close" class="bg-sky-700 text-white font-bold py-2 px-6 rounded-full">好的</button>` });
+                         showInfoModal({ title: '提示', bodyHtml: '您尚未對此觀點做出評價，或現在不是移除評價的練習步驟喔。', footerHtml: `<button data-action="close" class="bg-sky-700 text-white font-bold py-2 px-6 rounded-full hover:bg-sky-800">好的</button>` });
                      }
                 }
             }
