@@ -565,6 +565,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	// 新的程式碼是呼叫我們自己的後端代理
   	  const response = await fetch('/.netlify/functions/callGemini', {
    	     method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
    	     body: JSON.stringify({ payload }) // 只需傳送使用者輸入的內容
    	 });
 
