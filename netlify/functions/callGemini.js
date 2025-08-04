@@ -2,7 +2,7 @@
 
 exports.handler = async function(event, context) {
     // 從前端請求中獲取使用者輸入的 prompt
-    const { userPrompt } = JSON.parse(event.body);
+    const userPrompt = JSON.parse(event.body);
 
     // 從安全的環境變數中讀取 API 金鑰
 
@@ -15,7 +15,7 @@ exports.handler = async function(event, context) {
         const response = await fetch(apiUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(userPrompt)
+            body: userPrompt
         });
 
         if (!response.ok) {
