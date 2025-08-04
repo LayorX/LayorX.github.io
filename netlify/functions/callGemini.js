@@ -12,7 +12,7 @@ console.log(GEMINI_API_KEY)
 console.log("66666")
     // const fullPrompt = `Based on the theme "${userPrompt}", generate a color scheme for a bouncing ball animation. Provide a JSON object with a hex code for the ball's color, a hex code for the background color, and a short, creative explanation in Traditional Chinese.`;
 //fuck
-    const fullPrompt = ${userPrompt}
+    const fullPrompt = userPrompt
     const chatHistory = [{ role: "user", parts: [{ text: fullPrompt }] }];
     const payload = {
         contents: chatHistory,
