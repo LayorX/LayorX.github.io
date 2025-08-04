@@ -550,6 +550,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const payload = { contents: chatHistory };
         
         for (let i = 0; i < maxRetries; i++) {
+    /*// 舊的程式碼是直接呼叫 googleapis.com
             try {
                 const response = await fetch(apiUrl, {
                     method: 'POST',
@@ -559,7 +560,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
-                }
+                }*/
+	// 新的程式碼是呼叫我們自己的後端代理
+  	  const response = await fetch('/.netlify/functions/callGemini', {
+   	     method: 'POST',
+   	     body: JSON.stringify({ userPrompt: userPrompt }) // 只需傳送使用者輸入的內容
+   	 });
+
+  		if (!response.ok) {
+        	throw new Error(`伺服器代理錯誤，狀態碼： ${response.status}`);
+   		 }
 
                 const result = await response.json();
                 if (result.candidates && result.candidates.length > 0 &&
