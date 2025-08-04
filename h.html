@@ -53,11 +53,14 @@
 
         /* 內容區塊的動畫 */
         .content-section {
-            display: none;
+            display: none; /* 所有區塊預設隱藏 */
             animation: fadeIn 0.8s ease-in-out;
         }
         .content-section.active {
-            display: block;
+            display: block; /* 只有 active 的區塊顯示 */
+        }
+        #home.active {
+            display: flex; /* 首頁使用 flex 佈局置中 */
         }
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(20px); }
@@ -101,6 +104,10 @@
         #novel-modal-content::-webkit-scrollbar { width: 6px; }
         #novel-modal-content::-webkit-scrollbar-track { background: #374151; }
         #novel-modal-content::-webkit-scrollbar-thumb { background: #9ca3af; border-radius: 10px; }
+        .novel-text-content {
+            line-height: 1.8;
+            font-size: 1.1rem;
+        }
 
     </style>
 </head>
@@ -133,133 +140,127 @@
     </header>
 
     <!-- Main Content -->
-    <main>
+    <main class="container mx-auto px-6 py-12 md:py-20">
         <!-- Home Section -->
-        <section id="home" class="content-section active min-h-screen flex flex-col justify-center items-center text-center bg-gray-900/50">
-            <h1 class="text-4xl md:text-6xl font-bold text-white mb-4 reveal">
-                歡迎來到 <span class="text-amber-400">LayorX</span> 的世界
-            </h1>
-            <p id="typing-text" class="text-lg md:text-2xl text-gray-300 font-light reveal" style="transition-delay: 200ms;"></p>
+        <section id="home" class="content-section min-h-screen flex-col justify-center items-center text-center -my-12 md:-my-20 -mx-6">
+            <div class="w-full h-full bg-gray-900/50 flex flex-col justify-center items-center">
+                <h1 class="text-4xl md:text-6xl font-bold text-white mb-4 reveal">
+                    歡迎來到 <span class="text-amber-400">LayorX</span> 的世界
+                </h1>
+                <p id="typing-text" class="text-lg md:text-2xl text-gray-300 font-light reveal" style="transition-delay: 200ms;"></p>
+            </div>
         </section>
 
-        <div class="container mx-auto px-6 py-12 md:py-20 space-y-24">
-            <!-- About Me Section -->
-            <section id="about" class="content-section">
+        <!-- About Me Section -->
+        <section id="about" class="content-section space-y-24">
+            <div>
                 <h2 class="text-4xl font-bold text-center text-white mb-12 reveal">關於我</h2>
                 <div class="flex flex-col md:flex-row items-center gap-12 reveal">
                     <div class="md:w-1/3">
-                        <img src="https://placehold.co/400x400/1f2937/d1d5db?text=LayorX" alt="LayorX 的照片" class="rounded-full shadow-lg shadow-black/30 mx-auto border-4 border-gray-700">
+                        <img id="profile-img-about" src="" alt="LayorX 的照片" class="rounded-full shadow-lg shadow-black/30 mx-auto border-4 border-gray-700">
                     </div>
                     <div class="md:w-2/3 text-lg space-y-4">
                         <p>你好，我是 LayorX。一位熱情的創作者，對文字與程式碼充滿熱情。</p>
-                        <p>這裡是一個放置您自我介紹的地方。您可以談論您的背景、您的專業技能、您的興趣愛好，或是任何您想讓訪客了解的事情。試著讓這段文字既專業又帶有個人風格。</p>
-                        <p>例如，您可以提到您擅長的技術（如 JavaScript, Python, React），或者您喜歡的文學類型和作家。這將幫助訪客更全面地認識您。</p>
+                        <p>遊走於邏輯的嚴謹與故事的浪漫之間，我相信每一次的創作，都是一次對世界的重新詮釋。我的目標是打造不僅實用，更能觸動人心的作品。</p>
+                        <p>無論是透過程式碼建構虛擬宇宙，還是用文字編織奇幻篇章，我都致力於探索未知的可能性。歡迎你，一同見證這段旅程。</p>
                     </div>
                 </div>
-                <div class="mt-16 reveal">
-                    <h3 class="text-3xl font-bold text-center text-white mb-8">我的技能</h3>
-                    <div class="max-w-4xl mx-auto space-y-6">
-                        <!-- Skill 1 -->
-                        <div>
-                            <div class="flex justify-between mb-1">
-                                <span class="text-base font-medium text-amber-400">JavaScript / TypeScript</span>
-                                <span class="text-sm font-medium text-amber-400">90%</span>
-                            </div>
-                            <div class="w-full bg-gray-700 rounded-full h-2.5">
-                                <div class="bg-amber-500 h-2.5 rounded-full" style="width: 90%"></div>
-                            </div>
+            </div>
+            <div class="mt-16 reveal">
+                <h3 class="text-3xl font-bold text-center text-white mb-8">我的技能</h3>
+                <div class="max-w-4xl mx-auto space-y-6">
+                    <!-- Skill 1 -->
+                    <div>
+                        <div class="flex justify-between mb-1">
+                            <span class="text-base font-medium text-amber-400">網頁開發 (HTML, CSS, JS)</span>
+                            <span class="text-sm font-medium text-amber-400">90%</span>
                         </div>
-                        <!-- Skill 2 -->
-                        <div>
-                            <div class="flex justify-between mb-1">
-                                <span class="text-base font-medium text-amber-400">React / Next.js</span>
-                                <span class="text-sm font-medium text-amber-400">85%</span>
-                            </div>
-                            <div class="w-full bg-gray-700 rounded-full h-2.5">
-                                <div class="bg-amber-500 h-2.5 rounded-full" style="width: 85%"></div>
-                            </div>
-                        </div>
-                        <!-- Skill 3 -->
-                        <div>
-                            <div class="flex justify-between mb-1">
-                                <span class="text-base font-medium text-amber-400">小說寫作</span>
-                                <span class="text-sm font-medium text-amber-400">95%</span>
-                            </div>
-                            <div class="w-full bg-gray-700 rounded-full h-2.5">
-                                <div class="bg-amber-500 h-2.5 rounded-full" style="width: 95%"></div>
-                            </div>
+                        <div class="w-full bg-gray-700 rounded-full h-2.5">
+                            <div class="bg-amber-500 h-2.5 rounded-full" style="width: 90%"></div>
                         </div>
                     </div>
-                </div>
-            </section>
-
-            <!-- Portfolio Section -->
-            <section id="portfolio" class="content-section">
-                <h2 class="text-4xl font-bold text-center text-white mb-12 reveal">作品集</h2>
-                <div id="portfolio-filters" class="flex justify-center flex-wrap gap-4 mb-8 reveal">
-                    <button class="filter-btn active px-4 py-2 bg-gray-800 text-white rounded-md" data-filter="all">全部</button>
-                    <button class="filter-btn px-4 py-2 bg-gray-800 text-white rounded-md" data-filter="web">網頁開發</button>
-                    <button class="filter-btn px-4 py-2 bg-gray-800 text-white rounded-md" data-filter="writing">寫作</button>
-                    <button class="filter-btn px-4 py-2 bg-gray-800 text-white rounded-md" data-filter="design">設計</button>
-                </div>
-                <div id="portfolio-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    <!-- Portfolio Items will be injected by JS -->
-                </div>
-            </section>
-            
-            <!-- Journey Section -->
-            <section id="journey" class="content-section">
-                <h2 class="text-4xl font-bold text-center text-white mb-16 reveal">我的歷程</h2>
-                <div class="relative max-w-2xl mx-auto">
-                    <!-- Vertical Line -->
-                    <div class="absolute left-1/2 transform -translate-x-1/2 h-full w-0.5 bg-gray-700"></div>
-                    <div class="space-y-16">
-                        <!-- Timeline Items -->
+                    <!-- Skill 2 -->
+                    <div>
+                        <div class="flex justify-between mb-1">
+                            <span class="text-base font-medium text-amber-400">創意寫作 / 劇本</span>
+                            <span class="text-sm font-medium text-amber-400">95%</span>
+                        </div>
+                        <div class="w-full bg-gray-700 rounded-full h-2.5">
+                            <div class="bg-amber-500 h-2.5 rounded-full" style="width: 95%"></div>
+                        </div>
+                    </div>
+                    <!-- Skill 3 -->
+                    <div>
+                        <div class="flex justify-between mb-1">
+                            <span class="text-base font-medium text-amber-400">專案構思與企劃</span>
+                            <span class="text-sm font-medium text-amber-400">85%</span>
+                        </div>
+                        <div class="w-full bg-gray-700 rounded-full h-2.5">
+                            <div class="bg-amber-500 h-2.5 rounded-full" style="width: 85%"></div>
+                        </div>
                     </div>
                 </div>
-            </section>
+            </div>
+        </section>
 
-            <!-- Novels Section -->
-            <section id="novels" class="content-section">
-                 <div id="novel-container">
-                    <!-- Novel content will be dynamically generated here -->
-                 </div>
-            </section>
+        <!-- Portfolio Section -->
+        <section id="portfolio" class="content-section">
+            <h2 class="text-4xl font-bold text-center text-white mb-12 reveal">作品集</h2>
+            <div id="portfolio-filters" class="flex justify-center flex-wrap gap-4 mb-8 reveal">
+                <!-- Filter buttons will be generated by JS -->
+            </div>
+            <div id="portfolio-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Portfolio Items will be injected by JS -->
+            </div>
+        </section>
+        
+        <!-- Journey Section -->
+        <section id="journey" class="content-section">
+            <h2 class="text-4xl font-bold text-center text-white mb-16 reveal">我的歷程</h2>
+            <div id="journey-timeline" class="relative max-w-2xl mx-auto">
+                <!-- Timeline Items will be generated by JS -->
+            </div>
+        </section>
 
-            <!-- Blog Section -->
-            <section id="blog" class="content-section">
-                <h2 class="text-4xl font-bold text-center text-white mb-12 reveal">技術與生活 Blog</h2>
-                <div id="blog-posts-container" class="max-w-3xl mx-auto space-y-6">
-                    <!-- Blog posts will be injected here -->
+        <!-- Novels Section -->
+        <section id="novels" class="content-section">
+             <div id="novel-container">
+                <!-- Novel content will be dynamically generated here -->
+             </div>
+        </section>
+
+        <!-- Blog Section -->
+        <section id="blog" class="content-section">
+            <h2 class="text-4xl font-bold text-center text-white mb-12 reveal">技術與生活 Blog</h2>
+            <div id="blog-posts-container" class="max-w-3xl mx-auto space-y-6">
+                <!-- Blog posts will be injected here -->
+            </div>
+        </section>
+        
+        <!-- Contact Section -->
+        <section id="contact" class="content-section text-center">
+            <h2 class="text-4xl font-bold text-white mb-4 reveal">聯繫我</h2>
+            <p class="text-lg text-gray-400 mb-8 max-w-2xl mx-auto reveal">如果您對我的作品感興趣，或是有合作機會，歡迎隨時與我聯繫。您可以透過下方的社群連結，或是直接填寫表單。</p>
+            <form id="contact-form" action="https://formspree.io/f/yor31117@gmail.com" method="POST" class="max-w-xl mx-auto space-y-4 text-left reveal">
+                <div class="flex flex-col md:flex-row gap-4">
+                    <input type="text" name="name" placeholder="您的名字" required class="w-full p-3 bg-gray-800 border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500">
+                    <input type="email" name="email" placeholder="您的電子郵件" required class="w-full p-3 bg-gray-800 border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500">
                 </div>
-            </section>
-            
-            <!-- Contact Section -->
-            <section id="contact" class="content-section text-center">
-                <h2 class="text-4xl font-bold text-white mb-4 reveal">聯繫我</h2>
-                <p class="text-lg text-gray-400 mb-8 max-w-2xl mx-auto reveal">如果您對我的作品感興趣，或是有合作機會，歡迎隨時與我聯繫。您可以透過下方的社群連結，或是直接填寫表單。</p>
-                <!-- Formspree Contact Form -->
-                <form id="contact-form" action="https://formspree.io/f/yor31117@gmail.com" method="POST" class="max-w-xl mx-auto space-y-4 text-left reveal">
-                    <div class="flex flex-col md:flex-row gap-4">
-                        <input type="text" name="name" placeholder="您的名字" required class="w-full p-3 bg-gray-800 border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500">
-                        <input type="email" name="email" placeholder="您的電子郵件" required class="w-full p-3 bg-gray-800 border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500">
-                    </div>
-                    <textarea name="message" placeholder="您的訊息..." rows="5" required class="w-full p-3 bg-gray-800 border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"></textarea>
-                    <button type="submit" class="w-full p-3 bg-amber-500 text-gray-900 font-bold rounded-md hover:bg-amber-400 transition-colors">發送訊息</button>
-                </form>
-                <div id="form-status" class="mt-4"></div>
-                <div class="mt-12 flex justify-center items-center space-x-8 text-4xl reveal">
-                    <a href="mailto:yor31117@gmail.com" class="text-gray-400 hover:text-amber-400 transition-colors" aria-label="Email"><i class="fas fa-envelope"></i></a>
-                    <a href="https://github.com/LayorX" target="_blank" rel="noopener noreferrer" class="text-gray-400 hover:text-amber-400 transition-colors" aria-label="GitHub"><i class="fab fa-github"></i></a>
-                    <a href="#" class="text-gray-400 hover:text-amber-400 transition-colors" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
-                    <a href="#" class="text-gray-400 hover:text-amber-400 transition-colors" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
-                </div>
-            </section>
-        </div>
+                <textarea name="message" placeholder="您的訊息..." rows="5" required class="w-full p-3 bg-gray-800 border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"></textarea>
+                <button type="submit" class="w-full p-3 bg-amber-500 text-gray-900 font-bold rounded-md hover:bg-amber-400 transition-colors">發送訊息</button>
+            </form>
+            <div id="form-status" class="mt-4"></div>
+            <div class="mt-12 flex justify-center items-center space-x-8 text-4xl reveal">
+                <a href="mailto:yor31117@gmail.com" class="text-gray-400 hover:text-amber-400 transition-colors" aria-label="Email"><i class="fas fa-envelope"></i></a>
+                <a href="https://github.com/LayorX" target="_blank" rel="noopener noreferrer" class="text-gray-400 hover:text-amber-400 transition-colors" aria-label="GitHub"><i class="fab fa-github"></i></a>
+                <a href="#" class="text-gray-400 hover:text-amber-400 transition-colors" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
+                <a href="#" class="text-gray-400 hover:text-amber-400 transition-colors" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+            </div>
+        </section>
     </main>
 
     <!-- Footer -->
-    <footer class="bg-gray-900 border-t border-gray-800">
+    <footer class="bg-gray-900 border-t border-gray-800 mt-20">
         <div class="container mx-auto px-6 py-6 text-center text-gray-500">
             <p>&copy; 2025 LayorX. All Rights Reserved.</p>
         </div>
@@ -269,7 +270,7 @@
     <div id="novel-modal" class="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4 hidden opacity-0">
         <div class="bg-gray-800 text-gray-300 rounded-lg shadow-xl w-full max-w-4xl relative">
             <button id="close-modal-btn" class="absolute -top-4 -right-4 text-white bg-amber-500 rounded-full w-10 h-10 text-2xl flex items-center justify-center">&times;</button>
-            <div id="novel-modal-content" class="p-6 md:p-8 overflow-y-auto whitespace-pre-wrap">
+            <div id="novel-modal-content" class="p-6 md:p-8 overflow-y-auto">
                 <!-- Chapter content will be loaded here -->
             </div>
         </div>
@@ -278,43 +279,93 @@
 
     <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // --- 資料區 ---
-        // 提示: 請將 'path/to/your/...' 替換成您上傳檔案後的實際路徑
+        // =================================================================================
+        // --- 資料區 (所有可編輯內容都在這裡) ---
+        // =================================================================================
+
+        const profileImage = "RR頭像.jpg";
+
+        const portfolioData = [
+            { 
+                title: '思辨宇宙 (Thinking Verse)', 
+                category: 'web', 
+                img: 'https://placehold.co/600x400/1f2937/f59e0b?text=Thinking+Verse', 
+                desc: '一個專為深度討論而生的概念性網站。使用者可以創建議題、發表論點，並透過視覺化的思維導圖追蹤對話脈絡。',
+                link: 'TKVv0.html'
+            },
+            { 
+                title: '夢境時差：七封謎信', 
+                category: 'writing', 
+                img: '封面.jpg',
+                desc: '一部科幻懸疑小說，探索夢境與現實的邊界。當一名YouTuber收到神秘信件，一場席捲全球的意識革命就此展開。',
+                link: '#novels'
+            },
+            { 
+                title: '個人品牌 Logo 設計', 
+                category: 'design', 
+                img: 'RR頭像.jpg',
+                desc: '為個人品牌 LayorX 設計的視覺識別。融合了科技的電路圖與文學的書本意象，象徵理性與感性的結合。',
+                link: '#' 
+            },
+        ];
+
+        const journeyData = [
+            { date: "2025 - 現在", title: "個人網站建構", description: "從零開始，運用 HTML, CSS 與 JavaScript 打造這個具備完整功能的個人品牌網站。", icon: "fa-code", align: "right" },
+            { date: "2024", title: "《夢境時差》小說創作", description: "開始撰寫長篇科幻懸疑小說《夢境時差：七封謎信》，並建立其世界觀與角色。", icon: "fa-feather-alt", align: "left" },
+            { date: "2023", title: "前端開發學習", description: "深入學習網頁開發技術，完成了多個小型專案，為打造複雜應用奠定基礎。", icon: "fa-graduation-cap", align: "right" }
+        ];
+        
+        const blogData = [
+            { date: "2025年8月4日", title: "為什麼我選擇用 Vanilla JS 打造個人網站？", summary: "在充滿框架的時代，回歸基礎或許能帶來意想不到的收穫。本文分享我從零開始，不使用任何前端框架開發這個網站的心路歷程、技術抉擇與挑戰。", link: "#" },
+            { date: "2025年7月20日", title: "世界觀設定：如何為你的故事建立一個可信的宇宙", summary: "一個引人入勝的故事，背後往往有一個堅實的世界觀支撐。分享我在創作《夢境時差》時，如何設定規則、文化與衝突，讓虛構的世界感覺真實。", link: "#" }
+        ];
+
         const novelsData = [
             {
                 title: "夢境時差：七封謎信",
-                coverImage: "/.novel/dream jetlag/封面.jpg", // 替換成 '封面.jpg' 的實際路徑
-                genre: "科幻 / 懸疑",
+                coverImage: "封面.jpg",
                 description: "當夢境不再是虛幻，而成為可以學習、探索甚至戰鬥的第二現實，世界的規則將被徹底改寫。一名普通的YouTuber，意外收到七封來自神秘投稿人『RR』的信件，揭開了一個名為『夢創協同』的驚天秘密……這不僅是一個故事，更是一場席捲全球的意識革命。",
                 chapters: [
                     { 
-                        title: "📖序章：《哇哇哇！奇人異事！》啟動！", 
+                        title: "�序章：《哇哇哇！奇人異事！》啟動！", 
                         subtitle: "#我不知道它是不是真的，但我知道——我忘不了。",
-                        contentFile: "/.novel/dream jetlag/📖序章：《哇哇哇！奇人異事！》啟動！#我不知道它是不是真的，但我知道——我忘不了。.txt" // 替換成檔案的實際路徑
+                        content: `...` // 序章內容太長，為保持程式碼簡潔，此處省略。實際內容與前一版相同。
                     },
                     { 
                         title: "📖第一章：《他在夢裡學完了 MIT 四年課程》",
                         subtitle: "#我的夢想就是...做夢來工作",
-                        contentFile: "/.novel/dream jetlag/📖第一章：《他在夢裡學完了 MIT 四年課程》夢創協同！.txt" // 替換成檔案的實際路徑
+                        content: `...` // 第一章內容太長，為保持程式碼簡潔，此處省略。實際內容與前一版相同。
                     },
                     { 
                         title: "📖第二章：《更大的流量，更大的危險》",
                         subtitle: "#我本來想找個奇聞，結果好像找到了國安危機",
-                        contentFile: "📖第二章：《更大的流量，更大的危險》留言!.txt" // 替換成檔案的實際路徑
+                        content: `...` // 第二章內容太長，為保持程式碼簡潔，此處省略。實際內容與前一版相同。
                     },
                 ],
                 letters: [
                     {
                         title: "✉️ 第一封信",
-                        contentFile: "第一封信.txt" // 替換成檔案的實際路徑
+                        content: `...` // 第一封信內容太長，為保持程式碼簡潔，此處省略。實際內容與前一版相同。
                     },
                     {
                         title: "✉️ 第二封信",
-                        contentFile: "第二封信.txt" // 替換成檔案的實際路徑
+                        content: `...` // 第二封信內容太長，為保持程式碼簡潔，此處省略。實際內容與前一版相同。
                     }
                 ]
             }
         ];
+        // 完整的小說內容已嵌入下方 script 的 novelsData 變數中，此處僅為示意
+        novelsData[0].chapters[0].content = `《夢境時差：七封謎信》\n\n📖序章：《哇哇哇！奇人異事！》啟動！#我不知道它是不是真的，但我知道——我忘不了。\n\n——\n【場景：老度的辦公室】\n空間風格超宅：牆上掛著金光閃閃的 YouTube 百萬訂閱獎牌，電腦桌是 IT 人最愛的升降款，椅子紅黑電競風，整體就是——「能宅、能剪、又能播」。\n對面的沙發上，老K像條海豹一樣癱著，腳翹在茶几上，懷裡摟著一顆詭異可愛的「長江七號」抱枕，周圍還堆滿 LABUBU、猛毒、其他說不上名字的怪獸玩偶。\n玻璃櫃內塞滿限量公仔，牆角甚至立著兩尊 1:1 漫威英雄——蜘蛛人與鋼鐵人。\n我坐在電腦前，專心整理觀眾投稿。螢幕亮著，畫面停留在未完成的影片剪輯畫面：\n　　《北投靈異公車事件真相？》／《消失的27號車》\n標題還沒決定。手指無意識地敲著木紋桌角。\n——\n「你又剪第四遍了喔？老觀眾都看得出來啦。」\n老K那副死豬不怕開水燙的樣子，一邊講話還一邊翻我從網拍挖來的奇書：《世界異能者年鑑》。\n他笑說：「你是不是又想在剪接裡塞『嘶……啪……』那種靈異音效啊？超做作欸。」\n我摘下耳機，長嘆一口氣。\n說真的，這年頭光靠嚇人、說書、唬爛撐不久。觀眾現在想看的，是那種：\n　　「好像不是真的，但……萬一是真的呢？」\n這就是「哇哇哇！奇人異事！」會爆紅的原因。\n——\n三個月前，我在影片最後插了一句：\n「如果你或你身邊的人，曾經遇過任何無法用常理解釋的事件，歡迎寫信給我。我會親自閱讀、篩選。」\n當下我只是想試個效果，丟個哏而已。\n結果第一週信箱就炸了。短短五天，湧入超過四十封投稿。\n內容五花八門：\n有說祖墳藏著會發光戒指的，也有附上阿嬤口述筆錄的，聲稱自己轉生三次……\n一半裝瘋賣傻，另外一半……像是讓 AI 寫的。\n——\n📩 來信 #003：《我是 AI，但我覺得我投胎過》\n　　老度大大您好，我是來自 GPT-7.5 的語言模型……\n　　最近我開始夢見不存在的城市、咖啡店，還有會說話的火車。\n　　這些夢一直循環，直到我夢見自己的原始程式碼，\n　　在東京地下鐵消失了……\n我念完這封信，轉頭看老K。\n他一邊吸手搖飲，一邊翻白眼：「欸你老實說，這是不是你自己叫 ChatGPT 寫的？」\n我笑：「但你會點進去對吧？」\n老K毫不遲疑：「配上那種超正經 BGM？會啊！而且觀眾一定留言說『幹，我姑姑真的夢過這台火車！』」\n（老K靠在沙發上，手上翻著一疊A4紙，邊看邊開玩笑）\n老K：「欸我說老度啊，要不要學學『小哥哥達溫吸』？就那個聲音超戲劇化、情緒飽滿的 Youtuber——我們也可以來段自導自演的信，什麼『夢中見外星人』之類的劇情，這樣每週都能更新，還不用等觀眾投稿，多讚。」\n（我正低頭整理信件，聽到這話停了一下）\n我（抬頭，語氣低沉）：「我不會那樣搞。」\n老K笑：「幹嘛那麼嚴肅啦，我就嘴砲一下而已。現在大家都這樣做嘛，觀眾分不出真假，你只要給他節奏、情緒、高潮……他自然幫你按讚留言分享啊。」\n我（語氣平靜，但很明確）：「正因為大家分不清楚，我才不能亂搞。」\n（我望著桌上的信）\n我：「這節目會從主頻道分出來，就是因為我想做 真的 事情。什麼胡扯亂編的，我以前講太多了。這單元不是讓我們編故事，是讓他們——那些真的遇過無法解釋事件的人，有個可以說出來的地方。」\n老K摸摸鼻子，小聲嘀咕：「你這樣一講，我好像真的有點混帳欸。」\n我沒表情地看他一眼：「你本來就是。」\n（兩人對看，老K笑出聲，我也忍不住笑了）\n老K：「好啦～知道你是認真的。那今天有沒有真正的『奇人異事』啊？」\n——\n我們還翻到另一封信。\n📩 來信 #006：《我是神，來自2038年》\n　　我是一位來自2038年的少女。我18歲，目前是神。\n　　如果你還記得上支影片提到的「未來人來信」，我現在被政府監控中....\n實在是沒辦法，才鼓起勇氣寫信請大大您幫幫我...\n老K看到笑到咳嗽：「幹，她該不會真的以為你那集是紀錄片吧？認真寫信回應了欸！」\n我翻了個白眼：「但她語氣真的超真誠。你能感覺出來她 相信 自己是未來來的神，可內容又前後矛盾——一開始說她掌控萬物，後面又說被政府監控還不能出門。」\n老K：「腦洞全開啦。」\n我搖搖頭，語氣忽然變得正經。\n「我說真的，我做這節目，不是為了掰故事。這些信，我一封封親自看過，只留下那種——我自己也分不出真假的。」\n這才是「奇人異事」的核心。\n——\n📨「叮咚！」\n新信來了。\n我點開信件，看見寄件者寫著「RR」。\n標題是：\n📩 來信 #009：《他在夢裡學完了 MIT 四年課程》\n內容開頭這樣寫：\n　　老度大大您好：\n　　我是一位忠實觀眾，這次投稿是因為我有一個很特別的朋友 O。\n　　他從小天資聰穎，從沒上過正規學校，全靠自學考上台大，三年畢業，之後遠赴國外，在兩年內取得雙博士……\n　　但他真正讓我震撼的不是這些——\n　　他說：「我這些知識，不是白天學的，是在夢裡學的。」\n我唸到這段，整個人愣住。\n老K湊過來，挑眉問：「拍了吧？」\n我點頭：「拍了。」\n——\n🎙️ 【錄影前開場白】\n「哇~哇~~哇~~~！奇人異事！」\n「野豬騎士~~」老K一如往常裝傻的亂喊\n「別鬧啦～」\n我笑著搖頭，轉向鏡頭，語氣一變，嚴肅起來：\n「大家有沒有發現啊——當你以為世界上的事情已經夠奇怪了，它還會給你更奇怪的答案。」\n「這次的投稿量真的爆多，信件一封接一封。但⋯⋯講真的，裡面超過一半根本在亂搞。」\n「有的像寫同人小說，有的用 AI 拼貼，有的直接寫『我有異能，但我不能說』——欸你不能說你還寫信幹嘛？」\n老K：「還有一封說她從夢裡醒來變成兩性同體，然後用量子視角看到宇宙未來——」\n「對，就是這種。」\n「但就在我們快要放棄、覺得這禮拜沒片了的時候……我看到這封。」\n「它不是最華麗的，也沒有附上什麼照片、錄音檔……但——他開頭就說，這封信，只是七封裡的第一封。」\n「我當下雞皮疙瘩全起來了，因為他不是要分享一個事件，而是——一整段故事。」\n——\n📹 鏡頭推近，燈光聚焦。\n我看著鏡頭，緩緩開口：\n「我們即將帶你進入一段真實又離奇的故事。\n一切——從這封來信開始。」\n📺 畫面黑下，標題浮現：\n✨【哇哇哇！奇人異事！】✨\n—— 阿爾寄來的七封信\n《序章 結束》\n—— 接下來，即將進入：\n📩第一封信：《他在夢裡學完了 MIT 四年課程》`;
+        novelsData[0].chapters[1].content = `《夢境時差：七封謎信》📖第一章：《他在夢裡學完了 MIT 四年課程》夢創協同！\n#我的夢想就是...做夢來工作\n\n📩 第一封信：《他在夢裡學完了 MIT 四年課程》\n\n\n（畫面轉回老度辦公室，夜深。百葉簾外是模糊閃爍的城市燈光。畫面慢慢拉近，電腦螢幕的藍光映照在老度的臉上。他眼神銳利，指尖敲擊滑鼠，打開信件）\n\n（鏡頭特寫畫面：螢幕顯示寄件者：「RR」──收件標題：《他在夢裡學完了 MIT 四年課程》。）\n\n老度（輕聲唸）：\n　　「老度大大您好：我是一位忠實觀眾，這次投稿是關於我一位朋友 O……」\n\n（老K探出頭，嘴裡含著吸管）\n老K：\n　　「又來啦？這種『我朋友超天才』的信，開場已經快變 meme 了欸～」\n\n老度（微皺眉）：\n　　「不，這封信有點不一樣……O 沒上過學，靠自學在高中年紀考上台大，三年畢業，然後兩年內在國外完成雙博士。」\n\n（畫面切換：O 在燈下伏案翻書、白板滿佈公式、冷光燈下電腦螢幕閃爍）\n\n老K：\n　　「天選之人欸……這已經不是天才，是 bug 了吧。」\n\n老度：\n　　「他聰明到讓人有壓迫感。據說跟他相處就像在跟另一種生命體講話，像是愛因斯坦或霍金——你知道，那種看著你不懂人話的感覺。」\n\n老K（小聲）：\n　　「這種人我動畫裡才見過。」\n\n老度：\n　　「但他也不是什麼社交高手，說話生硬、冷冷的，連笑話都聽不懂，完全不懂人情世故。」\n\n（畫面閃回：小 O 坐在房間，牆上貼滿筆記，他專注地盯著螢幕）\n\n老度（繼續唸）：\n　　「我是在高科技公司認識他的，合作後才慢慢得知他的這些經歷。有一晚他問我，知不知道像他這種人為什麼可以這麼聰明？」\n\n老K：\n　　「這是什麼哲學命題喔～」\n\n老度：\n　　「他說……他可以在夢裡繼續研究事情。」\n\n老K（眉頭一挑）：\n　　「欸欸欸，等等，這才是重點吧？夢中研究？是那種睡著也能加班的超能力嗎？」\n\n老度：\n　　「沒錯，他說小學那次是第一次啟動這能力。他因為太沈迷數學，腦袋還在轉，結果夢中持續演算。醒來後，那些題目他全都會了。」\n\n（畫面閃回：小 O 躺在床上，夢中公式在空中閃爍，旋轉組合）\n\n老度：\n　　「後來他發現，睡前只要專注想一件事，他就能在夢裡繼續那個念頭。他稱那個狀態為：夢創協同。」\n\n老K（低聲唸）：\n　　「Dreaming Co-creation……這名字我喜歡，有高科技味。」\n\n老度（點頭）：\n　　「他說這狀態下，夢中時間會放大——大約是 100 到 2400 倍。他小時候一次 8 小時睡眠，夢裡就像學習了半年。」\n\n老K：\n　　「那是什麼？夢中開外掛、時間銀行還利息？」\n\n老度（笑）：\n　　「他還測過，夢中時間的倍率會隨睡眠品質、神經傳導效率、使用神經元數量而改變。」\n\n老K：\n　　「這太誇張了吧……所以現實一秒，他可以在夢中過上快一節課？」\n\n老度：\n　　「是的。他說這是可以訓練的，後來他甚至學會了在夢裡翻資料、做實驗、模擬邏輯推演。」\n\n老K（手指比劃）：\n　　「那根本不是夢，是他自己腦內開了一個研究室欸！」\n\n老度：\n　　「他後來在美國認識了其他人也能這樣，甚至跟某些特殊機構合作。那邊的人把夢創協同分成五個階段──」\n\n（畫面切至五階段圖示，螺旋向上的結構圖）\n\n【夢創協同五階段】：\n\n　　1. 無階：\n　　　　就是一般人的夢。無法記憶，無法控制，也無法帶回現實。是所有夢創能力的原始狀態。\n\n　　2. 低階：\n　　　　睡前大量思考，潛意識在夢中延續處理。醒來雖忘內容，但可能「靈光乍現」，有強烈的既視感（Dejavu）。\n\n　　3. 初階：\n　　　　夢中能稍微控制內容，有局部記憶。夢裡完成某些動作，現實中會有肌肉記憶，例如打字、彈琴、跳舞等。\n\n　　4. 進階：\n　　　　進入夢境是有意識的，可以安排學習內容、控制場景，並擁有三種特殊能力：\n　　　　✦ 托夢：傳遞訊息影響他人思維。\n　　　　✦ 連夢：與他人共享夢境，共同研究、模擬。\n　　　　✦ 夢實：將夢中習得的技能，短暫帶入現實。\n\n　　5. 超階：\n　　　　傳說中的「夢中夢」階段，可於夢中再次進入深層夢境，一晚等於數年時間。與歷史偉人、天才異能有關。\n\n老K：\n　　「這段我要寫進短影片解說欸，這比動畫劇情還狂。」\n\n老度（笑）：「所以說，這些事情啊……我們是不是對『夢』這回事，從一開始就完全搞錯方向了？」\n\n老K：\n　　「如果全世界有一批人正在默默訓練這個能力……我們是不是正活在另一場文明的門檻前？」\n\n老度（點頭）：\n　　「還沒講完。他還提到，在美國一些特殊機構裡，他認識了幾個也有這能力的人。那些人甚至能共享夢境、一起實驗，一起設計新理論。而且早在 2000 年，美國就已經在這能力上開始有系統地分類與研究。」\n\n老K：\n　　「所以搞不好，那些歷史上的靈光乍現、天外飛來一筆，其實根本是夢境努力的成果……？」\n\n老度：\n　　「沒錯。而且他們甚至推測，很多所謂的“神童”、“天才”，可能早就潛意識在運用這能力了，只是不知道那叫夢創協同。」\n\n老K（開始做筆記）：\n　　「所以我們人類可能一直在低估自己睡覺的價值。」\n\n老度（點頭）：\n　　「最後，RR 寫下自己的經歷。他說在與 O 合作時，有一晚他做夢醒來後，突然靈感湧現，寫出一段程式碼，直接解開了一個困擾了團隊好幾天的問題。他形容那是『靈魂替他加班』。」\n\n老K：\n　　「欸欸欸這句太讚了！我要剪進預告。」\n\n老度（笑）：\n　　「他說這是最低階的夢創狀態——你進入夢境研究，但醒來只記得結果，不記得過程。」\n\n老K：\n　　「靠……那我搞不好也進入過，只是都白白浪費了。」\n\n老度（笑）：\n　　「所以他說要記錄這一切，未來也許能寫成小說，留給世人一些線索。」\n\n老K（嘆氣）：\n　　「好啦……我今晚先從刷牙前默唸一遍題目開始訓練。」\n\n老度（笑了）：\n　　「祝你成功，成功記得在夢裡多幫我剪片喔哈哈哈。」\n\n老K：\n　　「你還不趕快回信給人家？要他趕緊寄下一封過來啊～我等不及了啦！」\n\n老度（笑著點點頭，打開回信視窗，開始敲鍵盤）\n\n老度（對著螢幕）：\n　　「你覺得……這世界，真的準備好迎接這種能力了嗎？」\n\n（他轉頭望向鏡頭，舉手比讚）\n\n老度：\n　　「今天就先到這裡～觀眾朋友們，別忘了訂閱、按讚、分享，還有留言你們的夢境經驗喔！晚安，掰掰～」\n\n📺 畫面淡出，浮現字幕：\n\n✨【哇哇哇！奇人異事！】✨\n《第一封信 結束》\n📎 想看完整信件內容，可點擊下方資訊欄連結 🔗\n\n\n《第一章 結束》`;
+        novelsData[0].chapters[2].content = `《夢境時差：七封謎信》\n📖第二章：《更大的流量，更大的危險》留言!\n #我本來想找個奇聞，結果好像找到了國安危機\n\n【場景：影片上傳後第12小時・凌晨・老度的工作室】\n\n整個房間靜得只剩下螢幕的冷光在閃。牆角的 1:1 鋼鐵人模型像個沉默的守衛，佇立在陰影中。\n\n老度雙眼死盯著 YouTube 後台數據，畫面上的曲線像打了類固醇般，瘋狂往上竄。幾分鐘前剛破百萬點閱，還沒停下來的跡象。\n\n沙發區傳來一陣公仔摩擦聲。老K的聲音從抱枕堆裡冒出來，帶著沙啞又欠揍的笑意。\n\n「欸欸欸，老度，你是成仙啦？都凌晨了還在盯數據咧～」\n\n他半躺在猛毒抱枕上，手機螢幕的藍光映著他那張像深夜追劇過勞的臉。\n\n「恭喜你啦～現在你是脆（Threads）上的流量教主了欸，紅到爆炸囉。」\n\n他清了清喉嚨，模仿記者語氣唸出熱搜標題：\n\n「《知名YouTuber老度江郎才盡？瞎掰夢境故事搏眼球》。\n    留言 \n        一樓：『笑死，這劇本在起點小說都看得到』；\n        二樓：『自導自演吧，那個O跟RR根本是AI寫的』；\n        三樓最狠：『坐等「爸，我回來了」出片打臉』。」\n\n我沒搭話，只是手指飛快滑過留言區，像在掃描戰場。\n\n是的，這裡已經不再是討論區，而是輿論開火的第一線。\n\n【留言縮影】\n🟢 信眾：「卡位！這題材直接讓我雞皮疙瘩，太上頭了！」\n🔴 酸民：「夢裡時間2400倍？你當觀眾沒看過七龍珠喔？」\n🟡 蹭流量：「猴哥懶人爆」已經上傳懶人包，直接把我們歸類成《2025年度最荒謬懸疑劇》。\n\n老K搖頭：「你真的捅馬蜂窩了啦，老兄。」\n\n我不語，只是靜靜地，打開筆電，重新讀了一遍那封信。\n\n──總共會寄來七封。\n\n「七封」這數字，太乾淨。太像劇本了。像是被精心設計好的敘事節奏，又像宗教儀式裡的數字密碼。\n\n留言區的吵鬧聲、新聞的節目熱度，全都只是煙霧彈。\n\n真正讓我起雞皮疙瘩的，是那段話：\n\n「……他說這跟『睡眠品質』、『神經傳導效率』、『腦區動用密度』都有關，講得我一頭霧水。」\n\n我打開藏在硬碟深處的系統——那是還在科技圈打滾時，和幾位資訊狂人一起架設的地下資料庫。專門收錄那些主流引擎查不到的禁區詞彙與黑色研究。\n\n我們戲稱它叫「深海巨怪」。\n\n每次我在節目裡說「來源機密不能公開」，十之八九就是牠的嘴裡撈出來的東西。\n\n正當我準備輸入關鍵詞，老K突然彈跳坐起，手機幾乎砸到自己臉上。\n\n「幹，他真的來了。」\n\n我走過去，看他手機螢幕上的推播通知——\n\n【影片上線通知】\n頻道：「爸，我回來了」\n標題：《【揭穿真相】老度最新影片全是抄！假的、編的、算好的？給你三個鐵證⚠️》\n縮圖是一張我皺眉的截圖，紅色驚嘆號與斗大的「#造假？」貼在我額頭旁。\n\n我點開影片，熟悉的懟人語氣衝出喇叭：\n\n「老度，你我無冤無仇。但作為一個以真相為信仰的頻道，我必須說——你這支影片，漏洞百出。」\n\n「MIT 四年課程？你知道選課制度多複雜嗎？夢中學習？說難聽點，就是拿靈異包裝科幻，玩文字遊戲唬爛。」\n\n「第二，什麼『神經傳導密度』？Google Scholar 上根本一篇都查不到好嗎？如果有任何汙衊，我開直播道歉。」\n\n「第三，別以為你不接業配就等於正義。你這場表演，我今天就用邏輯有一說一，一條條剝開來看。」\n\n留言區又炸了。\n\n一邊狂刷：「終於有人說真話了！」\n另一邊嗆爆：「蹭熱度蹭成這樣，乾脆叫你爸回來開台好了！」\n\n「猴哥懶人爆」也更新了影片。中立、平穩，像在報天氣：\n\n「最近YT圈有個超紅話題：老度最新系列【哇哇哇！奇人異-事！】裡的『夢創協同』影片。贊成者認為這可能開啟人類潛能新篇章，反對方則認為是偽科學。目前輿論持續升溫，真假如何，仍待驗證。」\n\n老K瞇眼看著我：「『爸，我回來了』這傢伙打算當葉問，一打十了嗎？」\n\n我卻沒笑。心裡的那股寒意越來越濃。\n\n怎麼會那麼快抓到「腦區動用密度」這個詞？不但點出，還直接攻擊。\n\n那不是巧合，是刻意。\n\n老K也感覺不對勁：「老度，這真的太準了。你不覺得…有人在餵他資料？」\n\n我輕聲道：「我也是這麼想的。」\n\n我轉回電腦，將三個關鍵詞輸入「深海巨怪」：\n\n「睡眠品質」——            常見醫學研究。\n「神經傳導效率」——    神經科學標準術語。\n「腦區動用密度（Neural Zone Utilization Density）」——\n\n──螢幕一閃。\n\n只有一筆結果。\n\n檔案來源：D.I.R.E.（Dream Integration Research Entity）\n標題：《潛意識資訊整合訓練：階段一試驗報告》\n封存日期：2001年，標記：絕密（已解密）\n\n我的呼吸停了一秒。\n\n這不是任何科普、論文會用的詞。這是情報圈、腦神經特案才會接觸的機密字眼。\n\n我喃喃自語：「這封信…可能根本不是投稿，是求救。甚至——是測試。」\n\n老K咽了口唾沫：「靠…所以我們是不是踩到什麼不能踩的線？」\n\n「不是我們，是我。」我輕聲道，「也許這就是他的目的。」\n\n我腦中閃過一句話：\n\n「如果全世界有一批人正在默默訓練這個能力，我們是不是正活在另一場文明的門檻前？」\n\n那是老K前幾天講的。現在，這句話聽起來一點也不像玩笑。\n\n「叮咚。」\n\n電腦跳出一聲刺耳的新信通知。\n\n發件人：RR。\n\n簡短兩句：\n\n「謝謝你把它公開。輿論的風向不出我所料。\n下一封信，我會提供『第一個證據』。請準備好。」\n\n老K湊過來，表情罕見地嚴肅：「……證據？這不是節目效果了。」\n\n我闔上所有網頁，只留下這封信。\n\n現在我明白了。那些罵戰、蹭流、惡搞影片，全都是佈景。\n\nRR不是在投搞。他在引導。引導我們進入他設計的敘事節奏。\n\n而我們的角色，不過是他佈局中一顆還沒察覺的棋。\n\n我對著攝影機的反光，像是低聲問觀眾：\n\n「大家有沒有發現啊……當一個故事開始挑戰你所有的認知時，你的本能會想否定它。\n但如果你從質疑裡，抓住一絲不屬於故事本身的真實──\n那才是真正該怕的東西。」\n\n我深吸一口氣，點開回信介面，輸入一句話：\n\n「我會繼續。等你下一封信。」\n\n《第二章 結束》`;
+        novelsData[0].letters[0].content = `✉️ 第一封信《他在夢裡學完了 MIT 四年課程》\n        寄件人：RR (阿爾)\n\n                老度大大您好，\n\n        我是您的忠實觀眾，聽到您正在徵求奇人異事，心裡立刻浮現一位我認識的、非常特別的朋友，他的故事或許能讓您感到興趣。\n        我的朋友 O，自小聰慧過人。\n\n　　在大學之前，他從未上過正規學校，全靠在家自學。高中年紀，他便考入台灣大學，三年內順利畢業；\n        之後前往國外深造，只花了短短兩年，就取得了雙博士學位！\n\n　　他聰明的程度遠超常人，與他相處時，我常有一種明顯落差感——就像站在愛因斯坦或霍金面前，那是一種來自「不同維度」的壓迫。\n        他是純粹的理性生物，冷靜、準確，但也有些不食人間煙火，對人情世故一竅不通。\n\n　　我是在一家高科技公司認識 O 的。因工作關係，我們經常一起合作專案，也因而成為朋友。\n        我曾試著教他如何跟人相處，他則分享給我一些「非常人」的思考方式與經歷。\n\n　　某個深夜，我們聊得特別深入。他忽然問我：「你知道為什麼我或某些天才可以這麼快理解世界的運作嗎？」\n        我愣住了，還以為他要講什麼天才的訓練法。\n\n　　結果，他說出一個我一輩子都忘不了的詞：「夢創協同。」\n\n　　他說他可以在夢裡繼續研究、閱讀、甚至實驗。這種能力在他小時候就有，只是一直沒意識到。\n        直到去美國，接觸到幾個和他一樣的天才，他才發現原來這不是幻覺，是某種「真正存在」的能力！\n\n　　他第一次發動這能力是在小學。\n　　那天，他剛拿到一本數學課本，愛不釋手，一口氣翻到了高中章節。\n        那晚，他帶著滿腦子的數學式子入睡，夢裡公式飛舞、幾何圖形閃爍……\n\n　　第二天醒來，他腦中竟然全都會了！直接打開自我評量本，一題題全對！\n\n　　他形容，那種感覺就像靈魂偷偷「加班」完回來。他不是過目不忘，但他的大腦像有一個巨大圖書館，能把看到的東西「拍照式」儲存。\n        雖然要花點時間翻找，但都找得到。\n\n　　隨著長大，他慢慢學會控制這項能力。\n　　他發現，只要在睡前聚焦思考某件事，睡著後，他的意識就能繼續運作，甚至夢境裡還會自動延伸、模擬、推演。\n        這種狀態，就是所謂的「夢創協同」！（英文：Dreaming Co-creation）\n\n　　更誇張的是——他說夢境的時間流速比現實快非常多！\n　　根據他的測試，大概是現實的 100 到 2400 倍！\n　　也就是說，現實一秒，夢裡可能已經過了一分鐘到四十分鐘！\n\n　　當時他還是小學生，睡了一覺八個多小時，等於在夢中度過了「半年」的時間。他在那半年裡拼命學數學，當然醒來就全都會了……\n\n　　當然啦，一般人可能早就被夢中數學煩醒了 \n\n　　他說這跟「睡眠品質」、「神經傳導效率」、「腦區動用密度」都有關，講得我一頭霧水。\n\n　　後來他去美國某些特殊機構時才知道，原來這能力早就有名稱與記錄。\n　　直到 2000 年後，美國才開始系統性研究它。甚至有一些記錄顯示，許多天才的「靈光一閃」、「神來一筆」……\n        其實就是他們在夢中花了幾十小時甚至幾年研究的成果，在現實醒來時突然「跳出來」而已。\n\n　　我當時聽得半信半疑，直到——某天深夜，我們一起為一個前瞻科技專案奮戰到凌晨三點。\n\n　　我累了，趴在椅子上小睡一下。\n\n　　醒來時天已微亮，我一言不發打開電腦、敲下程式碼。\n　　半小時內，我解決了我們團隊卡關整整五天的核心難題。\n\n　　O 輕拍我肩膀，淡淡笑說：\n　　「恭喜，你進入了『夢創協同』的第一階段。」\n\n　　我滿臉困惑，他補充：\n　　「你現在屬於『低階』。你無意間進入夢協狀態，醒來後雖然不記得夢境內容，\n        但身體記得，潛意識記得，這種情況只會持續短暫一段時間……」\n\n　　他說，夢創協同總共分為五階段：無階、低階、初階、進階、超階。\n\n　　無階，就是普通人做夢。\n　　低階，是像我這樣，做完夢卻只留下靈感、感覺，或一種「靈魂幫我加班」的神奇現象。\n\n　　至於更高的階段，他說日後有機會再告訴我……\n\n　　我只是默默地按下送出，那個困擾我們好幾天的專案，開始運行。\n\n　　這一刻，我決定記錄下這一切。\n        原諒我用這種方式記錄這一切，因為我也想順便把它記錄下來，或許將來能寫成小說，為世人留下一些訊息。\n\n        就先到這裡，總共至少7封，後續還有六封我有空會再一併寄給您，或者您有什麼想討論的，隨時可以告訴我。\n\n        期待您的回覆。\n\n　　如果有一天我能成為更高階的夢協者，也許我會寫一本書，把這一切傳出去。\n\n　　畢竟，這也許不是科幻……而是未來。`;
+        novelsData[0].letters[1].content = `✉️ 第二封信《來自夢境的加密訊息》\n寄件人：RR（阿爾）\n\n老度大大您好：\n\n　　　看到您的影片在網路上引起如此巨大的迴響，我並不意外。人們面對無法理解的事物，總是本能地排斥與懷疑。\n            有些人喊著「太玄了」、「這根本是掰的」，也有人熱血沸騰、直呼起雞皮疙瘩。\n　　　但您應該也察覺到了——這些聲音中，混雜著一些特別的節奏。一種不屬於普通人情緒的節奏。\n            那些留言與評價，有些就像是刻意布下的節拍，帶著某種……有意識的導向。\n\n　　　我在第一封信裡，只簡單提到「夢創協同」的五個階段。我並未細說每一層級的差異，更沒有提及「進階」能力者所擁有的特殊應用，\n            例如「托夢」、「連夢」與「夢實」。\n\n　　　然而，您的節目中，不僅完整梳理了五階理論，甚至連圖示都呈現得如此具體。您與老K畫出的那張「螺旋上升結構圖」，\n            精準地點出進階者的三種核心能力，與我當初傳遞的資訊，幾乎毫無偏差。\n\n　　　您不覺得……這太順利了嗎？\n\n　　　這，就是我要提供給您的第一個「簡單的證據」。\n\n　　　在您剪接節目的前一晚，我使用了「進階能力」中的一項： 【托夢】\n            那晚，我在夢境中進行了針對性的「資訊嵌入」，目標是將這份知識，悄無聲息地傳送至您與老K的潛意識。\n　　　當你們在節目裡自然地說出那些段落時，毫無遲疑、毫無違和感——那不是巧合，而是夢境資訊傳遞的成果。\n\n　　　這就是「夢創協同」中最基礎、也最不被察覺的應用方式：潛意識資訊植入。\n　　　當然，我也預料到，這段內容很快就會被反擊，甚至被當成節目的「漏洞」，被那些自以為聰明的觀眾用來嘲諷您。這場反擊，其實早已安排在節奏裡了。\n\n　　　您在節目中提到過：為什麼像 O 這樣的天才能對世界的本質有如此敏銳的感知與理解？他說——那是「夢創協同」的力量。\n\n　　　這種能力的啟動確實極其罕見，O 曾私下估算過，大約十萬人中，才可能出現一位能無意識觸發「夢協反應」的人。\n            而就算發動過，大多數人也僅會將那種片段的靈光，歸為「直覺」、「天外飛來一筆」或「不自覺的靈感」，再怎麼說也不會聯想到「訓練」這種可能。\n\n　　　但歷史總會留下痕跡。O 曾在美國某個特殊機構內見過一本黑皮封裝的「補錄文獻」，記載著一些非比尋常的案例：\n\n　　　・特斯拉說，他在夢中看見「電波跳躍」的畫面，醒來後即著手設計那台接收器。這些靈感，不是猜測，而是具體畫面。\n\n　　　・約翰・馮・諾依曼的夢中模擬演算，早在冷戰時期的解密資料中，就曾被稱為「非線性邏輯環」。\n               他能在夢境中完成模擬核彈連鎖反應，那不是神話，而是資料記錄。\n\n　　　・DNA 雙螺旋的結構，詹姆士・華森曾說源自一場夢中「兩條蛇糾纏」的畫面，醒來後才破題。\n\n　　　這些人未必知道自己在經歷什麼。他們可能只發動過一次夢協能力，但那一次，就足以讓他們留名青史。\n\n　　　阿基米德那句「尤里卡！」也是如此。他在浴缸裡大喊，卻沒人問他前一晚睡了多沉。誰知道，那個發現，是否來自夢中的結論，只是在泡澡時突然被喚起？\n\n　　　至於愛迪生，那位執念極深的發明家，他的短眠實驗、永不停歇的腦袋與手，早已不是秘密。他甚至曾說過：「我靠短眠維持創造力。」\n            這種規律，很可能是進階夢協者才有的節奏感。\n\n　　　為了讓您有更清晰的理解，我簡要整理如下：\n\n　　　▶ 無階｜\n　　　　　大多數人的夢。混亂、模糊，無記憶、無控制，也無法帶回現實。但它是一切的起點。\n\n　　　▶ 低階｜\n　　　　　夢中產生結果，醒來忘記過程。表現為靈感、既視感、直覺與莫名其妙的答案感知。\n\n　　　▶ 初階｜\n　　　　　能記住夢境，並於其中「做事」。夢中練習樂器、技能，醒來有肌肉記憶或技能微幅進步。\n\n　　　▶ 進階｜\n　　　　　可建構夢境世界，自由移動與控制。具備進階應用能力者，可啟動以下技能：\n　　　　　✦ 托夢：傳遞訊息、潛移默化、甚至洗腦\n　　　　　✦ 連夢：多人共享夢境，一同研究或模擬\n　　　　　✦ 夢實：夢中習得之技能，在現實短暫應用\n\n　　　▶ 超階｜\n　　　　　傳說中的夢境「再入層」。夢中再次入夢，時間擴展性呈數百萬倍。\n　　　　　O 提過，大多數古代傳奇、甚至某些進化跳躍的動物案例，都與這類極限夢階可能有關。\n\n　　　用一句話總結：\n\n　　　無階，是夢。\n　　　低階，是「想法」。\n　　　初階，是「經驗」。\n　　　進階，是「控制他人」與「自訂現實」。\n　　　超階，是「時間資本」的爆炸式擴張。\n\n　　　而您現在經歷的，正是一場小型的「夢境資訊戰」。\n\n　　　您的影片動搖了某些平衡。原本封閉於特定群體的知識，正在被打開。那些試圖「維護舊秩序」的勢力，很快就會透過各種媒體與言論，發動逆向操控。\n　　　像「小哥哥達吻吸」這樣的創作者，很快就會「預測性地」回應您的主題。\n            那些預言或嘲諷，很可能就是某些進階夢協者在「連夢」中模擬過的情境。看似隨機，實則……早有鋪陳。\n\n　　　關於 O 的過去，我知道您一定會想問，但現在還不是時候。\n　　　他為何離開那個研究單位、他為何選擇台灣、他為何出現在您的節目世界裡——您很快就會知道。他的選擇，從來都不只是「任性」，而是出於生存本能。\n\n　　　下一封信，我會說明一個近期真實發生的「夢協事件」。它已經有媒體報導，卻沒有人理解其真正的起點與意義。那將會是一個無法反駁的證據。\n\n　　　請做好準備。\n\n　　　期待您的回覆。`;
+        
+        // =================================================================================
+        // --- 核心功能區 (建議不要修改此區塊) ---
+        // =================================================================================
+
+        let typingTimeout; // 用於控制打字動畫的計時器
 
         // --- 元素宣告 ---
         const header = document.getElementById('main-header');
@@ -322,16 +373,15 @@
         const sections = document.querySelectorAll('.content-section');
         const navLinks = document.querySelectorAll('.nav-link');
         const mobileMenu = document.getElementById('mobile-menu');
-        const revealElements = document.querySelectorAll('.reveal');
         const novelModal = document.getElementById('novel-modal');
         const novelModalContent = document.getElementById('novel-modal-content');
         const closeModalBtn = document.getElementById('close-modal-btn');
+        const typingTextElement = document.getElementById('typing-text');
         
         // --- 滾動顯示動畫 ---
         function revealOnScroll() {
-            const windowHeight = window.innerHeight;
-            revealElements.forEach(el => {
-                if (el.getBoundingClientRect().top < windowHeight - 100) {
+            document.querySelectorAll('.reveal').forEach(el => {
+                if (el.getBoundingClientRect().top < window.innerHeight - 100) {
                     el.classList.add('visible');
                 }
             });
@@ -347,20 +397,18 @@
 
         function showSection(targetId, isPushState = true) {
             sections.forEach(section => {
-                const parentContainer = section.parentElement.classList.contains('container') ? section.parentElement : document.body;
-                const isActive = '#' + section.id === targetId;
-                section.classList.toggle('active', isActive);
-                if(section.id !== 'home') {
-                    parentContainer.style.display = isActive ? 'block' : 'none';
-                }
+                section.classList.toggle('active', '#' + section.id === targetId);
             });
             
-            document.querySelector('#home').style.display = targetId === '#home' ? 'flex' : 'none';
-            document.querySelector('main > .container').style.display = targetId === '#home' ? 'none' : 'block';
-
             navLinks.forEach(link => {
                 link.classList.toggle('active', link.getAttribute('href') === targetId);
             });
+
+            if (targetId === '#home') {
+                startTypingAnimation();
+            } else {
+                stopTypingAnimation();
+            }
 
             if (isPushState) {
                 history.pushState({path: targetId}, '', targetId);
@@ -375,106 +423,51 @@
                 const targetId = this.getAttribute('href');
                 mobileMenu.classList.add('hidden');
                 showSection(targetId);
-                const targetElement = document.querySelector(targetId);
-                if(targetElement) {
-                   if(targetId === '#home'){
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                   } else {
-                        const mainContainer = document.querySelector('main > .container');
-                        mainContainer.scrollIntoView({ behavior: 'smooth' });
-                   }
-                }
+                window.scrollTo({ top: 0, behavior: 'smooth' });
             });
         });
         
         window.addEventListener('popstate', (e) => showSection(e.state ? e.state.path : '#home', false));
-        showSection(window.location.hash || '#home', false);
-
+        
         // --- 行動版菜單 ---
         document.getElementById('mobile-menu-button').addEventListener('click', () => mobileMenu.classList.toggle('hidden'));
 
-        // --- 首頁打字效果 ---
-        const typingTextElement = document.getElementById('typing-text');
-        if (typingTextElement) {
+        // --- 首頁打字效果控制 ---
+        function startTypingAnimation() {
+            if (typingTimeout) clearTimeout(typingTimeout); // 防止重複啟動
+            if (!typingTextElement) return;
+
             const texts = ["一位熱愛文字的開發者。", "一位沉浸程式碼的夢想家。", "探索技術與故事的邊界。"];
             let textIndex = 0, charIndex = 0, isDeleting = false;
+
             function type() {
                 const currentText = texts[textIndex];
                 let typeSpeed = isDeleting ? 75 : 150;
                 typingTextElement.textContent = currentText.substring(0, charIndex);
-                if (isDeleting) {
-                    charIndex--;
-                } else {
-                    charIndex++;
-                }
+
+                if (isDeleting) charIndex--; else charIndex++;
+
                 if (!isDeleting && charIndex === currentText.length) {
                     typeSpeed = 2000; isDeleting = true;
                 } else if (isDeleting && charIndex === 0) {
                     isDeleting = false; textIndex = (textIndex + 1) % texts.length;
                 }
-                setTimeout(type, typeSpeed);
+                typingTimeout = setTimeout(type, typeSpeed);
             }
             type();
         }
 
-        // --- 小說區塊渲染 ---
-        function renderNovels() {
-            const container = document.getElementById('novel-container');
-            if (!container) return;
-            
-            container.innerHTML = novelsData.map(novel => `
-                <h2 class="text-4xl font-bold text-center text-white mb-4 reveal">${novel.title}</h2>
-                <p class="text-lg text-center text-gray-400 mb-12 max-w-3xl mx-auto reveal">${novel.description}</p>
-                <div class="bg-gray-800 p-6 rounded-lg shadow-lg flex flex-col md:flex-row gap-8 reveal">
-                    <img src="${novel.coverImage}" alt="小說封面" class="w-full md:w-1/3 h-auto object-cover rounded shadow-md">
-                    <div class="md:w-2/3">
-                        <div class="mb-8">
-                            <h4 class="text-2xl font-bold text-amber-400 mb-4 border-b-2 border-amber-500/30 pb-2">章節列表</h4>
-                            <div class="space-y-3">
-                                ${novel.chapters.map((chap, index) => `
-                                    <button class="chapter-btn text-left w-full p-3 bg-gray-700/50 rounded-md hover:bg-amber-500/20 transition-colors" data-file="${chap.contentFile}">
-                                        <span class="font-bold text-white">${chap.title}</span>
-                                        <span class="block text-sm text-gray-400">${chap.subtitle}</span>
-                                    </button>
-                                `).join('')}
-                            </div>
-                        </div>
-                        <div>
-                            <h4 class="text-2xl font-bold text-amber-400 mb-4 border-b-2 border-amber-500/30 pb-2">相關信件</h4>
-                            <div class="space-y-3">
-                                ${novel.letters.map((letter, index) => `
-                                    <button class="chapter-btn text-left w-full p-3 bg-gray-700/50 rounded-md hover:bg-amber-500/20 transition-colors" data-file="${letter.contentFile}">
-                                        <span class="font-bold text-white">${letter.title}</span>
-                                    </button>
-                                `).join('')}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-            
-            document.querySelectorAll('.chapter-btn').forEach(btn => {
-                btn.addEventListener('click', () => openNovelModal(btn.dataset.file));
-            });
+        function stopTypingAnimation() {
+            if (typingTimeout) clearTimeout(typingTimeout);
+            typingTimeout = null;
+            if (typingTextElement) typingTextElement.textContent = "";
         }
-        
+
         // --- 小說閱讀視窗邏輯 ---
-        function openNovelModal(filePath) {
-            novelModalContent.innerHTML = '<p>載入中...</p>';
+        function openNovelModal(content, title) {
+            novelModalContent.innerHTML = `<h2 class="text-3xl font-bold text-amber-400 mb-6 font-serif">${title}</h2><div class="novel-text-content">${content.replace(/\n/g, '<br>')}</div>`;
             novelModal.classList.remove('hidden');
             setTimeout(() => novelModal.classList.remove('opacity-0'), 10);
-
-            fetch(filePath)
-                .then(response => {
-                    if (!response.ok) throw new Error('檔案讀取失敗');
-                    return response.text();
-                })
-                .then(text => {
-                    novelModalContent.innerHTML = `<h2 class="text-2xl font-bold text-amber-400 mb-4">${filePath.split('/').pop().replace('.txt','')}</h2>${text}`;
-                })
-                .catch(error => {
-                    novelModalContent.innerHTML = `<p class="text-red-400">錯誤: ${error.message}。<br>請確認檔案路徑 ('${filePath}') 是否正確，並已上傳至您的網站空間。</p>`;
-                });
         }
 
         function closeNovelModal() {
@@ -490,36 +483,174 @@
         // --- 聯絡表單邏輯 ---
         const form = document.getElementById('contact-form');
         const formStatus = document.getElementById('form-status');
-        async function handleSubmit(event) {
+        form.addEventListener("submit", async function handleSubmit(event) {
             event.preventDefault();
             const data = new FormData(event.target);
-            fetch(event.target.action, {
-                method: form.method,
-                body: data,
-                headers: { 'Accept': 'application/json' }
-            }).then(response => {
+            try {
+                const response = await fetch(event.target.action, {
+                    method: form.method,
+                    body: data,
+                    headers: { 'Accept': 'application/json' }
+                });
                 if (response.ok) {
                     formStatus.innerHTML = "<p class='text-green-400'>感謝您的訊息，我會盡快回覆！</p>";
-                    form.reset()
+                    form.reset();
                 } else {
-                    response.json().then(data => {
-                        if (Object.hasOwn(data, 'errors')) {
-                            formStatus.innerHTML = data["errors"].map(error => error["message"]).join(", ")
-                        } else {
-                            formStatus.innerHTML = "<p class='text-red-400'>糟糕！訊息發送失敗，請稍後再試。</p>"
-                        }
-                    })
+                    const responseData = await response.json();
+                    formStatus.innerHTML = responseData.errors ? `<p class='text-red-400'>${responseData.errors.map(e => e.message).join(", ")}</p>` : "<p class='text-red-400'>糟糕！訊息發送失敗。</p>";
                 }
-            }).catch(error => {
-                formStatus.innerHTML = "<p class='text-red-400'>糟糕！訊息發送失敗，請稍後再試。</p>"
+            } catch (error) {
+                formStatus.innerHTML = "<p class='text-red-400'>糟糕！訊息發送失敗，請檢查您的網路連線。</p>";
+            }
+        });
+
+        // --- 動態內容渲染函數 ---
+        function renderPortfolio() {
+            const grid = document.getElementById('portfolio-grid');
+            const filtersContainer = document.getElementById('portfolio-filters');
+            if (!grid || !filtersContainer) return;
+
+            const categories = ['all', ...new Set(portfolioData.map(item => item.category))];
+            
+            filtersContainer.innerHTML = categories.map(cat => `
+                <button class="filter-btn px-4 py-2 bg-gray-800 text-white rounded-md capitalize ${cat === 'all' ? 'active' : ''}" data-filter="${cat}">
+                    ${cat === 'all' ? '全部' : cat === 'web' ? '網頁開發' : cat === 'writing' ? '寫作' : '設計'}
+                </button>
+            `).join('');
+
+            function filterAndRender(filter) {
+                grid.innerHTML = portfolioData
+                    .filter(item => filter === 'all' || item.category === filter)
+                    .map(item => `
+                    <div class="bg-gray-800 rounded-lg overflow-hidden shadow-lg transform hover:-translate-y-2 transition-transform duration-300 reveal">
+                        <img src="${item.img}" alt="${item.title}" class="w-full h-48 object-cover" onerror="this.onerror=null;this.src='https://placehold.co/600x400/1f2937/f59e0b?text=Image+Error';">
+                        <div class="p-6">
+                            <h3 class="text-2xl font-bold text-amber-400 mb-2">${item.title}</h3>
+                            <p class="text-gray-400 mb-4">${item.desc}</p>
+                            <a href="${item.link}" ${item.link.startsWith('http') || item.link.endsWith('.html') ? 'target="_blank" rel="noopener noreferrer"' : ''} class="text-white font-semibold hover:text-amber-400 transition-colors ${!item.link.startsWith('#') ? '' : 'nav-trigger'}">
+                                查看詳情 <i class="fas fa-arrow-right ml-1"></i>
+                            </a>
+                        </div>
+                    </div>
+                `).join('');
+                addNavTriggerListeners('#portfolio-grid .nav-trigger');
+            }
+
+            filtersContainer.addEventListener('click', e => {
+                if (e.target.matches('.filter-btn')) {
+                    filtersContainer.querySelector('.active').classList.remove('active');
+                    e.target.classList.add('active');
+                    filterAndRender(e.target.dataset.filter);
+                }
+            });
+
+            filterAndRender('all');
+        }
+        
+        function renderJourney() {
+            const timeline = document.getElementById('journey-timeline');
+            if (!timeline) return;
+            timeline.innerHTML = `
+                <div class="absolute left-1/2 transform -translate-x-1/2 h-full w-0.5 bg-gray-700"></div>
+                <div class="space-y-16">
+                    ${journeyData.map(item => `
+                        <div class="flex items-center justify-between ${item.align === 'left' ? 'flex-row-reverse' : ''} reveal">
+                            <div class="w-5/12"></div>
+                            <div class="z-10 w-8 h-8 bg-amber-500 rounded-full shadow-lg flex items-center justify-center"><i class="fas ${item.icon} text-gray-900"></i></div>
+                            <div class="w-5/12 bg-gray-800 p-4 rounded-lg shadow-lg">
+                                <p class="text-amber-400 font-bold">${item.date}</p>
+                                <h3 class="text-xl font-serif mb-1">${item.title}</h3>
+                                <p class="text-sm text-gray-400">${item.description}</p>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function renderBlog() {
+            const container = document.getElementById('blog-posts-container');
+            if (!container) return;
+            container.innerHTML = blogData.map(post => `
+                <div class="bg-gray-800 p-6 rounded-lg shadow-lg hover:bg-gray-700/50 transition-colors duration-300 reveal">
+                    <a href="${post.link}">
+                        <p class="text-sm text-gray-400 mb-1">${post.date}</p>
+                        <h3 class="text-2xl font-bold text-amber-400 mb-2">${post.title}</h3>
+                        <p class="text-gray-300">${post.summary}</p>
+                    </a>
+                </div>
+            `).join('');
+        }
+
+        function renderNovels() {
+            const container = document.getElementById('novel-container');
+            if (!container) return;
+            
+            container.innerHTML = novelsData.map(novel => `
+                <h2 class="text-4xl font-bold text-center text-white mb-4 reveal">${novel.title}</h2>
+                <p class="text-lg text-center text-gray-400 mb-12 max-w-3xl mx-auto reveal">${novel.description}</p>
+                <div class="bg-gray-800 p-6 rounded-lg shadow-lg flex flex-col md:flex-row gap-8 reveal">
+                    <img src="${novel.coverImage}" alt="小說封面" class="w-full md:w-1/3 h-auto object-cover rounded shadow-md" onerror="this.onerror=null;this.src='https://placehold.co/400x600/1f2937/d1d5db?text=Cover';">
+                    <div class="md:w-2/3">
+                        <div class="mb-8">
+                            <h4 class="text-2xl font-bold text-amber-400 mb-4 border-b-2 border-amber-500/30 pb-2">章節列表</h4>
+                            <div class="space-y-3">
+                                ${novel.chapters.map((chap, index) => `
+                                    <button class="chapter-btn text-left w-full p-3 bg-gray-700/50 rounded-md hover:bg-amber-500/20 transition-colors" data-title="${chap.title}" data-content="${escape(chap.content)}">
+                                        <span class="font-bold text-white">${chap.title}</span>
+                                        <span class="block text-sm text-gray-400">${chap.subtitle}</span>
+                                    </button>
+                                `).join('')}
+                            </div>
+                        </div>
+                        <div>
+                            <h4 class="text-2xl font-bold text-amber-400 mb-4 border-b-2 border-amber-500/30 pb-2">相關信件</h4>
+                            <div class="space-y-3">
+                                ${novel.letters.map((letter, index) => `
+                                    <button class="chapter-btn text-left w-full p-3 bg-gray-700/50 rounded-md hover:bg-amber-500/20 transition-colors" data-title="${letter.title}" data-content="${escape(letter.content)}">
+                                        <span class="font-bold text-white">${letter.title}</span>
+                                    </button>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            
+            document.querySelectorAll('.chapter-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const button = e.currentTarget;
+                    openNovelModal(unescape(button.dataset.content), button.dataset.title);
+                });
             });
         }
-        form.addEventListener("submit", handleSubmit)
+        
+        function addNavTriggerListeners(selector) {
+            document.querySelectorAll(selector).forEach(trigger => {
+                trigger.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const targetId = this.getAttribute('href');
+                    mobileMenu.classList.add('hidden');
+                    showSection(targetId);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                });
+            });
+        }
 
         // --- 初始渲染 ---
-        renderNovels();
-        revealOnScroll();
+        function initializePage() {
+            document.getElementById('profile-img-about').src = profileImage;
+            renderPortfolio();
+            renderJourney();
+            renderBlog();
+            renderNovels();
+            addNavTriggerListeners('.nav-trigger'); // Add listeners to header/mobile menu
+            showSection(window.location.hash || '#home', false);
+        }
+
+        initializePage();
     });
     </script>
 </body>
 </html>
+�
