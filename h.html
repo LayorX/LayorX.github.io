@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="zh-TW" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LayorX | 個人網站</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        /* 自定義樣式 */
+        body {
+            background-color: #111827; /* 深石板灰 */
+            color: #d1d5db; /* 淺灰色 */
+            font-family: 'Inter', sans-serif;
+        }
+        
+        h1, h2, h3, .font-serif {
+            font-family: 'Noto Serif TC', serif;
+        }
+
+        /* 導覽列連結 hover 效果 */
+        .nav-link {
+            position: relative;
+            transition: color 0.3s ease;
+        }
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -4px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #f59e0b; /* amber-500 */
+            transition: width 0.3s ease;
+        }
+        .nav-link:hover::after, .nav-link.active::after {
+            width: 100%;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: #f59e0b;
+        }
+
+        /* 內容區塊的動畫 */
+        .content-section {
+            display: none;
+            animation: fadeIn 0.8s ease-in-out;
+        }
+        .content-section.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 滾動載入動畫 */
+        .reveal {
+            position: relative;
+            opacity: 0;
+            transform: translateY(50px);
+            transition: all 1s ease-in-out;
+        }
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* 自定義捲軸 */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #1f2937; }
+        ::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+
+        /* 作品集篩選按鈕樣式 */
+        .filter-btn {
+            transition: all 0.3s ease;
+        }
+        .filter-btn.active {
+            background-color: #f59e0b;
+            color: #111827;
+        }
+        
+        /* 小說閱讀彈出視窗樣式 */
+        #novel-modal {
+            transition: opacity 0.3s ease-in-out;
+        }
+        #novel-modal-content {
+            max-height: 80vh;
+        }
+        #novel-modal-content::-webkit-scrollbar { width: 6px; }
+        #novel-modal-content::-webkit-scrollbar-track { background: #374151; }
+        #novel-modal-content::-webkit-scrollbar-thumb { background: #9ca3af; border-radius: 10px; }
+
+    </style>
+</head>
+<body class="overflow-x-hidden">
+
+    <!-- Header / Navigation Bar -->
+    <header id="main-header" class="bg-transparent fixed top-0 left-0 right-0 z-50 transition-all duration-300">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="#home" class="text-2xl font-bold tracking-wider text-white font-serif nav-trigger">LayorX</a>
+            <nav class="hidden md:flex space-x-8">
+                <a href="#home" class="nav-link nav-trigger active">首頁</a>
+                <a href="#about" class="nav-link nav-trigger">關於我</a>
+                <a href="#portfolio" class="nav-link nav-trigger">作品集</a>
+                <a href="#journey" class="nav-link nav-trigger">歷程</a>
+                <a href="#novels" class="nav-link nav-trigger">小說</a>
+                <a href="#blog" class="nav-link nav-trigger">Blog</a>
+                <a href="#contact" class="nav-link nav-trigger">聯繫我</a>
+            </nav>
+            <button id="mobile-menu-button" class="md:hidden text-white focus:outline-none"><i class="fas fa-bars text-2xl"></i></button>
+        </div>
+        <div id="mobile-menu" class="hidden md:hidden bg-gray-900">
+            <a href="#home" class="block py-3 px-6 text-center nav-link nav-trigger active">首頁</a>
+            <a href="#about" class="block py-3 px-6 text-center nav-link nav-trigger">關於我</a>
+            <a href="#portfolio" class="block py-3 px-6 text-center nav-link nav-trigger">作品集</a>
+            <a href="#journey" class="block py-3 px-6 text-center nav-link nav-trigger">歷程</a>
+            <a href="#novels" class="block py-3 px-6 text-center nav-link nav-trigger">小說</a>
+            <a href="#blog" class="block py-3 px-6 text-center nav-link nav-trigger">Blog</a>
+            <a href="#contact" class="block py-3 px-6 text-center nav-link nav-trigger">聯繫我</a>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+        <!-- Home Section -->
+        <section id="home" class="content-section active min-h-screen flex flex-col justify-center items-center text-center bg-gray-900/50">
+            <h1 class="text-4xl md:text-6xl font-bold text-white mb-4 reveal">
+                歡迎來到 <span class="text-amber-400">LayorX</span> 的世界
+            </h1>
+            <p id="typing-text" class="text-lg md:text-2xl text-gray-300 font-light reveal" style="transition-delay: 200ms;"></p>
+        </section>
+
+        <div class="container mx-auto px-6 py-12 md:py-20 space-y-24">
+            <!-- About Me Section -->
+            <section id="about" class="content-section">
+                <h2 class="text-4xl font-bold text-center text-white mb-12 reveal">關於我</h2>
+                <div class="flex flex-col md:flex-row items-center gap-12 reveal">
+                    <div class="md:w-1/3">
+                        <img src="https://placehold.co/400x400/1f2937/d1d5db?text=LayorX" alt="LayorX 的照片" class="rounded-full shadow-lg shadow-black/30 mx-auto border-4 border-gray-700">
+                    </div>
+                    <div class="md:w-2/3 text-lg space-y-4">
+                        <p>你好，我是 LayorX。一位熱情的創作者，對文字與程式碼充滿熱情。</p>
+                        <p>這裡是一個放置您自我介紹的地方。您可以談論您的背景、您的專業技能、您的興趣愛好，或是任何您想讓訪客了解的事情。試著讓這段文字既專業又帶有個人風格。</p>
+                        <p>例如，您可以提到您擅長的技術（如 JavaScript, Python, React），或者您喜歡的文學類型和作家。這將幫助訪客更全面地認識您。</p>
+                    </div>
+                </div>
+                <div class="mt-16 reveal">
+                    <h3 class="text-3xl font-bold text-center text-white mb-8">我的技能</h3>
+                    <div class="max-w-4xl mx-auto space-y-6">
+                        <!-- Skill 1 -->
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span class="text-base font-medium text-amber-400">JavaScript / TypeScript</span>
+                                <span class="text-sm font-medium text-amber-400">90%</span>
+                            </div>
+                            <div class="w-full bg-gray-700 rounded-full h-2.5">
+                                <div class="bg-amber-500 h-2.5 rounded-full" style="width: 90%"></div>
+                            </div>
+                        </div>
+                        <!-- Skill 2 -->
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span class="text-base font-medium text-amber-400">React / Next.js</span>
+                                <span class="text-sm font-medium text-amber-400">85%</span>
+                            </div>
+                            <div class="w-full bg-gray-700 rounded-full h-2.5">
+                                <div class="bg-amber-500 h-2.5 rounded-full" style="width: 85%"></div>
+                            </div>
+                        </div>
+                        <!-- Skill 3 -->
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span class="text-base font-medium text-amber-400">小說寫作</span>
+                                <span class="text-sm font-medium text-amber-400">95%</span>
+                            </div>
+                            <div class="w-full bg-gray-700 rounded-full h-2.5">
+                                <div class="bg-amber-500 h-2.5 rounded-full" style="width: 95%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Portfolio Section -->
+            <section id="portfolio" class="content-section">
+                <h2 class="text-4xl font-bold text-center text-white mb-12 reveal">作品集</h2>
+                <div id="portfolio-filters" class="flex justify-center flex-wrap gap-4 mb-8 reveal">
+                    <button class="filter-btn active px-4 py-2 bg-gray-800 text-white rounded-md" data-filter="all">全部</button>
+                    <button class="filter-btn px-4 py-2 bg-gray-800 text-white rounded-md" data-filter="web">網頁開發</button>
+                    <button class="filter-btn px-4 py-2 bg-gray-800 text-white rounded-md" data-filter="writing">寫作</button>
+                    <button class="filter-btn px-4 py-2 bg-gray-800 text-white rounded-md" data-filter="design">設計</button>
+                </div>
+                <div id="portfolio-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <!-- Portfolio Items will be injected by JS -->
+                </div>
+            </section>
+            
+            <!-- Journey Section -->
+            <section id="journey" class="content-section">
+                <h2 class="text-4xl font-bold text-center text-white mb-16 reveal">我的歷程</h2>
+                <div class="relative max-w-2xl mx-auto">
+                    <!-- Vertical Line -->
+                    <div class="absolute left-1/2 transform -translate-x-1/2 h-full w-0.5 bg-gray-700"></div>
+                    <div class="space-y-16">
+                        <!-- Timeline Items -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Novels Section -->
+            <section id="novels" class="content-section">
+                 <div id="novel-container">
+                    <!-- Novel content will be dynamically generated here -->
+                 </div>
+            </section>
+
+            <!-- Blog Section -->
+            <section id="blog" class="content-section">
+                <h2 class="text-4xl font-bold text-center text-white mb-12 reveal">技術與生活 Blog</h2>
+                <div id="blog-posts-container" class="max-w-3xl mx-auto space-y-6">
+                    <!-- Blog posts will be injected here -->
+                </div>
+            </section>
+            
+            <!-- Contact Section -->
+            <section id="contact" class="content-section text-center">
+                <h2 class="text-4xl font-bold text-white mb-4 reveal">聯繫我</h2>
+                <p class="text-lg text-gray-400 mb-8 max-w-2xl mx-auto reveal">如果您對我的作品感興趣，或是有合作機會，歡迎隨時與我聯繫。您可以透過下方的社群連結，或是直接填寫表單。</p>
+                <!-- Formspree Contact Form -->
+                <form id="contact-form" action="https://formspree.io/f/yor31117@gmail.com" method="POST" class="max-w-xl mx-auto space-y-4 text-left reveal">
+                    <div class="flex flex-col md:flex-row gap-4">
+                        <input type="text" name="name" placeholder="您的名字" required class="w-full p-3 bg-gray-800 border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500">
+                        <input type="email" name="email" placeholder="您的電子郵件" required class="w-full p-3 bg-gray-800 border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500">
+                    </div>
+                    <textarea name="message" placeholder="您的訊息..." rows="5" required class="w-full p-3 bg-gray-800 border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"></textarea>
+                    <button type="submit" class="w-full p-3 bg-amber-500 text-gray-900 font-bold rounded-md hover:bg-amber-400 transition-colors">發送訊息</button>
+                </form>
+                <div id="form-status" class="mt-4"></div>
+                <div class="mt-12 flex justify-center items-center space-x-8 text-4xl reveal">
+                    <a href="mailto:yor31117@gmail.com" class="text-gray-400 hover:text-amber-400 transition-colors" aria-label="Email"><i class="fas fa-envelope"></i></a>
+                    <a href="https://github.com/LayorX" target="_blank" rel="noopener noreferrer" class="text-gray-400 hover:text-amber-400 transition-colors" aria-label="GitHub"><i class="fab fa-github"></i></a>
+                    <a href="#" class="text-gray-400 hover:text-amber-400 transition-colors" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
+                    <a href="#" class="text-gray-400 hover:text-amber-400 transition-colors" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 border-t border-gray-800">
+        <div class="container mx-auto px-6 py-6 text-center text-gray-500">
+            <p>&copy; 2025 LayorX. All Rights Reserved.</p>
+        </div>
+    </footer>
+    
+    <!-- Novel Reading Modal -->
+    <div id="novel-modal" class="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4 hidden opacity-0">
+        <div class="bg-gray-800 text-gray-300 rounded-lg shadow-xl w-full max-w-4xl relative">
+            <button id="close-modal-btn" class="absolute -top-4 -right-4 text-white bg-amber-500 rounded-full w-10 h-10 text-2xl flex items-center justify-center">&times;</button>
+            <div id="novel-modal-content" class="p-6 md:p-8 overflow-y-auto whitespace-pre-wrap">
+                <!-- Chapter content will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // --- 資料區 ---
+        // 提示: 請將 'path/to/your/...' 替換成您上傳檔案後的實際路徑
+        const novelsData = [
+            {
+                title: "夢境時差：七封謎信",
+                coverImage: "封面.jpg", // 替換成 '封面.jpg' 的實際路徑
+                genre: "科幻 / 懸疑",
+                description: "當夢境不再是虛幻，而成為可以學習、探索甚至戰鬥的第二現實，世界的規則將被徹底改寫。一名普通的YouTuber，意外收到七封來自神秘投稿人『RR』的信件，揭開了一個名為『夢創協同』的驚天秘密……這不僅是一個故事，更是一場席捲全球的意識革命。",
+                chapters: [
+                    { 
+                        title: "📖序章：《哇哇哇！奇人異事！》啟動！", 
+                        subtitle: "#我不知道它是不是真的，但我知道——我忘不了。",
+                        contentFile: "📖序章：《哇哇哇！奇人異事！》啟動！#我不知道它是不是真的，但我知道——我忘不了。.txt" // 替換成檔案的實際路徑
+                    },
+                    { 
+                        title: "📖第一章：《他在夢裡學完了 MIT 四年課程》",
+                        subtitle: "#我的夢想就是...做夢來工作",
+                        contentFile: "📖第一章：《他在夢裡學完了 MIT 四年課程》夢創協同！.txt" // 替換成檔案的實際路徑
+                    },
+                    { 
+                        title: "📖第二章：《更大的流量，更大的危險》",
+                        subtitle: "#我本來想找個奇聞，結果好像找到了國安危機",
+                        contentFile: "📖第二章：《更大的流量，更大的危險》留言!.txt" // 替換成檔案的實際路徑
+                    },
+                ],
+                letters: [
+                    {
+                        title: "✉️ 第一封信",
+                        contentFile: "第一封信.txt" // 替換成檔案的實際路徑
+                    },
+                    {
+                        title: "✉️ 第二封信",
+                        contentFile: "第二封信.txt" // 替換成檔案的實際路徑
+                    }
+                ]
+            }
+        ];
+
+        // --- 元素宣告 ---
+        const header = document.getElementById('main-header');
+        const triggers = document.querySelectorAll('.nav-trigger');
+        const sections = document.querySelectorAll('.content-section');
+        const navLinks = document.querySelectorAll('.nav-link');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const revealElements = document.querySelectorAll('.reveal');
+        const novelModal = document.getElementById('novel-modal');
+        const novelModalContent = document.getElementById('novel-modal-content');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+        
+        // --- 滾動顯示動畫 ---
+        function revealOnScroll() {
+            const windowHeight = window.innerHeight;
+            revealElements.forEach(el => {
+                if (el.getBoundingClientRect().top < windowHeight - 100) {
+                    el.classList.add('visible');
+                }
+            });
+        }
+
+        // --- 頁面導覽 & 滾動標頭 ---
+        window.addEventListener('scroll', () => {
+            header.classList.toggle('bg-gray-900/80', window.scrollY > 50);
+            header.classList.toggle('backdrop-blur-sm', window.scrollY > 50);
+            header.classList.toggle('shadow-lg', window.scrollY > 50);
+            revealOnScroll();
+        });
+
+        function showSection(targetId, isPushState = true) {
+            sections.forEach(section => {
+                const parentContainer = section.parentElement.classList.contains('container') ? section.parentElement : document.body;
+                const isActive = '#' + section.id === targetId;
+                section.classList.toggle('active', isActive);
+                if(section.id !== 'home') {
+                    parentContainer.style.display = isActive ? 'block' : 'none';
+                }
+            });
+            
+            document.querySelector('#home').style.display = targetId === '#home' ? 'flex' : 'none';
+            document.querySelector('main > .container').style.display = targetId === '#home' ? 'none' : 'block';
+
+            navLinks.forEach(link => {
+                link.classList.toggle('active', link.getAttribute('href') === targetId);
+            });
+
+            if (isPushState) {
+                history.pushState({path: targetId}, '', targetId);
+            }
+            
+            revealOnScroll();
+        }
+
+        triggers.forEach(trigger => {
+            trigger.addEventListener('click', function(e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href');
+                mobileMenu.classList.add('hidden');
+                showSection(targetId);
+                const targetElement = document.querySelector(targetId);
+                if(targetElement) {
+                   if(targetId === '#home'){
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                   } else {
+                        const mainContainer = document.querySelector('main > .container');
+                        mainContainer.scrollIntoView({ behavior: 'smooth' });
+                   }
+                }
+            });
+        });
+        
+        window.addEventListener('popstate', (e) => showSection(e.state ? e.state.path : '#home', false));
+        showSection(window.location.hash || '#home', false);
+
+        // --- 行動版菜單 ---
+        document.getElementById('mobile-menu-button').addEventListener('click', () => mobileMenu.classList.toggle('hidden'));
+
+        // --- 首頁打字效果 ---
+        const typingTextElement = document.getElementById('typing-text');
+        if (typingTextElement) {
+            const texts = ["一位熱愛文字的開發者。", "一位沉浸程式碼的夢想家。", "探索技術與故事的邊界。"];
+            let textIndex = 0, charIndex = 0, isDeleting = false;
+            function type() {
+                const currentText = texts[textIndex];
+                let typeSpeed = isDeleting ? 75 : 150;
+                typingTextElement.textContent = currentText.substring(0, charIndex);
+                if (isDeleting) {
+                    charIndex--;
+                } else {
+                    charIndex++;
+                }
+                if (!isDeleting && charIndex === currentText.length) {
+                    typeSpeed = 2000; isDeleting = true;
+                } else if (isDeleting && charIndex === 0) {
+                    isDeleting = false; textIndex = (textIndex + 1) % texts.length;
+                }
+                setTimeout(type, typeSpeed);
+            }
+            type();
+        }
+
+        // --- 小說區塊渲染 ---
+        function renderNovels() {
+            const container = document.getElementById('novel-container');
+            if (!container) return;
+            
+            container.innerHTML = novelsData.map(novel => `
+                <h2 class="text-4xl font-bold text-center text-white mb-4 reveal">${novel.title}</h2>
+                <p class="text-lg text-center text-gray-400 mb-12 max-w-3xl mx-auto reveal">${novel.description}</p>
+                <div class="bg-gray-800 p-6 rounded-lg shadow-lg flex flex-col md:flex-row gap-8 reveal">
+                    <img src="${novel.coverImage}" alt="小說封面" class="w-full md:w-1/3 h-auto object-cover rounded shadow-md">
+                    <div class="md:w-2/3">
+                        <div class="mb-8">
+                            <h4 class="text-2xl font-bold text-amber-400 mb-4 border-b-2 border-amber-500/30 pb-2">章節列表</h4>
+                            <div class="space-y-3">
+                                ${novel.chapters.map((chap, index) => `
+                                    <button class="chapter-btn text-left w-full p-3 bg-gray-700/50 rounded-md hover:bg-amber-500/20 transition-colors" data-file="${chap.contentFile}">
+                                        <span class="font-bold text-white">${chap.title}</span>
+                                        <span class="block text-sm text-gray-400">${chap.subtitle}</span>
+                                    </button>
+                                `).join('')}
+                            </div>
+                        </div>
+                        <div>
+                            <h4 class="text-2xl font-bold text-amber-400 mb-4 border-b-2 border-amber-500/30 pb-2">相關信件</h4>
+                            <div class="space-y-3">
+                                ${novel.letters.map((letter, index) => `
+                                    <button class="chapter-btn text-left w-full p-3 bg-gray-700/50 rounded-md hover:bg-amber-500/20 transition-colors" data-file="${letter.contentFile}">
+                                        <span class="font-bold text-white">${letter.title}</span>
+                                    </button>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            
+            document.querySelectorAll('.chapter-btn').forEach(btn => {
+                btn.addEventListener('click', () => openNovelModal(btn.dataset.file));
+            });
+        }
+        
+        // --- 小說閱讀視窗邏輯 ---
+        function openNovelModal(filePath) {
+            novelModalContent.innerHTML = '<p>載入中...</p>';
+            novelModal.classList.remove('hidden');
+            setTimeout(() => novelModal.classList.remove('opacity-0'), 10);
+
+            fetch(filePath)
+                .then(response => {
+                    if (!response.ok) throw new Error('檔案讀取失敗');
+                    return response.text();
+                })
+                .then(text => {
+                    novelModalContent.innerHTML = `<h2 class="text-2xl font-bold text-amber-400 mb-4">${filePath.split('/').pop().replace('.txt','')}</h2>${text}`;
+                })
+                .catch(error => {
+                    novelModalContent.innerHTML = `<p class="text-red-400">錯誤: ${error.message}。<br>請確認檔案路徑 ('${filePath}') 是否正確，並已上傳至您的網站空間。</p>`;
+                });
+        }
+
+        function closeNovelModal() {
+            novelModal.classList.add('opacity-0');
+            setTimeout(() => novelModal.classList.add('hidden'), 300);
+        }
+
+        closeModalBtn.addEventListener('click', closeNovelModal);
+        novelModal.addEventListener('click', (e) => {
+            if (e.target === novelModal) closeNovelModal();
+        });
+
+        // --- 聯絡表單邏輯 ---
+        const form = document.getElementById('contact-form');
+        const formStatus = document.getElementById('form-status');
+        async function handleSubmit(event) {
+            event.preventDefault();
+            const data = new FormData(event.target);
+            fetch(event.target.action, {
+                method: form.method,
+                body: data,
+                headers: { 'Accept': 'application/json' }
+            }).then(response => {
+                if (response.ok) {
+                    formStatus.innerHTML = "<p class='text-green-400'>感謝您的訊息，我會盡快回覆！</p>";
+                    form.reset()
+                } else {
+                    response.json().then(data => {
+                        if (Object.hasOwn(data, 'errors')) {
+                            formStatus.innerHTML = data["errors"].map(error => error["message"]).join(", ")
+                        } else {
+                            formStatus.innerHTML = "<p class='text-red-400'>糟糕！訊息發送失敗，請稍後再試。</p>"
+                        }
+                    })
+                }
+            }).catch(error => {
+                formStatus.innerHTML = "<p class='text-red-400'>糟糕！訊息發送失敗，請稍後再試。</p>"
+            });
+        }
+        form.addEventListener("submit", handleSubmit)
+
+        // --- 初始渲染 ---
+        renderNovels();
+        revealOnScroll();
+    });
+    </script>
+</body>
+</html>
