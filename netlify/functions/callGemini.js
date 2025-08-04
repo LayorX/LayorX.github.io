@@ -5,8 +5,11 @@ exports.handler = async function(event, context) {
     const { userPrompt } = JSON.parse(event.body);
 
     // 從安全的環境變數中讀取 API 金鑰
+console.log("66666")
     const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-
+console.log("66666")
+console.log(GEMINI_API_KEY)
+console.log("66666")
     const fullPrompt = `Based on the theme "${userPrompt}", generate a color scheme for a bouncing ball animation. Provide a JSON object with a hex code for the ball's color, a hex code for the background color, and a short, creative explanation in Traditional Chinese.`;
 
     const chatHistory = [{ role: "user", parts: [{ text: fullPrompt }] }];
