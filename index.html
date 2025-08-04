@@ -566,7 +566,7 @@ document.addEventListener('DOMContentLoaded', () => {
   	  const response = await fetch('/.netlify/functions/callGemini', {
    	     method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
-   	     body: JSON.stringify({ '你是誰?' }) // 只需傳送使用者輸入的內容
+   	     body: JSON.stringify({ "who are you?" }) // 只需傳送使用者輸入的內容
    	 });
 
   		if (!response.ok) {
