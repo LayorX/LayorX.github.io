@@ -18,9 +18,13 @@
 
     // --- 核心功能 ---
 
-    // ✨ [優化] 設定 marked.js 渲染器以符合網站風格
+    // ✨ [修正] 更新 marked.js 渲染器以相容新版 API (v5+)
     const renderer = new marked.Renderer();
-    renderer.heading = (text, level) => {
+    
+    // 使用傳統 function() {} 以確保 'this' 指向 renderer 實例，從而可以呼叫 this.parser
+    renderer.heading = function(token) {
+        const level = token.depth;
+        const text = this.parser.parseInline(token.tokens); // 使用 parser 來解析標題中的行內元素 (如連結)
         if (level === 2) {
             return `<h2 class="text-2xl font-bold text-amber-400 mt-6 mb-3 font-serif">${text}</h2>`;
         }
@@ -29,10 +33,35 @@
         }
         return `<h${level} class="font-serif">${text}</h${level}>`;
     };
-    renderer.link = (href, title, text) => `<a href="${href}" target="_blank" rel="noopener noreferrer" class="text-amber-400 hover:underline" title="${title || ''}">${text}</a>`;
-    renderer.image = (href, title, text) => `<img src="${href}" alt="${text}" title="${title || ''}" class="rounded-lg my-4 mx-auto max-w-full h-auto">`;
-    renderer.listitem = (text) => `<li class="ml-6 list-disc">${text}</li>`;
-    renderer.paragraph = (text) => `<p class="mb-4">${text}</p>`;
+
+    renderer.link = function(token) {
+        const href = token.href;
+        const title = token.title;
+        const text = this.parser.parseInline(token.tokens); // 解析連結文字中的行內元素
+        return `<a href="${href}" target="_blank" rel="noopener noreferrer" class="text-amber-400 hover:underline" title="${title || ''}">${text}</a>`;
+    };
+
+    renderer.image = function(token) {
+        const href = token.href;
+        const title = token.title;
+        const text = token.text; // 圖片的 alt 文字是純文字，不需解析
+        return `<img src="${href}" alt="${text}" title="${title || ''}" class="rounded-lg my-4 mx-auto max-w-full h-auto">`;
+    };
+
+    renderer.listitem = function(token) {
+        const text = this.parser.parseInline(token.tokens); // 解析列表項中的行內元素
+        // 處理任務列表 (task list) 的情況，例如: - [x] Do this
+        if (token.task) {
+            return `<li class="ml-6 list-disc flex items-start task-list-item"><input type="checkbox" disabled ${token.checked ? 'checked' : ''} class="mr-2 mt-1.5 flex-shrink-0"><span>${text}</span></li>`;
+        }
+        return `<li class="ml-6 list-disc">${text}</li>`;
+    };
+
+    renderer.paragraph = function(token) {
+        const text = this.parser.parseInline(token.tokens); // 解析段落中的行內元素
+        return `<p class="mb-4">${text}</p>`;
+    };
+
 
     marked.setOptions({
       renderer: renderer,
