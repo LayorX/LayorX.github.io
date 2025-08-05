@@ -73,7 +73,7 @@
         .gallery-arrow.left { left: 1rem; }
         .gallery-arrow.right { right: 1rem; }
 
-        /* ✨ [優化] 針對行動裝置優化 Modal 體驗 */
+        /* [優化] 針對行動裝置優化 Modal 體驗 */
         @media (max-width: 767px) {
             .modal {
                 padding: 0; /* 移除 backdrop 的內邊距 */
@@ -116,6 +116,18 @@
             /* 小說的導覽列高度固定，不被壓縮 */
             #novel-navigation {
                 flex-shrink: 0;
+            }
+
+            /* ✨ [修正] 確保作品集 Modal 在小螢幕上能正確顯示圖片 */
+            #portfolio-modal .md\:w-3\/5 {
+                flex-shrink: 0; /* 防止圖片容器在 flex 佈局中被壓縮 */
+                width: 100%; /* 確保它佔滿寬度 */
+            }
+
+            #portfolio-modal #portfolio-gallery-images {
+                /* 確保圖片容器有正確的長寬比 */
+                width: 100%;
+                aspect-ratio: 16 / 9;
             }
         }
     </style>
@@ -180,7 +192,6 @@
     </div>
 
     <!-- JavaScript Files -->
-    <!-- ✨ [優化] 引入 marked.js 函式庫 -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="data.js"></script>
     <script src="main.js"></script>
