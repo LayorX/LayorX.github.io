@@ -1,11 +1,11 @@
 ## :beginner:  tmux 前置作業
 
 
-:::info
+info
 - **Install:** `$ sudo apt-get install tmux`
 - **config:** `$ nano ~/.tmux.conf`
     貼上以下code
-```python=
+
 #设置前缀为Ctrl + a
 set -g prefix C-a
 #解除Ctrl+b 与前缀的对应关系
@@ -36,11 +36,9 @@ set -g mouse off
 # 设置默认终端模式为 256color
 # set -g default-terminal "screen-256color"
 
-```
+
 
 - **上述config作用:**
-
-    :::warning
     - 更改前綴鍵 
         - Control+b ->  Control+a [之後簡稱C-a]
     - 新增滑鼠功能 
@@ -51,15 +49,15 @@ set -g mouse off
         - C-a K : 關閉同步功能
     - 新增reload .tumx.conf功能
         - C-a r : 重讀config
-    :::
+
     
 
 
-:::
+
 
 
 ## :point_right: 進入tmux指令
-:::success
+success
 - 創建並進入tmux空間(Session)
     - tmux : 自動創建一個Session，並自動命名為數字
     - tmux new -s <name> : 創建一個名為<name>的Session
@@ -79,7 +77,7 @@ set -g mouse off
     重新命名<name> -> <new_name>   
 - 列出目前Session
     - tmux ls : 列出目前Session
-:::
+
 
 ## :arrow_heading_down: 在tmux內的指令
 前綴鍵內鍵為(Control+b :若有用上面的config會改成Control+a)
