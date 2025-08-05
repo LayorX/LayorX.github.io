@@ -45,6 +45,14 @@ const portfolioData = [
         details: `<h3>設計理念</h3><p>標誌以陰陽圖為基礎，左半邊是代表科技與理性的電路板，右半邊是代表文學與感性的書頁。</p>`
     },
     { 
+        title: 'Kai Cenat Meets Ray In Japan不同風格', 
+        category: 'design', 
+        images: ['data/images/KaiRay01.png','data/images/KaiRay02.png','data/images/KaiRay03.png','data/images/KaiRay04.png','data/images/KaiRay05.png'],
+        desc: '這是一場結合了懷舊與創意的特別企劃！',
+        details: `<h3>設計理念</h3><p>我們將 Kai Cenat 和他的粉絲 Ray 在日本相遇的經典場景，用充滿回憶的懷舊畫風重新詮釋。從像素風的遊戲畫面到復古動漫風格，每一幀都帶你回到過去的美好時光。快來看看你最喜歡哪一種風格，並在留言區分享你對這場相遇的看法吧！</p>`,
+        externalLink: 'https://www.youtube.com/shorts/OqpmYnVaDeY'
+    },
+    { 
         title: 'PuffPaleCloudy角色設計YunBao', 
         category: 'design', 
         images: ['data/images/PuffPaleCloudy.png','data/images/YunBaoLogo.png', 'data/images/YunBao.png','data/images/YunBao2.png'],
