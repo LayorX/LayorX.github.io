@@ -48,13 +48,22 @@
         return `<img src="${href}" alt="${text}" title="${title || ''}" class="rounded-lg my-4 mx-auto max-w-full h-auto">`;
     };
 
+    // ✨ [修正] 新增 list 渲染器以解決 "Token with 'list' type was not found" 錯誤
+    renderer.list = function(token) {
+        const body = this.parser.parse(token.items);
+        const tag = token.ordered ? 'ol' : 'ul';
+        const listClass = token.ordered ? 'list-decimal ml-6 space-y-2' : 'list-disc ml-6 space-y-2';
+        return `<${tag} class="${listClass}">${body}</${tag}>`;
+    };
+
     renderer.listitem = function(token) {
         const text = this.parser.parseInline(token.tokens); // 解析列表項中的行內元素
         // 處理任務列表 (task list) 的情況，例如: - [x] Do this
         if (token.task) {
-            return `<li class="ml-6 list-disc flex items-start task-list-item"><input type="checkbox" disabled ${token.checked ? 'checked' : ''} class="mr-2 mt-1.5 flex-shrink-0"><span>${text}</span></li>`;
+            return `<li class="ml-6 list-none flex items-start task-list-item"><input type="checkbox" disabled ${token.checked ? 'checked' : ''} class="mr-2 mt-1.5 flex-shrink-0"><span>${text}</span></li>`;
         }
-        return `<li class="ml-6 list-disc">${text}</li>`;
+        // 對於普通列表項，我們讓父級的 ul/ol 來處理 list-disc/list-decimal
+        return `<li>${text}</li>`;
     };
 
     renderer.paragraph = function(token) {
