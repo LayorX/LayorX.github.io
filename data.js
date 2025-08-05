@@ -4,7 +4,6 @@
 
 const profileImage = "data/images/RR頭像.jpg";
 
-// 優化: 更新 "關於我" 內容
 const aboutMeData = {
     p1: "你好，我是 LayorX。我是一個熱衷於『把想法變為現實』的創造者。",
     p2: "我的旅程橫跨了影片剪輯、App 開發、自動化工具到 AI 應用與小說創作。這段看似跳躍的經歷，背後是我對新事物永不滿足的好奇心，以及用各種『小聰明』解決問題的熱情。",
@@ -24,7 +23,7 @@ const portfolioData = [
     { 
         title: '思辨宇宙 (Thinking Verse)', 
         category: 'web', 
-        images: ['data/images/TV.jpg', 'data/images/TV2.jpg','data/images/TV3.jpg','data/images/TV4.jpg','data/images/TV5.jpg',],
+        images: ['data/images/TV.jpg', 'data/images/TV2.jpg','data/images/TV3.jpg','data/images/TV4.jpg','data/images/TV5.jpg'],
         desc: '一個專為深度討論而生的概念性網站。',
         details: `<h3>專案目標</h3><p>打造一個鼓勵理性思辨、避免無效爭論的線上平台。</p><h3>核心功能</h3><ul><li>- 議題創建與時間軸</li><li>- 正反方論點陳述</li><li>- 思維導圖視覺化</li><li>- 引用與證據連結</li></ul>`,
         externalLink: './TKVv0.html'
@@ -85,7 +84,6 @@ const videosData = [
     }
 ];
 
-// 優化: 更新 "歷程" 內容
 const journeyData = [
     { date: "2025 - 至今", title: "架設個人網站", description: "從零開始學習並打造這個展示所有奇思妙想的個人品牌網站。", icon: "fa-code", align: "left" },
     { date: "2025 7月", title: "網路小說撰寫", description: "開啟新的創作領域，開始撰寫長篇科幻懸疑小說《夢境時差：七封謎信》。", icon: "fa-feather-alt", align: "right" },
@@ -98,6 +96,8 @@ const journeyData = [
     { date: "2018", title: "VR App 開發", description: "自學開發 VR 相關的手機練習 APP，踏入移動應用開發領域。", icon: "fa-vr-cardboard", align: "left" },
     { date: "2017", title: "YouTube 頻道經營", description: "初試啼聲，透過解說與剪輯分享，頻道迅速累積破萬訂閱，單支影片半個月內突破200萬點閱，登上熱門發燒#1。", icon: "fa-youtube", align: "right" }
 ];
+
+
 const blogData = [
     { date: "2025年8月4日", title: "為什麼我選擇用 Vanilla JS 打造個人網站？", summary: "在充滿框架的時代，回歸基礎或許能帶來意想不到的收穫。本文分享我從零開始，不使用任何前端框架開發這個網站的心路歷程、技術抉擇與挑戰。", link: "#" },
     { date: "2025年7月20日", title: "世界觀設定：如何為你的故事建立一個可信的宇宙", summary: "一個引人入勝的故事，背後往往有一個堅實的世界觀支撐。分享我在創作《夢境時差》時，如何設定規則、文化與衝突，讓虛構的世界感覺真實。", link: "#" }
@@ -117,3 +117,16 @@ const novelsData = [
         ]
     }
 ];
+
+// 修正: 將初始化函式的呼叫移到 data.js 的末端，確保所有資料都已定義。
+// 這樣可以保證 main.js 在執行時，能夠安全地存取到這裡的所有資料變數。
+if (typeof initializePage === 'function') {
+    initializePage();
+} else {
+    // 如果 main.js 尚未載入，則等待 DOMContentLoaded 事件後再嘗試初始化
+    document.addEventListener('DOMContentLoaded', () => {
+        if (typeof initializePage === 'function') {
+            initializePage();
+        }
+    });
+}

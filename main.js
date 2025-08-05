@@ -1,8 +1,9 @@
-document.addEventListener('DOMContentLoaded', function() {
-    // =================================================================================
-    // --- 核心功能區 (此檔案掌管所有網站互動邏輯) ---
-    // =================================================================================
+// =================================================================================
+// --- 核心功能區 (此檔案掌管所有網站互動邏輯) ---
+// =================================================================================
 
+// 將所有功能封裝在一個立即執行函式中，避免污染全域命名空間
+(function() {
     let typingTimeout, galleryInterval;
     let currentNovelContentIndex = -1;
 
@@ -180,10 +181,10 @@ document.addEventListener('DOMContentLoaded', function() {
         openModal(portfolioModal);
     }
 
-    // --- 渲染函式 ---
+    // --- 渲染函式 (已加入全面安全檢查) ---
     function renderAboutMe() {
         const container = document.getElementById('about-me-text-container');
-        if (!container ) return;
+        if (!container || typeof aboutMeData === 'undefined') return;
         container.innerHTML = `
             <p>${aboutMeData.p1}</p>
             <p>${aboutMeData.p2}</p>
@@ -193,12 +194,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function renderSkills() {
         const container = document.querySelector('#skills-section .max-w-4xl');
+        if (!container || typeof skillsData === 'undefined') return;
         container.innerHTML = skillsData.map(skill => `<div><div class="flex justify-between mb-1"><span class="text-base font-medium text-amber-400">${skill.name}</span><span class="text-sm font-medium text-amber-400">${skill.percentage}%</span></div><div class="w-full bg-gray-700 rounded-full h-2.5"><div class="skill-bar-progress bg-amber-500 h-2.5 rounded-full" data-percentage="${skill.percentage}"></div></div></div>`).join('');
     }
 
     function renderPortfolio() {
         const grid = document.getElementById('portfolio-grid');
         const filtersContainer = document.getElementById('portfolio-filters');
+        if (!grid || !filtersContainer || typeof portfolioData === 'undefined') return;
+
         const categories = ['all', ...new Set(portfolioData.map(item => item.category))];
         filtersContainer.innerHTML = categories.map(cat => `<button class="filter-btn px-4 py-2 bg-gray-800 text-white rounded-md capitalize ${cat === 'all' ? 'active' : ''}" data-filter="${cat}">${cat === 'all' ? '全部' : cat === 'web' ? '網頁開發' : cat === 'writing' ? '寫作' : '設計'}</button>`).join('');
         const renderItems = (filter) => {
@@ -212,25 +216,25 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function renderVideos() {
         const grid = document.getElementById('videos-grid');
-        if (!grid) return;
+        if (!grid || typeof videosData === 'undefined') return;
         grid.innerHTML = videosData.map(video => `<div class="bg-gray-800 rounded-lg shadow-lg overflow-hidden reveal"><div class="aspect-video">${video.type === 'youtube' ? `<iframe class="w-full h-full" src="https://www.youtube.com/embed/${video.src}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>` : `<video class="w-full h-full" controls src="${video.src}"></video>`}</div><div class="p-6"><h3 class="text-2xl font-bold text-amber-400 mb-2">${video.title}</h3><p class="text-gray-400">${video.description}</p></div></div>`).join('');
     }
 
     function renderJourney() {
         const timeline = document.getElementById('journey-timeline');
-        if (!timeline) return;
+        if (!timeline || typeof journeyData === 'undefined') return;
         timeline.innerHTML = `<div class="absolute left-1/2 transform -translate-x-1/2 h-full w-0.5 bg-gray-700"></div><div class="space-y-16">${journeyData.map(item => `<div class="flex items-center justify-between ${item.align === 'left' ? 'flex-row-reverse' : ''} reveal"><div class="w-5/12"></div><div class="z-10 w-8 h-8 bg-amber-500 rounded-full shadow-lg flex items-center justify-center"><i class="fas ${item.icon} text-gray-900"></i></div><div class="w-5/12 bg-gray-800 p-4 rounded-lg shadow-lg"><p class="text-amber-400 font-bold">${item.date}</p><h3 class="text-xl font-serif mb-1">${item.title}</h3><p class="text-sm text-gray-400">${item.description}</p></div></div>`).join('')}</div>`;
     }
 
     function renderBlog() {
         const container = document.getElementById('blog-posts-container');
-        if (!container) return;
+        if (!container || typeof blogData === 'undefined') return;
         container.innerHTML = blogData.map(post => `<div class="bg-gray-800 p-6 rounded-lg shadow-lg hover:bg-gray-700/50 transition-colors duration-300 reveal"><a href="${post.link}"><p class="text-sm text-gray-400 mb-1">${post.date}</p><h3 class="text-2xl font-bold text-amber-400 mb-2">${post.title}</h3><p class="text-gray-300">${post.summary}</p></a></div>`).join('');
     }
 
     function renderNovels() {
         const container = document.getElementById('novel-container');
-        if (!container) return;
+        if (!container || typeof novelsData === 'undefined') return;
         container.innerHTML = novelsData.map(novel => `<h2 class="text-4xl font-bold text-center text-white mb-4 reveal">${novel.title}</h2><p class="text-lg text-center text-gray-400 mb-12 max-w-3xl mx-auto reveal">${novel.description}</p><div class="bg-gray-800 p-6 rounded-lg shadow-lg flex flex-col md:flex-row gap-8 reveal"><img src="${novel.coverImage}" alt="小說封面" class="w-full md:w-1/3 h-auto object-cover rounded shadow-md" onerror="this.onerror=null;this.src='https://placehold.co/400x600/1f2937/d1d5db?text=Cover';"><div class="md:w-2/3"><div class="mb-8"><h4 class="text-2xl font-bold text-amber-400 mb-4 border-b-2 border-amber-500/30 pb-2">章節列表</h4><div class="space-y-3">${novel.contentList.filter(c => c.type === 'chapter').map((chap) => `<button class="chapter-btn text-left w-full p-3 bg-gray-700/50 rounded-md hover:bg-amber-500/20 transition-colors" data-index="${novel.contentList.indexOf(chap)}"><span class="font-bold text-white">${chap.title}</span><span class="block text-sm text-gray-400">${chap.subtitle}</span></button>`).join('')}</div></div><div><h4 class="text-2xl font-bold text-amber-400 mb-4 border-b-2 border-amber-500/30 pb-2">相關信件</h4><div class="space-y-3">${novel.contentList.filter(c => c.type === 'letter').map((letter) => `<button class="chapter-btn text-left w-full p-3 bg-gray-700/50 rounded-md hover:bg-amber-500/20 transition-colors" data-index="${novel.contentList.indexOf(letter)}"><span class="font-bold text-white">${letter.title}</span></button>`).join('')}</div></div></div></div>`).join('');
         document.querySelectorAll('.chapter-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
@@ -242,7 +246,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // --- 初始化 ---
-    function initializePage() {
+    // 將此函式暴露到全域，以便 data.js 可以呼叫它
+    window.initializePage = function() {
         document.getElementById('profile-img-about').src = profileImage;
         renderAboutMe();
         renderSkills();
@@ -310,5 +315,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    initializePage();
-});
+    // 修正: 移除此處的 initializePage() 呼叫，改由 data.js 的末端觸發。
+    // initializePage(); 
+})();
