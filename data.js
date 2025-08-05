@@ -27,7 +27,7 @@ const portfolioData = [
         category: 'web', 
         images: ['data/images/TV.jpg', 'data/images/TV2.jpg','data/images/TV3.jpg','data/images/TV4.jpg','data/images/TV5.jpg'],
         desc: '一個專為深度討論而生的概念性網站。',
-        details: `<h3>專案目標</h3><p>打造一個鼓勵理性思辨、避免無效爭論的線上平台。</p><h3>核心功能</h3><ul><li>- 議題創建與時間軸</li><li>- 正反方論點陳述</li><li>- 思維導圖視覺化</li><li>- 引用與證據連結</li></ul>`,
+        details: `<h3>專案目標</h3><p>打造一個鼓勵理性思辨、避免無效爭論的線上平台。</p><h3>它以信任與深度/貢獻的動態平衡為核心，透過「雙星太極」概念，象徵信任與探索的共生關係。此平台旨在建構高媒體識讀社群，鼓勵用戶理性思辨、包容多元觀點，共同對抗假新聞，並維護高信任度的資訊交流空間</h3><ul><li>- 正反方論點陳述</li><li>- 思維導圖視覺化</li><li>- 引用與證據連結</li></ul>`,
         externalLink: './TKVv0.html'
     },
     { 
