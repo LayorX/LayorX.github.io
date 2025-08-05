@@ -1,25 +1,22 @@
 # Kernel Panic 相關解決
 
+## kernel panic 錯誤表現
 
-
-## kernel panic錯誤表現
-
-:::success
-kernel panic 主要有以下幾個出錯提示：
-（1）Kernel panic-not syncing fatal exception in interrupt
-（2）kernel panic - not syncing: Attempted to kill the idle task!
-（3）kernel panic - not syncing: killing interrupt handler!
-（4）Kernel Panic - not syncing：Attempted to kill init !
-
-:::
-
+> success
+> kernel panic 主要有以下幾個出錯提示：
+> 1. Kernel panic-not syncing fatal exception in interrupt
+> 2. kernel panic - not syncing: Attempted to kill the idle task!
+> 3. kernel panic - not syncing: killing interrupt handler!
+> 4. Kernel Panic - not syncing：Attempted to kill init !
 
 從其他原始檔和相關文件看到應該有幾種原因：
 
 ### 1、硬體問題
-使用了 SCSI-device 並且使用了未知命令
-#WDIOS_TEMPPANIC Kernel panic on temperature trip
-``` c
+
+使用了 SCSI-device 並且使用了未知命令。
+
+```c
+# WDIOS_TEMPPANIC Kernel panic on temperature trip
 # 
 # The SETOPTIONS call can be used to enable and disable the card
 # and to ask the driver to call panic if the system overheats.
@@ -29,25 +26,26 @@ kernel panic 主要有以下幾個出錯提示：
 # understand which SCSI-command caused the problem, I extended this
 # specific panic-message slightly.
 # 
-#read/write causes a command error from
+# read/write causes a command error from
 # the subsystem and this causes kernel-panic
 ```
-### 2、系統過熱
-如果系統過熱會呼叫panci，系統掛起
 
-``` c
-#WDIOS_TEMPPANIC Kernel panic on temperature trip
+### 2、系統過熱
+
+如果系統過熱會呼叫 panic，系統掛起。
+
+```c
+# WDIOS_TEMPPANIC Kernel panic on temperature trip
 # 
 # The SETOPTIONS call can be used to enable and disable the card
 # and to ask the driver to call panic if the system overheats.
 ```
 
+### 3、檔案系統引起
 
-3、檔案系統引起
-
-``` c
-#A variety of panics and hangs with /tmp on a reiserfs filesystem
-#Any other panic, hang, or strange behavior
+```c
+# A variety of panics and hangs with /tmp on a reiserfs filesystem
+# Any other panic, hang, or strange behavior
 #
 # It turns out that there's a limit of six environment variables on the
 # kernel command line. When that limit is reached or exceeded, argument
@@ -57,379 +55,151 @@ kernel panic 主要有以下幾個出錯提示：
 # The fix is to put less stuff on the command line. Glomming all your
 # setup variables into one is probably the best way to Go.
 ```
-linux核心命令列有6個環境變數。如果即將達到或者已經超過了的話 root= 引數會沒有傳進去
-啟動時會引發panics錯誤。
-vi grub.conf
+Linux 核心命令列有 6 個環境變數。如果即將達到或者已經超過了的話 `root=` 引數會沒有傳進去，啟動時會引發 panics 錯誤。
 
-	#####################
-	title Red Hat Enterprise Linux AS (2.6.9-67.0.15.ELsmp)
-	root (hd0,0)
-	kernel /boot/vmlinuz-2.6.9-67.0.15.ELsmp ro root=LABEL=/
-	initrd /boot/initrd-2.6.9-67.0.15.ELsmp.img
-	title Red Hat Enterprise Linux AS-up (2.6.9-67.EL)
-	root (hd0,0)
-	kernel /boot/vmlinuz-2.6.9-67.EL ro root=LABEL=/
-	initrd /boot/initrd-2.6.9-67.EL.img
-	應該是 其中的 root=LABEL=/ 沒有起作用。
-	
+`vi grub.conf`
+```grub
+#####################
+title Red Hat Enterprise Linux AS (2.6.9-67.0.15.ELsmp)
+root (hd0,0)
+kernel /boot/vmlinuz-2.6.9-67.0.15.ELsmp ro root=LABEL=/
+initrd /boot/initrd-2.6.9-67.0.15.ELsmp.img
+title Red Hat Enterprise Linux AS-up (2.6.9-67.EL)
+root (hd0,0)
+kernel /boot/vmlinuz-2.6.9-67.EL ro root=LABEL=/
+initrd /boot/initrd-2.6.9-67.EL.img
+```
+應該是其中的 `root=LABEL=/` 沒有起作用。
+
 ### 4、核心更新
 
-網上相關文件多半是因為升級核心引起的，建議使用官方標準版、穩定版
-另外還有使用磁碟的lvm 邏輯卷，新增CPU和記憶體。可在BIOS中禁掉音效卡驅動等不必要的裝置。
-也有報是ext3檔案系統的問題。
-解決： 手工編譯核心，把 ext3相關的模組都編譯進去，
+網上相關文件多半是因為升級核心引起的，建議使用官方標準版、穩定版。
+另外還有使用磁碟的 LVM 邏輯卷，新增 CPU 和記憶體。可在 BIOS 中禁掉音效卡驅動等不必要的裝置。也有報是 ext3 檔案系統的問題。
+解決： 手工編譯核心，把 ext3 相關的模組都編譯進去。
 
-### 5、處理panic後的系統自動重啟
-panic.c原始檔有個方法，當panic掛起後，指定超時時間，可以重新啟動機器
-``` c
+### 5、處理 panic 後的系統自動重啟
+
+`panic.c` 原始檔有個方法，當 panic 掛起後，指定超時時間，可以重新啟動機器。
+```c
 if (panic_timeout > 0)
 {
-int i;
-/*
-* Delay timeout seconds before rebooting the machine.
-* We can't use the "normal" timers since we just panicked..
-*/
-printk(KERN_EMERG "Rebooting in %d seconds..",panic_timeout);
-for (i = 0; i < panic_timeout; i++) {
-touch_nmi_watchdog();
-mdelay(1000);
+    int i;
+    /*
+    * Delay timeout seconds before rebooting the machine.
+    * We can't use the "normal" timers since we just panicked..
+    */
+    printk(KERN_EMERG "Rebooting in %d seconds..",panic_timeout);
+    for (i = 0; i < panic_timeout; i++) {
+        touch_nmi_watchdog();
+        mdelay(1000);
+    }
 }
 ```
 
 #### 修改方法：
 
-	/etc/sysctl.conf檔案中加入
-	kernel.panic = 30 #panic錯誤中自動重啟，等待時間為30秒
-	kernel.sysrq=1 #啟用Magic SysRq！ 否則，鍵盤滑鼠沒有響應
-	Linux Kernel Panic之後的招數
+在 `/etc/sysctl.conf` 檔案中加入：
+```
+kernel.panic = 30 #panic錯誤中自動重啟，等待時間為30秒
+kernel.sysrq=1 #啟用Magic SysRq！ 否則，鍵盤滑鼠沒有響應
+```
 
-	Linux的穩定性勿容置疑，
-	但是有些時候一些Kernel的致命錯誤還是會發生（有些時候甚至是因為硬體的原因或驅動故障），
-	Kernel Panic會導致系統crash，並且預設的系統會一直hung在那裡，直到你去把它重新啟動！
-	不過你可以在/etc/sysctl.conf檔案中加入
-	kernel.panic = 20
-	來告訴系統從Panic錯誤中自動重啟，等待時間為20秒！這個由管理員自己設定！
-	另外一個討厭的事情是系統hung住之後，鍵盤滑鼠沒有響應，
-	這個可以通過設定Magic SysRq來試著解決，也是在/etc/sysctl.conf中，
-	kernel.sysrq=1
-	來啟用Magic SysRq！
-	這樣在掛住的時候至少還有一招可以使，
-	按住 [ALT]+[SysRq]+[COMMAND], 這裡SysRq是Print SCR鍵，
-	而COMMAND按以下來解釋！b - 立即重啟
-	e - 傳送SIGTERM給init之外的系統程序
-	o - 關機
-	s - sync同步所有的檔案系統
-	u - 試圖重新掛載檔案系統
-當然，誰也不希望經常用到這些招數！:O，有備無患而已
+**Linux Kernel Panic 之後的招數**
 
-Kernel panic問題如何除錯
+你可以在 `/etc/sysctl.conf` 檔案中加入 `kernel.panic = 20` 來告訴系統從 Panic 錯誤中自動重啟，等待時間為 20 秒！這個由管理員自己設定！
+另外一個討厭的事情是系統 hung 住之後，鍵盤滑鼠沒有響應，這個可以通過設定 Magic SysRq 來試著解決，也是在 `/etc/sysctl.conf` 中，`kernel.sysrq=1` 來啟用 Magic SysRq！
 
-Linux kernel panic是很難定位和排查的重大故障,一旦系統發生了kernel panic，相關的日誌資訊非常少，而一種常見的排查方法—重現法–又很難實現，因此遇到kernel panic的問題，一般比較頭疼。
+這樣在掛住的時候至少還有一招可以使，按住 `[ALT]+[SysRq]+[COMMAND]`, 這裡 SysRq 是 Print SCR 鍵，而 COMMAND 按以下來解釋！
+- b - 立即重啟
+- e - 傳送 SIGTERM 給 init 之外的系統程序
+- o - 關機
+- s - sync 同步所有的檔案系統
+- u - 試圖重新掛載檔案系統
 
-沒有一個萬能和完美的方法來解決所有的kernel panic問題，這篇文章僅僅只是給出一些思路，一來如何解決kernel panic的問題，二來可以儘可能減少發生kernel panic的機會。
+當然，誰也不希望經常用到這些招數！:O，有備無患而已。
 
-什麼是kernel panic
+### Kernel panic 問題如何除錯
 
-就像名字所暗示的那樣，它表示Linux kernel走到了一個不知道該怎麼走下一步的狀況，一旦到這個情況，kernel就儘可能把它此時能獲取的全部資訊都打印出來，至於能打印出多少資訊，那就看是那種情況導致它panic了。
+Linux kernel panic 是很難定位和排查的重大故障,一旦系統發生了 kernel panic，相關的日誌資訊非常少，而一種常見的排查方法—重現法–又很難實現，因此遇到 kernel panic 的問題，一般比較頭疼。
 
-有兩種主要型別kernel panic：
+#### 什麼是 kernel panic
 
-1.hard panic(也就是Aieee資訊輸出)
-2.soft panic (也就是Oops資訊輸出)
-什麼能導致kernel panic
+它表示 Linux kernel 走到了一個不知道該怎麼走下一步的狀況。有兩種主要型別 kernel panic：
+1. hard panic (也就是 Aieee 資訊輸出)
+2. soft panic (也就是 Oops 資訊輸出)
 
-只有載入到核心空間的驅動模組才能直接導致kernel panic，你可以在系統正常的情況下，使用lsmod檢視當前系統載入了哪些模組。
-除此之外，內建在核心裡的元件（比如memory map等）也能導致panic。
+#### 什麼能導致 kernel panic
 
-因為hard panic和soft panic本質上不同，因此我們分別討論。
+只有載入到核心空間的驅動模組才能直接導致 kernel panic。
 
-如何排查hard panic
+#### 如何排查 hard panic
 
-一般出現下面的情況，就認為是發生了kernel panic:
+一般出現下面的情況，就認為是發生了 kernel panic:
+- 機器徹底被鎖定，不能使用
+- 數字鍵(Num Lock)，大寫鎖定鍵(Caps Lock)，滾動鎖定鍵(Scroll Lock)不停閃爍。
+- 如果在終端下，應該可以看到核心 dump 出來的資訊
+- 和 Windows 藍屏相似
 
-機器徹底被鎖定，不能使用
-數字鍵(Num Lock)，大寫鎖定鍵(Caps Lock)，滾動鎖定鍵(Scroll Lock)不停閃爍。
-如果在終端下，應該可以看到核心dump出來的資訊（包括一段”Aieee”資訊或者”Oops”資訊）
-和Windows藍屏相似
-原因：
+**原因：**
+對於 hard panic 而言，最大的可能性是驅動模組的中斷處理 (interrupt handler) 導致的，一般是因為驅動模組在中斷處理程式中訪問一個空指標 (null pointre)。
 
-對於hard panic而言，最大的可能性是驅動模組的中斷處理(interrupt handler)導致的，一般是因為驅動模組在中斷處理程式中訪問一個空指標(null pointre)。一旦發生這種情況，驅動模組就無法處理新的中斷請求，最終導致系統崩潰。
+**資訊收集**
+- `/var/log/messages`: 幸運的時候，整個 kernel panic 棧跟蹤資訊都能記錄在這裡。
+- 應用程式/庫 日誌: 可能可以從這些日誌資訊裡能看到發生 panic 之前發生了什麼。
+- 終端螢幕 dump 資訊。
 
-資訊收集
-根據panic的狀態不同，核心將記錄所有在系統鎖定之前的資訊。因為kenrel panic是一種很嚴重的錯誤，不能確定系統能記錄多少資訊，下面是一些需要收集的關鍵資訊，他們非常重要，因此儘可能收集全，當然如果系統啟動的時候就kernel panic，那就無法只知道能收集到多少有用的資訊了。
-
-/var/log/messages: 幸運的時候，整個kernel panic棧跟蹤資訊都能記錄在這裡。
-應用程式/庫 日誌: 可能可以從這些日誌資訊裡能看到發生panic之前發生了什麼。
-其他發生panic之前的資訊，或者知道如何重現panic那一刻的狀態
-終端螢幕dump資訊，一般OS被鎖定後，複製，貼上肯定是沒戲了，因此這類資訊，你可以需要藉助數碼相機或者原始的紙筆工具了。
-如果kernel dump資訊既沒有在/var/log/message裡，也沒有在螢幕上，那麼嘗試下面的方法來獲取（當然是在還沒有宕機的情況下）：
-
-如果在圖形介面，切換到終端介面，dump資訊是不會出現在圖形介面的，甚至都不會在圖形模式下的虛擬終端裡。
-確保螢幕不黑屏，可以使用下面的幾個方法：
-setterm -blank 0
-setterm -powerdown 0
-setvesablank off
-從終端，拷貝螢幕資訊（方法見上）
-完整棧跟蹤資訊的排查方法
-
-棧跟蹤資訊(stack trace)是排查kernel panic最重要的資訊，該資訊如果在/var/log/messages日誌裡當然最好，因為可以看到全部的資訊，如果僅僅只是在螢幕上，那麼最上面的資訊可能因為滾屏消失了，只剩下棧跟蹤資訊的一部分。如果你有一個完整棧跟蹤資訊的話，那麼就可能根據這些充分的資訊來定位panic的根本原因。要確認是否有一個足夠的棧跟蹤資訊，你只要查詢包含”EIP”的一行，它顯示了是什麼函式和模組呼叫時導致panic。大概就像下面這個例子一樣：
-``` log
+**完整棧跟蹤資訊的排查方法**
+棧跟蹤資訊 (stack trace) 是排查 kernel panic 最重要的資訊。要確認是否有一個足夠的棧跟蹤資訊，你只要查詢包含 ”EIP” 的一行，它顯示了是什麼函式和模組呼叫時導致 panic。大概就像下面這個例子一樣：
+```log
 EIP is at _dlgn_setevmask [streams-dlgnDriver] 0xe
-
-hard panic的一個完整跟蹤資訊例子：
-
-Unable to handle kernel NULL pointer dereference at virtual address 0000000c
-
-printing eip:
-
-f89e568a
-
-*pde = 32859001
-
-*pte = 00000000
-
-Oops: 0000
-
-Kernel 2.4.9-31enterprise
-
-CPU: 1
-
-EIP: 0010:[<f89e568a>] Tainted: PF
-
-EFLAGS: 00010096
-
-EIP is at _dlgn_setevmask [streams-dlgnDriver] 0xe
-
-eax: 00000000 ebx: f65f5410 ecx: f5e16710 edx: f65f5410
-
-esi: 00001ea0 edi: f5e23c30 ebp: f65f5410 esp: f1cf7e78
-
-ds: 0018 es: 0018 ss: 0018
-
-Process pwcallmgr (pid: 10334, stackpage=f1cf7000)
-
-Stack: 00000000 c01067fa 00000086 f1cf7ec0 00001ea0 f5e23c30 f65f5410 f89e53ec
-
-f89fcd60 f5e16710 f65f5410 f65f5410 f8a54420 f1cf7ec0 f8a4d73a 0000139e
-
-f5e16710 f89fcd60 00000086 f5e16710 f5e16754 f65f5410 0000034a f894e648
-
-Call Trace: [setup_sigcontext+218/288] setup_sigcontext [kernel] 0xda
-
-Call Trace: [<c01067fa>] setup_sigcontext [kernel] 0xda
-
-[<f89e53ec>] dlgnwput [streams-dlgnDriver] 0xe8
-
-[<f89fcd60>] Sm_Handle [streams-dlgnDriver] 0×1ea0
-
-[<f8a54420>] intdrv_lock [streams-dlgnDriver] 0×0
-
-[<f8a4d73a>] Gn_Maxpm [streams-dlgnDriver] 0×8ba
-
-[<f89fcd60>] Sm_Handle [streams-dlgnDriver] 0×1ea0
-
-[<f894e648>] lis_safe_putnext [streams] 0×168
-
-[<f8a7b098>] __insmod_streams-dvbmDriver_S.bss_L117376 [streams-dvbmDriver] 0xab8
-
-[<f8a78821>] dvbmwput [streams-dvbmDriver] 0×6f5
-
-[<f8a79f98>] dvwinit [streams-dvbmDriver] 0×2c0
-
-[<f894e648>] lis_safe_putnext [streams] 0×168
-
-[<f893e6d8>] lis_strputpmsg [streams] 0×54c
-
-[<f895482e>] __insmod_streams_S.rodata_L35552 [streams] 0×182e
-
-[<f8951227>] sys_putpmsg [streams] 0×6f
-
-[system_call+51/56] system_call [kernel] 0×33
-
-[<c010719b>] system_call [kernel] 0×33
-
-Nov 28 12:17:58 talus kernel:
-
-Nov 28 12:17:58 talus kernel:
-
-Code: 8b 70 0c 8b 06 83 f8 20 8b 54 24 20 8b 6c 24 24 76 1c 89 5c
-```
-完整棧資訊無效的排查方法
-
-如果只有部分跟蹤資訊，要快速定位問題的根本原因就變得很難，因為沒有明顯的資訊來告訴我們是哪個模組或者函式的呼叫導致了核心panic，你可能只能看到kernel最後的一些指令。這種情況下，要儘可能多的收集資訊，包括程式日誌，庫的跟蹤資訊，故障重現的步驟等。
-
-Hard panic 部分跟蹤資訊例子（沒有EIP資訊）：
-``` log
-[<c01e42e7>] ip_rcv [kernel] 0×357
-[<f8a179d5>] sramintr [streams_dlgnDriver] 0×32d
-[<f89a3999>] lis_spin_lock_irqsave_fcn [streams] 0×7d
-[<f8a82fdc>] inthw_lock [streams_dlgnDriver] 0×1c
-[<f8a7bad8>] pwswtbl [streams_dlgnDriver] 0×0
-[<f8a15442>] dlgnintr [streams_dlgnDriver] 0×4b
-[<f8a7c30a>] Gn_Maxpm [streams_dlgnDriver] 0×7ae
-[<c0123bc1>] __run_timers [kernel] 0xd1
-[<c0108a6e>] handle_IRQ_event [kernel] 0×5e
-[<c0108c74>] do_IRQ [kernel] 0xa4
-[<c0105410>] default_idle [kernel] 0×0
-[<c0105410>] default_idle [kernel] 0×0
-[<c022fab0>] call_do_IRQ [kernel] 0×5
-[<c0105410>] default_idle [kernel] 0×0
-[<c0105410>] default_idle [kernel] 0×0
-[<c010543d>] default_idle [kernel] 0×2d
-[<c01054c2>] cpu_idle [kernel] 0×2d
-[<c011bb86>] __call_console_drivers [kernel] 0×4b
-[<c011bcfb>] call_console_drivers [kernel] 0xeb
-Code: 8b 50 0c 85 d2 74 31 f6 42 0a 02 74 04 89 44 24 08 31 f6 0f
-<0> Kernel panic: Aiee, killing interrupt handler!
-In interrupt handler – not syncing
-```
-使用核心除錯工具(kenrel debugger ,aka KDB)
-
-如果跟蹤資訊只有一部分且不足以用來定位問題的根本原因時，kernel debugger(KDB)就需要請出來了。
-KDB編譯到核心裡，panic發生時，他將核心引導到一個shell環境而不是鎖定。這樣，我們就可以收集一些與panic相關的資訊了，這對我們定位問題的根本原因有很大的幫助。
-
-使用KDB需要注意，核心必須是基本核心版本，比如是2.4.18，而不是2.4.18-5這樣子的，因為KDB僅對基本核心有效。
-
-## 如何排查soft panic
-
-
-### 症狀：
-
-沒有hard panic嚴重
-通常導致段錯誤(segmentation fault)
-可以看到一個oops資訊，/var/log/messages裡可以搜尋到’Oops’
-機器稍微還能用（但是收集資訊後，應該重啟系統）
-### 原因：
-
-==凡是非中斷處理引發的模組崩潰都將導致soft panic==。在這種情況下，驅動本身會崩潰，但是還不至於讓系統出現致命性失敗，因為它沒有鎖定中斷處理例程。導致hard panic的原因同樣對soft panic也有用（比如在執行時訪問一個空指標)
-
-### 資訊收集：
-當soft panic發生時，核心將產生一個包含核心符號(kernel symbols)資訊的dump資料，這個將記錄在/var/log/messages裡。為了開始排查故障，可以使用ksymoops工具來把核心符號資訊轉成有意義的資料。
-
-為了生成==ksymoops==檔案,需要：
-
-- 從/var/log/messages裡找到的堆疊跟蹤文字資訊儲存為一個新檔案。確保刪除了時間戳(timestamp)，否則ksymoops會失敗。
-- 執行ksymoops程式（如果沒有，請安裝）
-- 詳細的ksymoops執行用法，可以參考ksymoops(8)手冊。
-### 案例分析：
-
-安裝linux出現“Kernel panic-not syncing fatal exception in interrupt”是由於網絡卡驅動原因。
-解決方法：將選項“Onboard Lan”的選項“Disabled”,重啟從光碟機啟動即可。
-等安裝完系統之後，再進入BIOS將“Onboard Lan”的選項給“enable”，下載相應的網絡卡驅動安裝。
-如出現以下報錯：
-init() r8168 … 
-          … …
-         … ：Kernel panic: Fatal exception
-r8168是網絡卡型號。
-在BIOS中禁用網絡卡，從光碟機啟動安裝系統。再從網上下載網絡卡驅動安裝。
-#tar  vjxf  r8168-8.014.00.tar.bz2
-``` c
-# make  clean  modules       (as root or with sudo)
-      # make  install
-      # depmod  -a
-      # modprobe  r8168
 ```
 
-安裝好系統後reboot進入BIOS把網絡卡開啟。
-另有網友在Kernel panic出錯資訊中看到“alc880”，這是個音效卡型別。嘗試著將音效卡關閉，重啟系統，搞定。
-安裝linux系統遇到安裝完成之後，無法啟動系統出現Kernel panic-not syncing fatal exception。很多情況是由於板載音效卡、網絡卡、或是cpu 超執行緒功能（Hyper-Threading ）引起的。這類問題的解決辦法就是先檢視錯誤程式碼中的資訊，找到錯誤所指向的硬體，將其禁用。系統啟動後，安裝好相應的驅動，再啟用該硬體即可。
-另外出現“Kernel Panic — not syncing: attempted to kill init”和“Kernel Panic — not syncing: attempted to kill idle task”有時把記憶體互相換下位置或重新插拔下可以解決問題。
+#### 如何排查 soft panic
 
-----------------------
+**症狀：**
+- 沒有 hard panic 嚴重
+- 通常導致段錯誤 (segmentation fault)
+- 可以看到一個 oops 資訊，`/var/log/messages` 裡可以搜尋到 ’Oops’
+- 機器稍微還能用（但是收集資訊後，應該重啟系統）
 
-分析kernel panic比較關鍵的就是看三點：
-1） 看pc指標的值
-通常是根據指標加上偏移值跟反彙編程式碼對照，找到出問題的位置：
-arm-histbv310-linux-addr2line 0xc004ee18 -evmlinux -f
-2） 看呼叫棧Call Trace://堆疊回溯得到函式呼叫資訊（動態載入LCRT機制）
-``` log
+**原因：**
+凡是非中斷處理引發的模組崩潰都將導致 soft panic。
+
+**資訊收集：**
+當 soft panic 發生時，核心將產生一個包含核心符號 (kernel symbols) 資訊的 dump 資料，這個將記錄在 `/var/log/messages` 裡。為了開始排查故障，可以使用 `ksymoops` 工具來把核心符號資訊轉成有意義的資料。
+
+#### 案例分析：
+
+安裝 linux 出現 “Kernel panic-not syncing fatal exception in interrupt” 是由於網絡卡驅動原因。
+解決方法：將選項 “Onboard Lan” 的選項 “Disabled”, 重啟從光碟機啟動即可。
+
+---
+
+分析 kernel panic 比較關鍵的就是看三點：
+1.  看 pc 指標的值
+2.  看呼叫棧 Call Trace
+
+```log
 Unable to handle kernel paging request at virtual address bc21840c
 pgd = c0004000
 [bc21840c] *pgd=00000000
 Internal error: Oops: 5 [#1] SMP ARM
 Modules linked in: tntfs(PO) ahci_platform libahci_platform libahci xhci_plat_hcd ohci_platform ehci_platform hi_cimaxplus hi_ci hi_pmoc hi_vi hi_sci hi_keyled hi_aenc hi_venc hi_png hi_jpge hi_jpeg hi_ir hi_dbe mali_kbase kds hi_fb hi_tuner hi_mce hi_pvr hi_sync hi_aiao hi_adsp hi_cipher hi_vdec hi_vpss hi_vfmw hi_adec hi_demux hi_otp hi_tde hi_i2c hi_gpio_i2c hi_gpio hi_vou hi_hdmi hi_pq hi_pdm hi_common hi_mmz hi_media
-CPU: 1 PID: 0 Comm: swapper/1 Tainted: P           O   3.18.24_hi3798cv2x #1
+CPU: 1 PID: 0 Comm: swapper/1 Tainted: P O 3.18.24_hi3798cv2x #1
 task: de462880 ti: de4c6000 task.ti: de4c6000
 PC is at scheduler_tick+0x98/0xec
 LR is at 0x1e1c8000
-pc : []    lr : [<1e1c8000>]    psr: 60030193
-sp : de4c7de0  ip : 00000000  fp : de4c7dfc
-r10: debc8478  r9 : c0087c64  r8 : de4c7ea8
-r7 : 00000001  r6 : 00000000  r5 : de462880  r4 : de4c6000
-r3 : bc217fc0  r2 : ddd51fc0  r1 : 00000000  r0 : 000061aa
-Flags: nZCv  IRQs off  FIQs on  Mode SVC_32  ISA ARM  Segment kernel
-Control: 10c5383d  Table: 1c4d406a  DAC: 00000015
+pc : [] lr : [<1e1c8000>] psr: 60030193
+sp : de4c7de0 ip : 00000000 fp : de4c7dfc
+r10: debc8478 r9 : c0087c64 r8 : de4c7ea8
+r7 : 00000001 r6 : 00000000 r5 : de462880 r4 : de4c6000
+r3 : bc217fc0 r2 : ddd51fc0 r1 : 00000000 r0 : 000061aa
+Flags: nZCv IRQs off FIQs on Mode SVC_32 ISA ARM Segment kernel
+Control: 10c5383d Table: 1c4d406a DAC: 00000015
 
 PC: 0xc004ed98:
-ed98  e3c33d7f e59f80c0 e3c3303f e59f40bc e5939014 e1a06004 e7987109 e0865007
-edb8  e1a00005 e595a44c eb19ce04 e595302c e3530000 da000021 e59a3040 e1a0100a
-edd8  e3a02000 e1a00005 e5933044 e12fff33 e1a00005 eb001063 f57ff05b e19630b7
-。。。。。。。。。
-ffc0: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
-ffe0: 00000000 00000000 00000000 00000000 00000013 00000000 00000000 00000000
-[] (rb_next) from [] (timerqueue_del+0x48/0x80)
-[] (timerqueue_del) from [] (__remove_hrtimer+0x48/0xcc)
-[] (__remove_hrtimer) from [] (__run_hrtimer+0x7c/0x1ac)
-[] (__run_hrtimer) from [] (hrtimer_interrupt+0x12c/0x310)
-[] (hrtimer_interrupt) from [] (arch_timer_handler_phys+0x40/0x48)
-[] (arch_timer_handler_phys) from [] (handle_percpu_devid_irq+0xb4/0x11c)
-[] (handle_percpu_devid_irq) from [] (__handle_domain_irq+0x8c/0xe4)
-[] (__handle_domain_irq) from [] (gic_handle_irq+0x30/0x6c)
-[] (gic_handle_irq) from [] (__irq_svc+0x40/0x54)
-Exception stack(0xd836fe50 to 0xd836fe98)
-fe40:                                     00000001 00000000 00000007 00000039
-fe60: dc5b5000 00000000 00000001 bf7d4cdc 00000004 bf7d4cf0 00000000 d836ff24
-fe80: 00001c40 d836fe98 000007c0 bf7b0c78 600f0013 ffffffff
-[] (__irq_svc) from [] (ENGINE_Process+0x1c4/0x928 [hi_adsp])
-[] (ENGINE_Process [hi_adsp]) from [] (AOE_ProcThread_Sw+0x30/0x54 [hi_adsp])
-[] (AOE_ProcThread_Sw [hi_adsp]) from [] (AoEngineTask+0x74/0xd4 [hi_adsp])
-[] (AoEngineTask [hi_adsp]) from [] (kthread+0xd8/0xf4)
-[] (kthread) from [] (ret_from_fork+0x14/0x20)
-Code: e3520000 1a000001 ea000005 e1a02003 (e5923008) 
----[ end trace 020dde7f5de8c403 ]---
-Kernel panic - not syncing: Fatal exception in interrupt
-CPU0: stopping
-CPU: 0 PID: 1593 Comm: video Tainted: P      D    O   3.18.24_hi3798cv2x #1
-[] (unwind_backtrace) from [] (show_stack+0x20/0x24)
-[] (show_stack) from [] (dump_stack+0x84/0x9c)
-[] (dump_stack) from [] (handle_IPI+0x278/0x2c0)
-[] (handle_IPI) from [] (gic_handle_irq+0x64/0x6c)
-[] (gic_handle_irq) from [] (__irq_usr+0x48/0x60)
-Exception stack(0xdc6d9fb0 to 0xdc6d9ff8)
-9fa0:                                     00000000 93f04f88 00000000 00000000
-9fc0: 00382ddc 00000000 000145f0 00000000 00000000 00000000 b6fec000 00000000
-9fe0: 003d0f00 beeddc88 b6f97a64 000145ec 600b0010 ffffffff
-CPU3: stopping
-CPU: 3 PID: 0 Comm: swapper/3 Tainted: P      D    O   3.18.24_hi3798cv2x #1
-[] (unwind_backtrace) from [] (show_stack+0x20/0x24)
-[] (show_stack) from [] (dump_stack+0x84/0x9c)
-[] (dump_stack) from [] (handle_IPI+0x278/0x2c0)
-[] (handle_IPI) from [] (gic_handle_irq+0x64/0x6c)
-[] (gic_handle_irq) from [] (__irq_svc+0x40/0x54)
-Exception stack(0xde4cbf68 to 0xde4cbfb0)
-bf60:                   debdc300 00000000 000440aa c0026860 de4ca000 00000003
-bf80: c0a60274 c0a1cd28 c0a1cd74 c0a60274 00000000 de4cbfbc de4cbfc0 de4cbfb0
-bfa0: c0016684 c0016688 600f0013 ffffffff
-[] (__irq_svc) from [] (arch_cpu_idle+0x40/0x4c)
-[] (arch_cpu_idle) from [] (cpu_startup_entry+0x15c/0x200)
-[] (cpu_startup_entry) from [] (secondary_start_kernel+0x11c/0x13c)
-[] (secondary_start_kernel) from [<00008784>] (0x8784)
-CPU2: stopping
-CPU: 2 PID: 0 Comm: swapper/2 Tainted: P      D    O   3.18.24_hi3798cv2x #1
-[] (unwind_backtrace) from [] (show_stack+0x20/0x24)
-[] (show_stack) from [] (dump_stack+0x84/0x9c)
-[] (dump_stack) from [] (handle_IPI+0x278/0x2c0)
-[] (handle_IPI) from [] (gic_handle_irq+0x64/0x6c)
-[] (gic_handle_irq) from [] (__irq_svc+0x40/0x54)
-Exception stack(0xde4c9f68 to 0xde4c9fb0)
-9f60:                   debd2300 00000000 0009abb8 c0026860 de4c8000 00000002
-9f80: c0a60274 c0a1cd28 c0a1cd74 c0a60274 00000000 de4c9fbc de4c9fc0 de4c9fb0
-9fa0: c0016684 c0016688 600f0013 ffffffff
-[] (__irq_svc) from [] (arch_cpu_idle+0x40/0x4c)
-[] (arch_cpu_idle) from [] (cpu_startup_entry+0x15c/0x200)
-[] (cpu_startup_entry) from [] (secondary_start_kernel+0x11c/0x13c)
-[] (secondary_start_kernel) from [<00008784>] (0x8784)
+ed98 e3c33d7f e59f80c0 e3c3303f e59f40bc e5939014 e1a06004 e7987109 e0865007
+edb8 e1a00005 e595a44c eb19ce04 e595302c e3530000 da000021 e59a3040 e1a0100a
+edd8 e3a02000 e1a00005 e5933044 e12fff33 e1a00005 eb001063 f57ff05b e19630b7
+...
 ---[ end Kernel panic - not syncing: Fatal exception in interrupt
-```
-
-[來源](https://www.itread01.com/content/1546945942.html)

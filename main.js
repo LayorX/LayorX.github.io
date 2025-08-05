@@ -18,13 +18,12 @@
 
     // --- 核心功能 ---
 
-    // ✨ [修正] 更新 marked.js 渲染器以相容新版 API (v5+)
+    // ✨ [FINAL FIX] 更新 marked.js 渲染器以解決所有解析錯誤
     const renderer = new marked.Renderer();
     
-    // 使用傳統 function() {} 以確保 'this' 指向 renderer 實例，從而可以呼叫 this.parser
     renderer.heading = function(token) {
         const level = token.depth;
-        const text = this.parser.parseInline(token.tokens); // 使用 parser 來解析標題中的行內元素 (如連結)
+        const text = this.parser.parseInline(token.tokens);
         if (level === 2) {
             return `<h2 class="text-2xl font-bold text-amber-400 mt-6 mb-3 font-serif">${text}</h2>`;
         }
@@ -37,45 +36,67 @@
     renderer.link = function(token) {
         const href = token.href;
         const title = token.title;
-        const text = this.parser.parseInline(token.tokens); // 解析連結文字中的行內元素
+        const text = this.parser.parseInline(token.tokens);
         return `<a href="${href}" target="_blank" rel="noopener noreferrer" class="text-amber-400 hover:underline" title="${title || ''}">${text}</a>`;
     };
 
     renderer.image = function(token) {
         const href = token.href;
         const title = token.title;
-        const text = token.text; // 圖片的 alt 文字是純文字，不需解析
+        const text = token.text;
         return `<img src="${href}" alt="${text}" title="${title || ''}" class="rounded-lg my-4 mx-auto max-w-full h-auto">`;
     };
 
-    // ✨ [修正] 新增 list 渲染器以解決 "Token with 'list' type was not found" 錯誤
     renderer.list = function(token) {
-        const body = this.parser.parse(token.items);
         const tag = token.ordered ? 'ol' : 'ul';
         const listClass = token.ordered ? 'list-decimal ml-6 space-y-2' : 'list-disc ml-6 space-y-2';
+        let body = '';
+        for (const item of token.items) {
+            const itemText = this.parser.parseInline(item.tokens);
+            if (item.task) {
+                body += `<li class="list-none flex items-start"><input type="checkbox" disabled ${item.checked ? 'checked' : ''} class="mr-2 mt-1.5 flex-shrink-0"><span>${itemText}</span></li>`;
+            } else {
+                body += `<li>${itemText}</li>`;
+            }
+        }
         return `<${tag} class="${listClass}">${body}</${tag}>`;
     };
 
-    renderer.listitem = function(token) {
-        const text = this.parser.parseInline(token.tokens); // 解析列表項中的行內元素
-        // 處理任務列表 (task list) 的情況，例如: - [x] Do this
-        if (token.task) {
-            return `<li class="ml-6 list-none flex items-start task-list-item"><input type="checkbox" disabled ${token.checked ? 'checked' : ''} class="mr-2 mt-1.5 flex-shrink-0"><span>${text}</span></li>`;
-        }
-        // 對於普通列表項，我們讓父級的 ul/ol 來處理 list-disc/list-decimal
-        return `<li>${text}</li>`;
-    };
-
     renderer.paragraph = function(token) {
-        const text = this.parser.parseInline(token.tokens); // 解析段落中的行內元素
+        const text = this.parser.parseInline(token.tokens);
         return `<p class="mb-4">${text}</p>`;
     };
 
+    renderer.blockquote = function(token) {
+        const text = this.parser.parse(token.tokens);
+        const innerText = text.replace(/<p>|<\/p>\n/g, '').trim();
+
+        if (innerText.toLowerCase().startsWith('success')) {
+            const content = innerText.substring('success'.length).replace(/<br>/g, '\n');
+            return `<div class="p-4 my-4 text-sm text-green-800 rounded-lg bg-green-50 dark:bg-gray-800 dark:text-green-400" role="alert">${marked.parse(content)}</div>`;
+        }
+        
+        if (innerText.toLowerCase().startsWith('info')) {
+            const content = innerText.substring('info'.length).replace(/<br>/g, '\n');
+            return `<div class="p-4 my-4 text-sm text-blue-800 rounded-lg bg-blue-50 dark:bg-gray-800 dark:text-blue-400" role="alert">${marked.parse(content)}</div>`;
+        }
+
+        return `<blockquote class="p-4 my-4 border-l-4 border-gray-500 bg-gray-800">${text}</blockquote>`;
+    };
+
+    renderer.code = function(token) {
+        const code = token.text;
+        const lang = token.lang || 'plaintext';
+        return `<pre class="bg-gray-900 text-white p-4 my-4 rounded-md overflow-x-auto"><code class="language-${lang}">${code}</code></pre>`;
+    };
+    
+    // 移除 listitem 渲染器，因為邏輯已整合到 list 渲染器中
+    delete renderer.listitem;
 
     marked.setOptions({
       renderer: renderer,
-      gfm: true, // 啟用 GitHub Flavored Markdown
-      breaks: true, // 將單一換行符轉換為 <br>
+      gfm: true,
+      breaks: true,
     });
 
     function revealOnScroll() {
@@ -166,7 +187,6 @@
         }
     }
 
-    // ✨ [優化] 使用 marked.js 函式庫取代自製解析器
     function parseMarkdown(text) {
         return marked.parse(text);
     }
@@ -257,7 +277,6 @@
         openModal(portfolioModal);
     }
 
-    // ✨ [偵錯] 新增了更詳細的錯誤處理
     function openBlogModal(index) {
         const post = blogData[index];
         if (!post) return;
@@ -268,7 +287,6 @@
         fetch(post.file)
             .then(res => {
                 if (!res.ok) {
-                    // 如果回應不成功 (例如 404 找不到檔案), 就拋出一個帶有狀態碼的錯誤
                     throw new Error(`HTTP error! status: ${res.status}`);
                 }
                 return res.text();
@@ -282,22 +300,19 @@
                         <div class="text-content-area">${contentHTML}</div>
                     `;
                 } catch (parseError) {
-                    // 如果 Markdown 解析失敗, 拋出一個特定的錯誤
                     throw new Error(`Markdown parsing failed: ${parseError.message}`);
                 }
             })
             .catch(err => {
-                // 將詳細錯誤印在開發者工具的 Console 中
                 console.error("載入或解析 Blog 內容時發生錯誤:", err);
                 
-                // 在畫面上顯示一個對使用者更友好的錯誤訊息
                 let errorMessage = '錯誤: 無法載入 Blog 內容。';
                 if (err.message.includes("HTTP error")) {
                     errorMessage += '<br><span class="text-sm text-red-500">原因：找不到檔案或伺服器錯誤。請檢查檔案路徑是否正確，或嘗試使用本地伺服器環境運行。</span>';
                 } else if (err.message.includes("parsing failed")) {
                     errorMessage += '<br><span class="text-sm text-red-500">原因：Markdown 檔案內容格式有誤。</span>';
                 } else {
-                     errorMessage += '<br><span class="text-sm text-red-500">請按 F12 打開開發者工具的 Console 查看詳細錯誤訊息。</span>';
+                     errorMessage += `<br><span class="text-sm text-red-500">詳細資訊: ${err.message}</span>`;
                 }
                 blogModalContent.innerHTML = `<p class="text-red-400">${errorMessage}</p>`;
             });
