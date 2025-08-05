@@ -1,168 +1,77 @@
 <!DOCTYPE html>
 <html lang="zh-TW" class="scroll-smooth">
 <head>
-    <script data-goatcounter="https://layorx.goatcounter.com/count"
-        async src="//gc.zgo.at/count.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LayorX | 個人網站</title>
     
-    <!-- 優化: 新增網站圖示 (Favicon) -->
+    <!-- GoatCounter Analytics - Note: This will only work on a live server, not on local file:/// -->
+    <script data-goatcounter="https://layorx.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="探索 LayorX 的創作世界，一個集結了影片剪輯、App開發、自動化工具、AI應用與小說創作的個人作品集網站。">
+    <meta name="keywords" content="LayorX, RR, 個人網站, 作品集, 小說, 影片製作, AI創作, 夢境時差">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://layorx.github.io/">
+    <meta property="og:title" content="LayorX | 個人網站">
+    <meta property="og:description" content="探索 LayorX 的創作世界...">
+    <meta property="og:image" content="https://layorx.github.io/data/images/RR頭像.jpg">
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://layorx.github.io/">
+    <meta property="twitter:title" content="LayorX | 個人網站">
+    <meta property="twitter:description" content="探索 LayorX 的創作世界...">
+    <meta property="twitter:image" content="https://layorx.github.io/data/images/RR頭像.jpg">
+
+    <!-- Favicon -->
     <link rel="apple-touch-icon" sizes="180x180" href="data/images/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="data/images/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="data/images/favicon-16x16.png">
     <link rel="manifest" href="data/images/site.webmanifest">
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Google Fonts -->
+    <!-- Styles and Fonts -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
-    
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
     <style>
-        /* 自定義樣式 */
-        body {
-            background-color: #111827; /* 深石板灰 */
-            color: #d1d5db; /* 淺灰色 */
-            font-family: 'Inter', sans-serif;
-        }
-        
-        h1, h2, h3, .font-serif {
-            font-family: 'Noto Serif TC', serif;
-        }
-
-        /* 導覽列連結 hover 效果 */
-        .nav-link {
-            position: relative;
-            transition: color 0.3s ease;
-        }
-        .nav-link::after {
-            content: '';
-            position: absolute;
-            width: 0;
-            height: 2px;
-            bottom: -4px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: #f59e0b; /* amber-500 */
-            transition: width 0.3s ease;
-        }
-        .nav-link:hover::after, .nav-link.active::after {
-            width: 100%;
-        }
-        .nav-link:hover, .nav-link.active {
-            color: #f59e0b;
-        }
-
-        /* 內容區塊的動畫 */
-        .content-section {
-            display: none; /* 所有區塊預設隱藏 */
-            animation: fadeIn 0.8s ease-in-out;
-        }
-        .content-section.active {
-            display: block; /* 只有 active 的區塊顯示 */
-        }
-        #home.active {
-            display: flex; /* 首頁使用 flex 佈局置中 */
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* 動態漸變背景 */
-        #home .animated-gradient {
-            background: linear-gradient(135deg, #111827, #1a1a2e, #111827, #2c1a2e);
-            background-size: 400% 400%;
-            animation: gradientAnimation 15s ease infinite;
-        }
-        @keyframes gradientAnimation {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        /* 滾動載入動畫 */
-        .reveal {
-            opacity: 0;
-            transform: translateY(50px);
-            transition: all 1s ease-in-out;
-        }
-        .reveal.visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        /* 技能條動畫 */
-        .skill-bar-progress {
-            width: 0%;
-            transition: width 1.5s ease-in-out;
-        }
-
-        /* 自定義捲軸 */
+        /* All styles remain the same as the previous version */
+        body { background-color: #111827; color: #d1d5db; font-family: 'Inter', sans-serif; }
+        h1, h2, h3, .font-serif { font-family: 'Noto Serif TC', serif; }
+        .nav-link { position: relative; transition: color 0.3s ease; }
+        .nav-link::after { content: ''; position: absolute; width: 0; height: 2px; bottom: -4px; left: 50%; transform: translateX(-50%); background-color: #f59e0b; transition: width 0.3s ease; }
+        .nav-link:hover::after, .nav-link.active::after { width: 100%; }
+        .nav-link:hover, .nav-link.active { color: #f59e0b; }
+        .content-section { display: none; animation: fadeIn 0.8s ease-in-out; }
+        .content-section.active { display: block; }
+        #home.active { display: flex; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        #home .animated-gradient { background: linear-gradient(135deg, #111827, #1a1a2e, #111827, #2c1a2e); background-size: 400% 400%; animation: gradientAnimation 15s ease infinite; }
+        @keyframes gradientAnimation { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        .reveal { opacity: 0; transform: translateY(50px); transition: all 1s ease-in-out; }
+        .reveal.visible { opacity: 1; transform: translateY(0); }
+        .skill-bar-progress { width: 0%; transition: width 1.5s ease-in-out; }
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #1f2937; }
         ::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
-
-        /* 作品集篩選按鈕樣式 */
-        .filter-btn {
-            transition: all 0.3s ease;
-        }
-        .filter-btn.active {
-            background-color: #f59e0b;
-            color: #111827;
-        }
-        
-        /* 彈出視窗通用樣式 */
-        .modal {
-            transition: opacity 0.3s ease-in-out;
-        }
-        .modal-content-area {
-            max-height: 80vh;
-        }
+        .filter-btn { transition: all 0.3s ease; }
+        .filter-btn.active { background-color: #f59e0b; color: #111827; }
+        .modal { transition: opacity 0.3s ease-in-out; }
+        .modal-content-area { max-height: 80vh; }
         .modal-content-area::-webkit-scrollbar { width: 6px; }
         .modal-content-area::-webkit-scrollbar-track { background: #374151; }
         .modal-content-area::-webkit-scrollbar-thumb { background: #9ca3af; border-radius: 10px; }
-        
-        .novel-text-content {
-            line-height: 1.8;
-            font-size: 1.1rem;
-            white-space: pre-wrap; /* 保留換行符 */
-        }
-        
-        /* 作品集圖集樣式 */
-        .portfolio-gallery-image {
-            display: none;
-            animation: fadeIn 0.5s;
-        }
-        .portfolio-gallery-image.active {
-            display: block;
-        }
-        .gallery-arrow {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            background-color: rgba(0,0,0,0.5);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 2.5rem;
-            height: 2.5rem;
-            font-size: 1.25rem;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        .gallery-arrow:hover {
-            background-color: rgba(0,0,0,0.8);
-        }
+        .text-content-area { line-height: 1.8; font-size: 1.1rem; white-space: pre-wrap; }
+        .text-content-area h2 { font-size: 1.75rem; font-weight: bold; color: #f59e0b; margin-top: 1.5rem; margin-bottom: 1rem; }
+        .text-content-area h3 { font-size: 1.5rem; font-weight: bold; color: #fbbf24; margin-top: 1.25rem; margin-bottom: 0.75rem; }
+        .portfolio-gallery-image { display: none; animation: fadeIn 0.5s; }
+        .portfolio-gallery-image.active { display: block; }
+        .gallery-arrow { position: absolute; top: 50%; transform: translateY(-50%); background-color: rgba(0,0,0,0.5); color: white; border: none; border-radius: 50%; width: 2.5rem; height: 2.5rem; font-size: 1.25rem; cursor: pointer; transition: background-color 0.3s; }
+        .gallery-arrow:hover { background-color: rgba(0,0,0,0.8); }
         .gallery-arrow.left { left: 1rem; }
         .gallery-arrow.right { right: 1rem; }
-
     </style>
 </head>
 <body class="overflow-x-hidden">
@@ -171,112 +80,23 @@
     <header id="main-header" class="bg-transparent fixed top-0 left-0 right-0 z-50 transition-all duration-300">
         <div class="container mx-auto px-6 py-4 flex justify-between items-center">
             <a href="#home" class="text-2xl font-bold tracking-wider text-white font-serif nav-trigger">LayorX</a>
-            <nav class="hidden md:flex space-x-8">
-                <a href="#home" class="nav-link nav-trigger active">首頁</a>
-                <a href="#about" class="nav-link nav-trigger">關於我</a>
-                <a href="#portfolio" class="nav-link nav-trigger">作品集</a>
-                <a href="#videos" class="nav-link nav-trigger">影片</a>
-                <a href="#journey" class="nav-link nav-trigger">歷程</a>
-                <a href="#novels" class="nav-link nav-trigger">小說</a>
-                <a href="#blog" class="nav-link nav-trigger">Blog</a>
-                <a href="#contact" class="nav-link nav-trigger">聯繫我</a>
-            </nav>
+            <nav id="desktop-nav" class="hidden md:flex space-x-8"></nav>
             <button id="mobile-menu-button" class="md:hidden text-white focus:outline-none"><i class="fas fa-bars text-2xl"></i></button>
         </div>
-        <div id="mobile-menu" class="hidden md:hidden bg-gray-900">
-            <a href="#home" class="block py-3 px-6 text-center nav-link nav-trigger active">首頁</a>
-            <a href="#about" class="block py-3 px-6 text-center nav-link nav-trigger">關於我</a>
-            <a href="#portfolio" class="block py-3 px-6 text-center nav-link nav-trigger">作品集</a>
-            <a href="#videos" class="block py-3 px-6 text-center nav-link nav-trigger">影片</a>
-            <a href="#journey" class="block py-3 px-6 text-center nav-link nav-trigger">歷程</a>
-            <a href="#novels" class="block py-3 px-6 text-center nav-link nav-trigger">小說</a>
-            <a href="#blog" class="block py-3 px-6 text-center nav-link nav-trigger">Blog</a>
-            <a href="#contact" class="block py-3 px-6 text-center nav-link nav-trigger">聯繫我</a>
-        </div>
+        <div id="mobile-menu" class="hidden md:hidden bg-gray-900"></div>
     </header>
 
     <!-- Main Content -->
     <main class="container mx-auto px-6 py-12 md:py-20">
-        <!-- Home Section -->
-        <section id="home" class="content-section min-h-screen flex-col justify-center items-center text-center -my-12 md:-my-20 -mx-6">
-            <div class="w-full h-full animated-gradient flex flex-col justify-center items-center">
-                <h1 class="text-4xl md:text-6xl font-bold text-white mb-4 reveal">
-                    歡迎來到 <span class="text-amber-400">LayorX</span> 的世界
-                </h1>
-                <p id="typing-text" class="text-lg md:text-2xl text-gray-300 font-light reveal" style="transition-delay: 200ms;"></p>
-            </div>
-        </section>
-
-        <!-- About Me Section -->
-        <section id="about" class="content-section space-y-24">
-            <div>
-                <h2 class="text-4xl font-bold text-center text-white mb-12 reveal">關於我</h2>
-                <div class="flex flex-col md:flex-row items-center gap-12 reveal">
-                    <div class="md:w-1/3">
-                        <img id="profile-img-about" src="" alt="LayorX 的照片" class="rounded-full shadow-lg shadow-black/30 mx-auto border-4 border-gray-700">
-                    </div>
-                    <!-- 修正: 將寫死的文字移除，改為讓 JS 填入的容器 -->
-                    <div id="about-me-text-container" class="md:w-2/3 text-lg space-y-4">
-                        <!-- About me content will be injected by main.js -->
-                    </div>
-                </div>
-            </div>
-            <div id="skills-section" class="mt-16 reveal">
-                <h3 class="text-3xl font-bold text-center text-white mb-8">我的技能</h3>
-                <div class="max-w-4xl mx-auto space-y-6">
-                    <!-- Skills will be injected by JS -->
-                </div>
-            </div>
-        </section>
-
-        <!-- Portfolio Section -->
-        <section id="portfolio" class="content-section">
-            <h2 class="text-4xl font-bold text-center text-white mb-12 reveal">作品集</h2>
-            <div id="portfolio-filters" class="flex justify-center flex-wrap gap-4 mb-8 reveal"></div>
-            <div id="portfolio-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
-        </section>
-        
-        <!-- Videos Section -->
-        <section id="videos" class="content-section">
-            <h2 class="text-4xl font-bold text-center text-white mb-12 reveal">影片作品</h2>
-            <div id="videos-grid" class="grid grid-cols-1 md:grid-cols-2 gap-8"></div>
-        </section>
-
-        <!-- Journey Section -->
-        <section id="journey" class="content-section">
-            <h2 class="text-4xl font-bold text-center text-white mb-16 reveal">我的歷程</h2>
-            <div id="journey-timeline" class="relative max-w-2xl mx-auto"></div>
-        </section>
-
-        <!-- Novels Section -->
-        <section id="novels" class="content-section">
-             <div id="novel-container"></div>
-        </section>
-
-        <!-- Blog Section -->
-        <section id="blog" class="content-section">
-            <h2 class="text-4xl font-bold text-center text-white mb-12 reveal">技術與生活 Blog</h2>
-            <div id="blog-posts-container" class="max-w-3xl mx-auto space-y-6"></div>
-        </section>
-        
-        <!-- Contact Section -->
-        <section id="contact" class="content-section text-center">
-            <h2 class="text-4xl font-bold text-white mb-4 reveal">聯繫我</h2>
-            <p class="text-lg text-gray-400 mb-8 max-w-2xl mx-auto reveal">如果您對我的作品感興趣...</p>
-            <form id="contact-form" action="https://formspree.io/f/xnnzgpdn" method="POST" class="max-w-xl mx-auto space-y-4 text-left reveal">
-                <div class="flex flex-col md:flex-row gap-4">
-                    <input type="text" name="name" placeholder="您的名字" required class="w-full p-3 bg-gray-800 border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500">
-                    <input type="email" name="email" placeholder="您的電子郵件" required class="w-full p-3 bg-gray-800 border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500">
-                </div>
-                <textarea name="message" placeholder="您的訊息..." rows="5" required class="w-full p-3 bg-gray-800 border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"></textarea>
-                <button type="submit" class="w-full p-3 bg-amber-500 text-gray-900 font-bold rounded-md hover:bg-amber-400 transition-colors">發送訊息</button>
-            </form>
-            <div id="form-status" class="mt-4"></div>
-            <div class="mt-12 flex justify-center items-center space-x-8 text-4xl reveal">
-                <a href="mailto:yor31117@gmail.com" class="text-gray-400 hover:text-amber-400 transition-colors" aria-label="Email"><i class="fas fa-envelope"></i></a>
-                <a href="https://github.com/LayorX" target="_blank" rel="noopener noreferrer" class="text-gray-400 hover:text-amber-400 transition-colors" aria-label="GitHub"><i class="fab fa-github"></i></a>
-            </div>
-        </section>
+        <!-- All sections are dynamically populated by JS -->
+        <section id="home" class="content-section min-h-screen flex-col justify-center items-center text-center -my-12 md:-my-20 -mx-6"></section>
+        <section id="about" class="content-section space-y-24"></section>
+        <section id="portfolio" class="content-section"></section>
+        <section id="videos" class="content-section"></section>
+        <section id="journey" class="content-section"></section>
+        <section id="novels" class="content-section"></section>
+        <section id="blog" class="content-section"></section>
+        <section id="contact" class="content-section text-center"></section>
     </main>
 
     <!-- Footer -->
@@ -294,14 +114,11 @@
             <div id="novel-navigation" class="p-4 border-t border-gray-700 flex justify-between"></div>
         </div>
     </div>
-
     <div id="portfolio-modal" class="modal fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4 hidden opacity-0">
         <div class="bg-gray-800 text-gray-300 rounded-lg shadow-xl w-full max-w-5xl relative flex flex-col md:flex-row">
             <button class="close-modal-btn absolute -top-4 -right-4 text-white bg-amber-500 rounded-full w-10 h-10 text-2xl flex items-center justify-center">&times;</button>
             <div class="md:w-3/5 p-6 flex flex-col items-center justify-center relative">
-                <div id="portfolio-gallery-images" class="w-full aspect-video relative mb-4">
-                    <!-- Gallery images will be injected here -->
-                </div>
+                <div id="portfolio-gallery-images" class="w-full aspect-video relative mb-4"></div>
                 <button id="gallery-prev" class="gallery-arrow left"><i class="fas fa-chevron-left"></i></button>
                 <button id="gallery-next" class="gallery-arrow right"><i class="fas fa-chevron-right"></i></button>
                 <div id="portfolio-gallery-dots" class="flex space-x-2"></div>
@@ -309,8 +126,14 @@
             <div id="portfolio-modal-details" class="md:w-2/5 p-6 modal-content-area overflow-y-auto bg-gray-900/30"></div>
         </div>
     </div>
+    <div id="blog-modal" class="modal fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4 hidden opacity-0">
+        <div class="bg-gray-800 text-gray-300 rounded-lg shadow-xl w-full max-w-4xl relative">
+            <button class="close-modal-btn absolute -top-4 -right-4 text-white bg-amber-500 rounded-full w-10 h-10 text-2xl flex items-center justify-center">&times;</button>
+            <div id="blog-modal-content" class="modal-content-area p-6 md:p-8 overflow-y-auto"></div>
+        </div>
+    </div>
 
-    <!-- 引入分離的 JavaScript 檔案 -->
+    <!-- JavaScript Files -->
     <script src="data.js"></script>
     <script src="main.js"></script>
 
