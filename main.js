@@ -18,9 +18,10 @@
 
     // --- 核心功能 ---
 
-    // ✨ [FINAL FIX] 更新 marked.js 渲染器以解決所有解析錯誤
+    // ✨ [FINAL FIX] 修正 marked.js 渲染器，簡化並穩定化
     const renderer = new marked.Renderer();
     
+    // 自訂標題樣式
     renderer.heading = function(token) {
         const level = token.depth;
         const text = this.parser.parseInline(token.tokens);
@@ -33,70 +34,55 @@
         return `<h${level} class="font-serif">${text}</h${level}>`;
     };
 
+    // 自訂連結樣式
     renderer.link = function(token) {
-        const href = token.href;
-        const title = token.title;
-        const text = this.parser.parseInline(token.tokens);
-        return `<a href="${href}" target="_blank" rel="noopener noreferrer" class="text-amber-400 hover:underline" title="${title || ''}">${text}</a>`;
+        return `<a href="${token.href}" target="_blank" rel="noopener noreferrer" class="text-amber-400 hover:underline" title="${token.title || ''}">${this.parser.parseInline(token.tokens)}</a>`;
     };
 
+    // 自訂圖片樣式
     renderer.image = function(token) {
-        const href = token.href;
-        const title = token.title;
-        const text = token.text;
-        return `<img src="${href}" alt="${text}" title="${title || ''}" class="rounded-lg my-4 mx-auto max-w-full h-auto">`;
+        return `<img src="${token.href}" alt="${token.text}" title="${token.title || ''}" class="rounded-lg my-4 mx-auto max-w-full h-auto">`;
     };
 
-    renderer.list = function(token) {
-        const tag = token.ordered ? 'ol' : 'ul';
-        const listClass = token.ordered ? 'list-decimal ml-6 space-y-2' : 'list-disc ml-6 space-y-2';
-        let body = '';
-        for (const item of token.items) {
-            const itemText = this.parser.parseInline(item.tokens);
-            if (item.task) {
-                body += `<li class="list-none flex items-start"><input type="checkbox" disabled ${item.checked ? 'checked' : ''} class="mr-2 mt-1.5 flex-shrink-0"><span>${itemText}</span></li>`;
-            } else {
-                body += `<li>${itemText}</li>`;
-            }
-        }
-        return `<${tag} class="${listClass}">${body}</${tag}>`;
-    };
-
+    // 自訂段落樣式
     renderer.paragraph = function(token) {
-        const text = this.parser.parseInline(token.tokens);
-        return `<p class="mb-4">${text}</p>`;
+        return `<p class="mb-4">${this.parser.parseInline(token.tokens)}</p>`;
     };
-
+    
+    // 自訂引用區塊樣式 (支援 info 和 success 提示)
     renderer.blockquote = function(token) {
         const text = this.parser.parse(token.tokens);
         const innerText = text.replace(/<p>|<\/p>\n/g, '').trim();
 
         if (innerText.toLowerCase().startsWith('success')) {
-            const content = innerText.substring('success'.length).replace(/<br>/g, '\n');
+            const content = innerText.substring('success'.length).replace(/<br>/g, '\n').trim();
             return `<div class="p-4 my-4 text-sm text-green-800 rounded-lg bg-green-50 dark:bg-gray-800 dark:text-green-400" role="alert">${marked.parse(content)}</div>`;
         }
         
         if (innerText.toLowerCase().startsWith('info')) {
-            const content = innerText.substring('info'.length).replace(/<br>/g, '\n');
+            const content = innerText.substring('info'.length).replace(/<br>/g, '\n').trim();
             return `<div class="p-4 my-4 text-sm text-blue-800 rounded-lg bg-blue-50 dark:bg-gray-800 dark:text-blue-400" role="alert">${marked.parse(content)}</div>`;
         }
 
         return `<blockquote class="p-4 my-4 border-l-4 border-gray-500 bg-gray-800">${text}</blockquote>`;
     };
 
+    // 自訂程式碼區塊樣式
     renderer.code = function(token) {
         const code = token.text;
         const lang = token.lang || 'plaintext';
+        // 使用 Prism.js 等高亮庫時，可以在此處添加對應的 class
         return `<pre class="bg-gray-900 text-white p-4 my-4 rounded-md overflow-x-auto"><code class="language-${lang}">${code}</code></pre>`;
     };
     
-    // 移除 listitem 渲染器，因為邏輯已整合到 list 渲染器中
+    // 移除所有對 list 和 listitem 的自訂渲染，使用 marked.js 的預設穩定行為
+    delete renderer.list;
     delete renderer.listitem;
 
     marked.setOptions({
       renderer: renderer,
-      gfm: true,
-      breaks: true,
+      gfm: true, // 啟用 GitHub Flavored Markdown
+      breaks: true, // 將單一換行符轉換為 <br>
     });
 
     function revealOnScroll() {
