@@ -6,9 +6,8 @@
     let typingTimeout, galleryInterval;
     let currentNovelContentIndex = -1;
 
-    // --- 元素快取 (修正: 將導覽列變數移至此處) ---
+    // --- 元素快取 ---
     const header = document.getElementById('main-header');
-    const desktopNav = document.getElementById('desktop-nav');
     const mobileMenu = document.getElementById('mobile-menu');
     const novelModal = document.getElementById('novel-modal');
     const portfolioModal = document.getElementById('portfolio-modal');
@@ -53,7 +52,7 @@
                 const targetId = this.getAttribute('href');
                 if (targetId.startsWith('#')) {
                     e.preventDefault();
-                    mobileMenu.classList.add('hidden');
+                    document.getElementById('mobile-menu').classList.add('hidden');
                     showSection(targetId);
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                 }
@@ -107,14 +106,42 @@
         }
     }
 
+    // 優化: 建立一個更強大的 Markdown 解析器
     function parseMarkdown(text) {
-        return text
-            .replace(/^## (.*$)/gim, '<h2 class="text-2xl font-bold text-amber-400 mt-6 mb-3">$1</h2>')
-            .replace(/^### (.*$)/gim, '<h3 class="text-xl font-bold text-amber-500 mt-4 mb-2">$1</h3>')
-            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-            .replace(/\*(.*?)\*/g, '<em>$1</em>')
-            .replace(/^\* (.*$)/gim, '<li class="ml-6 list-disc">$1</li>')
-            .replace(/\n/g, '<br>');
+        const blocks = text.split(/\n\s*\n/); // 按空白行分割成段落
+
+        const html = blocks.map(block => {
+            block = block.trim();
+            if (!block) return '';
+
+            // 處理行內樣式
+            const parseInline = (line) => {
+                return line
+                    .replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1" class="rounded-lg my-4 mx-auto max-w-full h-auto">')
+                    .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-amber-400 hover:underline">$1</a>')
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\*(.*?)\*/g, '<em>$1</em>');
+            };
+
+            // 處理區塊樣式
+            if (block.startsWith('## ')) {
+                return `<h2 class="text-2xl font-bold text-amber-400 mt-6 mb-3">${parseInline(block.substring(3))}</h2>`;
+            }
+            if (block.startsWith('### ')) {
+                return `<h3 class="text-xl font-bold text-amber-500 mt-4 mb-2">${parseInline(block.substring(4))}</h3>`;
+            }
+            if (block.startsWith('* ')) {
+                const listItems = block.split('\n').map(item => {
+                    return `<li class="ml-6 list-disc">${parseInline(item.substring(2))}</li>`;
+                }).join('');
+                return `<ul>${listItems}</ul>`;
+            }
+            
+            // 預設為段落
+            return `<p>${parseInline(block.replace(/\n/g, '<br>'))}</p>`;
+        }).join('');
+
+        return html;
     }
 
     function updateNovelModalContent(index) {
@@ -233,13 +260,8 @@
             { href: '#journey', text: '歷程' }, { href: '#novels', text: '小說' },
             { href: '#blog', text: 'Blog' }, { href: '#contact', text: '聯繫我' }
         ];
-        // 修正: 確保 desktopNav 和 mobileMenu 在此處可用
-        if (desktopNav) {
-            desktopNav.innerHTML = navItems.map(item => `<a href="${item.href}" class="nav-link nav-trigger">${item.text}</a>`).join('');
-        }
-        if (mobileMenu) {
-            mobileMenu.innerHTML = navItems.map(item => `<a href="${item.href}" class="block py-3 px-6 text-center nav-link nav-trigger">${item.text}</a>`).join('');
-        }
+        document.getElementById('desktop-nav').innerHTML = navItems.map(item => `<a href="${item.href}" class="nav-link nav-trigger">${item.text}</a>`).join('');
+        document.getElementById('mobile-menu').innerHTML = navItems.map(item => `<a href="${item.href}" class="block py-3 px-6 text-center nav-link nav-trigger">${item.text}</a>`).join('');
     }
 
     function renderHome() {
