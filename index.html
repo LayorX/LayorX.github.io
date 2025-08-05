@@ -130,6 +130,12 @@
                 aspect-ratio: 16 / 9;
             }
         }
+
+        /* ✨ [優化] 修正作品集預覽圖的顯示方式 */
+        #portfolio-grid img.portfolio-item {
+            object-fit: contain; /* 改為 'contain' 以完整顯示圖片，避免裁切 */
+            background-color: #000; /* 為不同長寬比的圖片提供黑色底板，更有一致性 */
+        }
     </style>
 </head>
 <body class="overflow-x-hidden">
