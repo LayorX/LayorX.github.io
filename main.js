@@ -248,6 +248,7 @@
         openModal(portfolioModal);
     }
 
+    // ✨ [偵錯] 新增了更詳細的錯誤處理
     function openBlogModal(index) {
         const post = blogData[index];
         if (!post) return;
@@ -256,17 +257,40 @@
         openModal(blogModal);
 
         fetch(post.file)
-            .then(res => res.ok ? res.text() : Promise.reject(res.status))
+            .then(res => {
+                if (!res.ok) {
+                    // 如果回應不成功 (例如 404 找不到檔案), 就拋出一個帶有狀態碼的錯誤
+                    throw new Error(`HTTP error! status: ${res.status}`);
+                }
+                return res.text();
+            })
             .then(text => {
-                const contentHTML = parseMarkdown(text);
-                blogModalContent.innerHTML = `
-                    <h2 class="text-3xl font-bold text-amber-400 mb-2 font-serif">${post.title}</h2>
-                    <p class="text-sm text-gray-400 mb-6">${post.date}</p>
-                    <div class="text-content-area">${contentHTML}</div>
-                `;
+                try {
+                    const contentHTML = parseMarkdown(text);
+                    blogModalContent.innerHTML = `
+                        <h2 class="text-3xl font-bold text-amber-400 mb-2 font-serif">${post.title}</h2>
+                        <p class="text-sm text-gray-400 mb-6">${post.date}</p>
+                        <div class="text-content-area">${contentHTML}</div>
+                    `;
+                } catch (parseError) {
+                    // 如果 Markdown 解析失敗, 拋出一個特定的錯誤
+                    throw new Error(`Markdown parsing failed: ${parseError.message}`);
+                }
             })
             .catch(err => {
-                blogModalContent.innerHTML = `<p class="text-red-400">錯誤: 無法載入 Blog 內容。</p>`;
+                // 將詳細錯誤印在開發者工具的 Console 中
+                console.error("載入或解析 Blog 內容時發生錯誤:", err);
+                
+                // 在畫面上顯示一個對使用者更友好的錯誤訊息
+                let errorMessage = '錯誤: 無法載入 Blog 內容。';
+                if (err.message.includes("HTTP error")) {
+                    errorMessage += '<br><span class="text-sm text-red-500">原因：找不到檔案或伺服器錯誤。請檢查檔案路徑是否正確，或嘗試使用本地伺服器環境運行。</span>';
+                } else if (err.message.includes("parsing failed")) {
+                    errorMessage += '<br><span class="text-sm text-red-500">原因：Markdown 檔案內容格式有誤。</span>';
+                } else {
+                     errorMessage += '<br><span class="text-sm text-red-500">請按 F12 打開開發者工具的 Console 查看詳細錯誤訊息。</span>';
+                }
+                blogModalContent.innerHTML = `<p class="text-red-400">${errorMessage}</p>`;
             });
     }
 
