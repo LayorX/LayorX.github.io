@@ -18,6 +18,28 @@
 
     // --- 核心功能 ---
 
+    // ✨ [優化] 設定 marked.js 渲染器以符合網站風格
+    const renderer = new marked.Renderer();
+    renderer.heading = (text, level) => {
+        if (level === 2) {
+            return `<h2 class="text-2xl font-bold text-amber-400 mt-6 mb-3 font-serif">${text}</h2>`;
+        }
+        if (level === 3) {
+            return `<h3 class="text-xl font-bold text-amber-500 mt-4 mb-2 font-serif">${text}</h3>`;
+        }
+        return `<h${level} class="font-serif">${text}</h${level}>`;
+    };
+    renderer.link = (href, title, text) => `<a href="${href}" target="_blank" rel="noopener noreferrer" class="text-amber-400 hover:underline" title="${title || ''}">${text}</a>`;
+    renderer.image = (href, title, text) => `<img src="${href}" alt="${text}" title="${title || ''}" class="rounded-lg my-4 mx-auto max-w-full h-auto">`;
+    renderer.listitem = (text) => `<li class="ml-6 list-disc">${text}</li>`;
+    renderer.paragraph = (text) => `<p class="mb-4">${text}</p>`;
+
+    marked.setOptions({
+      renderer: renderer,
+      gfm: true, // 啟用 GitHub Flavored Markdown
+      breaks: true, // 將單一換行符轉換為 <br>
+    });
+
     function revealOnScroll() {
         document.querySelectorAll('.reveal').forEach(el => {
             if (el.getBoundingClientRect().top < window.innerHeight - 100) {
@@ -106,42 +128,9 @@
         }
     }
 
-    // 優化: 建立一個更強大的 Markdown 解析器
+    // ✨ [優化] 使用 marked.js 函式庫取代自製解析器
     function parseMarkdown(text) {
-        const blocks = text.split(/\n\s*\n/); // 按空白行分割成段落
-
-        const html = blocks.map(block => {
-            block = block.trim();
-            if (!block) return '';
-
-            // 處理行內樣式
-            const parseInline = (line) => {
-                return line
-                    .replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1" class="rounded-lg my-4 mx-auto max-w-full h-auto">')
-                    .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-amber-400 hover:underline">$1</a>')
-                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                    .replace(/\*(.*?)\*/g, '<em>$1</em>');
-            };
-
-            // 處理區塊樣式
-            if (block.startsWith('## ')) {
-                return `<h2 class="text-2xl font-bold text-amber-400 mt-6 mb-3">${parseInline(block.substring(3))}</h2>`;
-            }
-            if (block.startsWith('### ')) {
-                return `<h3 class="text-xl font-bold text-amber-500 mt-4 mb-2">${parseInline(block.substring(4))}</h3>`;
-            }
-            if (block.startsWith('* ')) {
-                const listItems = block.split('\n').map(item => {
-                    return `<li class="ml-6 list-disc">${parseInline(item.substring(2))}</li>`;
-                }).join('');
-                return `<ul>${listItems}</ul>`;
-            }
-            
-            // 預設為段落
-            return `<p>${parseInline(block.replace(/\n/g, '<br>'))}</p>`;
-        }).join('');
-
-        return html;
+        return marked.parse(text);
     }
 
     function updateNovelModalContent(index) {

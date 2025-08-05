@@ -1,0 +1,115 @@
+## :beginner:  tmux 前置作業
+
+
+:::info
+- **Install:** `$ sudo apt-get install tmux`
+- **config:** `$ nano ~/.tmux.conf`
+    貼上以下code
+```python=
+#设置前缀为Ctrl + a
+set -g prefix C-a
+#解除Ctrl+b 与前缀的对应关系
+unbind C-b
+#将r 设置为加载配置文件，并显示"reloaded!"信息
+bind r source-file ~/.tmux.conf \; display "Reloaded!"
+#設定訊息卷軸
+set -g terminal-overrides 'xterm*:smcup@:rmcup@'
+# 開關滑鼠模式,預設關掉
+bind m \
+  set -g mouse on\;\
+  display "mouse on"
+bind M \
+  set -g mouse off\;\
+  display "mouse off"
+# Toggle synpanes on
+bind k \
+    set synchronize-panes on \;\
+    display 'SynPanes: ON'
+ 
+# Toggle synpanes off
+bind K \
+    set synchronize-panes off \;\
+    display 'SynPanes: OFF'
+set -g mouse off
+#bind -n C-s run "tmux save-buffer - | xclip -selection clipboard > /dev/null" \; display-message "Copied"
+#bind -n C-v run-shell "tmux set-buffer \"$(xclip -o)\"; tmux paste-buffer" \; display-message "Pasted"
+# 设置默认终端模式为 256color
+# set -g default-terminal "screen-256color"
+
+```
+
+- **上述config作用:**
+
+    :::warning
+    - 更改前綴鍵 
+        - Control+b ->  Control+a [之後簡稱C-a]
+    - 新增滑鼠功能 
+        - C-a m : 開啟滑鼠功能(通常用於使用滾輪)
+        - C-a M : 關閉滑鼠功能
+    - 新增全Pain同步功能
+        - C-a k : 開啟Panes同步功能(通常用於數台終端機同時作業)
+        - C-a K : 關閉同步功能
+    - 新增reload .tumx.conf功能
+        - C-a r : 重讀config
+    :::
+    
+
+
+:::
+
+
+## :point_right: 進入tmux指令
+:::success
+- 創建並進入tmux空間(Session)
+    - tmux : 自動創建一個Session，並自動命名為數字
+    - tmux new -s <name> : 創建一個名為<name>的Session
+    
+- 進入tmux空間(Session)
+    - tmux a -t <name> : 進入Session<name> 
+    - tmux a(at) : 進入最近一次進入的Session
+
+
+- 刪除tmux空間(Session)
+    - tmux kill-session -t <name> : 刪除Session<name>
+    - tmux kill-session -a : 刪除全部session
+    - tmux kill-server : 刪除tmux server
+
+- 重新命名Session
+    - tmux rename-session -t <name> <new_name> :
+    重新命名<name> -> <new_name>   
+- 列出目前Session
+    - tmux ls : 列出目前Session
+:::
+
+## :arrow_heading_down: 在tmux內的指令
+前綴鍵內鍵為(Control+b :若有用上面的config會改成Control+a)
+以下用 **C-a** 代表前綴鍵
+
+### Sessions
+
+- **C-a s** : 列出所有Session
+- **C-a $** : 重新命名所在的Session名稱
+- **C-a d** : ==離開==(detach)session
+- **C-a t** : 進入command模式
+
+### Windows
+- **C-a w** : 列出所有Windows
+- **C-a ,** : 重新命名所在的Window名稱
+- **C-a c** : ==新增==(create)Window
+- **C-a n** : 下一個(next)Window
+- **C-a p** : 上一個(previous)Window
+- **C-a &** : ==刪除==所在Window
+- **C-a 0-9** : 到第幾個Window
+### Panes(split windows)
+- **C-a %** : 直切一個Pane ( 1|2 )
+- **C-a "** : 橫切一個Pane ( $1\over2$ )
+- **C-a o** : 切換到下一個Pane
+- **C-a →** : 切換到右邊Pane(上下左右 以此類推)
+- **C-a }** : 跟下一個Pane互換位置
+- **C-a {** : 跟上一個Pane互換位置
+- **C-a z** : 放大此Pane(縮小同按鍵)
+- **C-a .** : ==顯示==Pane的數字，當數字顯示時按數字==切換==到那個Pane
+- **C-a x** : ==刪除==當前Pane
+- **C-a q** : 顯示Pane的數字
+- **C-a t** : 顯示現在時間
+- **C-a space** : 自動轉換分割方式(layout change) 
