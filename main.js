@@ -62,7 +62,13 @@
 
     function startTypingAnimation() {
         if (typingTimeout || !typingTextElement) return;
-        const texts = ["一位熱愛文字的開發者。", "一位沉浸程式碼的夢想家。", "探索技術與故事的邊界。"];
+        // 優化: 更新首頁動態文字
+        const texts = [
+            "一個將奇思妙想付諸實現的創造者。",
+            "遊走在程式碼、影像與文字之間。",
+            "從一行腳本到一部小說，熱衷於從零到一的過程。",
+            "相信最好的故事，來自最大膽的實踐。"
+        ];
         let textIndex = 0, charIndex = 0, isDeleting = false;
         function type() {
             const currentText = texts[textIndex];
@@ -189,6 +195,7 @@
             <p>${aboutMeData.p1}</p>
             <p>${aboutMeData.p2}</p>
             <p>${aboutMeData.p3}</p>
+            <p>${aboutMeData.p4}</p>
         `;
     }
 
@@ -206,7 +213,8 @@
         const categories = ['all', ...new Set(portfolioData.map(item => item.category))];
         filtersContainer.innerHTML = categories.map(cat => `<button class="filter-btn px-4 py-2 bg-gray-800 text-white rounded-md capitalize ${cat === 'all' ? 'active' : ''}" data-filter="${cat}">${cat === 'all' ? '全部' : cat === 'web' ? '網頁開發' : cat === 'writing' ? '寫作' : '設計'}</button>`).join('');
         const renderItems = (filter) => {
-            grid.innerHTML = portfolioData.map((item, index) => ({...item, originalIndex: index})).filter(item => filter === 'all' || item.category === filter).map(item => `<div class="bg-gray-800 rounded-lg overflow-hidden shadow-lg transform hover:-translate-y-2 transition-transform duration-300 reveal"><img src="${item.images[0]}" alt="${item.title}" class="w-full h-48 object-cover cursor-pointer portfolio-item" data-index="${item.originalIndex}" onerror="this.onerror=null;this.src='https://placehold.co/600x400/1f2937/f59e0b?text=Image+Error';"><div class="p-6"><h3 class="text-2xl font-bold text-amber-400 mb-2">${item.title}</h3><p class="text-gray-400 mb-4">${item.desc}</p><button class="text-white font-semibold hover:text-amber-400 transition-colors portfolio-item" data-index="${item.originalIndex}">查看詳情 <i class="fas fa-arrow-right ml-1"></i></button></div></div>`).join('');
+            // 優化: 為卡片增加邊框樣式
+            grid.innerHTML = portfolioData.map((item, index) => ({...item, originalIndex: index})).filter(item => filter === 'all' || item.category === filter).map(item => `<div class="bg-gray-800 rounded-lg overflow-hidden shadow-lg transform hover:-translate-y-2 transition-transform duration-300 reveal border border-gray-700 hover:border-gray-600 transition-colors"><img src="${item.images[0]}" alt="${item.title}" class="w-full h-48 object-cover cursor-pointer portfolio-item" data-index="${item.originalIndex}" onerror="this.onerror=null;this.src='https://placehold.co/600x400/1f2937/f59e0b?text=Image+Error';"><div class="p-6"><h3 class="text-2xl font-bold text-amber-400 mb-2">${item.title}</h3><p class="text-gray-400 mb-4">${item.desc}</p><button class="text-white font-semibold hover:text-amber-400 transition-colors portfolio-item" data-index="${item.originalIndex}">查看詳情 <i class="fas fa-arrow-right ml-1"></i></button></div></div>`).join('');
             revealOnScroll();
         };
         filtersContainer.addEventListener('click', e => { if (e.target.matches('.filter-btn')) { filtersContainer.querySelector('.active').classList.remove('active'); e.target.classList.add('active'); renderItems(e.target.dataset.filter); } });
@@ -217,7 +225,8 @@
     function renderVideos() {
         const grid = document.getElementById('videos-grid');
         if (!grid || typeof videosData === 'undefined') return;
-        grid.innerHTML = videosData.map(video => `<div class="bg-gray-800 rounded-lg shadow-lg overflow-hidden reveal"><div class="aspect-video">${video.type === 'youtube' ? `<iframe class="w-full h-full" src="https://www.youtube.com/embed/${video.src}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>` : `<video class="w-full h-full" controls src="${video.src}"></video>`}</div><div class="p-6"><h3 class="text-2xl font-bold text-amber-400 mb-2">${video.title}</h3><p class="text-gray-400">${video.description}</p></div></div>`).join('');
+        // 優化: 為卡片增加邊框樣式
+        grid.innerHTML = videosData.map(video => `<div class="bg-gray-800 rounded-lg shadow-lg overflow-hidden reveal border border-gray-700 hover:border-gray-600 transition-colors"><div class="aspect-video">${video.type === 'youtube' ? `<iframe class="w-full h-full" src="https://www.youtube.com/embed/${video.src}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>` : `<video class="w-full h-full" controls src="${video.src}"></video>`}</div><div class="p-6"><h3 class="text-2xl font-bold text-amber-400 mb-2">${video.title}</h3><p class="text-gray-400">${video.description}</p></div></div>`).join('');
     }
 
     function renderJourney() {
@@ -229,13 +238,14 @@
     function renderBlog() {
         const container = document.getElementById('blog-posts-container');
         if (!container || typeof blogData === 'undefined') return;
-        container.innerHTML = blogData.map(post => `<div class="bg-gray-800 p-6 rounded-lg shadow-lg hover:bg-gray-700/50 transition-colors duration-300 reveal"><a href="${post.link}"><p class="text-sm text-gray-400 mb-1">${post.date}</p><h3 class="text-2xl font-bold text-amber-400 mb-2">${post.title}</h3><p class="text-gray-300">${post.summary}</p></a></div>`).join('');
+        // 優化: 為卡片增加邊框樣式
+        container.innerHTML = blogData.map(post => `<div class="bg-gray-800 p-6 rounded-lg shadow-lg hover:bg-gray-700/50 transition-colors duration-300 reveal border border-gray-700 hover:border-gray-600"><a href="${post.link}"><p class="text-sm text-gray-400 mb-1">${post.date}</p><h3 class="text-2xl font-bold text-amber-400 mb-2">${post.title}</h3><p class="text-gray-300">${post.summary}</p></a></div>`).join('');
     }
 
     function renderNovels() {
         const container = document.getElementById('novel-container');
         if (!container || typeof novelsData === 'undefined') return;
-        container.innerHTML = novelsData.map(novel => `<h2 class="text-4xl font-bold text-center text-white mb-4 reveal">${novel.title}</h2><p class="text-lg text-center text-gray-400 mb-12 max-w-3xl mx-auto reveal">${novel.description}</p><div class="bg-gray-800 p-6 rounded-lg shadow-lg flex flex-col md:flex-row gap-8 reveal"><img src="${novel.coverImage}" alt="小說封面" class="w-full md:w-1/3 h-auto object-cover rounded shadow-md" onerror="this.onerror=null;this.src='https://placehold.co/400x600/1f2937/d1d5db?text=Cover';"><div class="md:w-2/3"><div class="mb-8"><h4 class="text-2xl font-bold text-amber-400 mb-4 border-b-2 border-amber-500/30 pb-2">章節列表</h4><div class="space-y-3">${novel.contentList.filter(c => c.type === 'chapter').map((chap) => `<button class="chapter-btn text-left w-full p-3 bg-gray-700/50 rounded-md hover:bg-amber-500/20 transition-colors" data-index="${novel.contentList.indexOf(chap)}"><span class="font-bold text-white">${chap.title}</span><span class="block text-sm text-gray-400">${chap.subtitle}</span></button>`).join('')}</div></div><div><h4 class="text-2xl font-bold text-amber-400 mb-4 border-b-2 border-amber-500/30 pb-2">相關信件</h4><div class="space-y-3">${novel.contentList.filter(c => c.type === 'letter').map((letter) => `<button class="chapter-btn text-left w-full p-3 bg-gray-700/50 rounded-md hover:bg-amber-500/20 transition-colors" data-index="${novel.contentList.indexOf(letter)}"><span class="font-bold text-white">${letter.title}</span></button>`).join('')}</div></div></div></div>`).join('');
+        container.innerHTML = novelsData.map(novel => `<h2 class="text-4xl font-bold text-center text-white mb-4 reveal">${novel.title}</h2><p class="text-lg text-center text-gray-400 mb-12 max-w-3xl mx-auto reveal">${novel.description}</p><div class="bg-gray-800 p-6 rounded-lg shadow-lg flex flex-col md:flex-row gap-8 reveal border border-gray-700"><img src="${novel.coverImage}" alt="小說封面" class="w-full md:w-1/3 h-auto object-cover rounded shadow-md" onerror="this.onerror=null;this.src='https://placehold.co/400x600/1f2937/d1d5db?text=Cover';"><div class="md:w-2/3"><div class="mb-8"><h4 class="text-2xl font-bold text-amber-400 mb-4 border-b-2 border-amber-500/30 pb-2">章節列表</h4><div class="space-y-3">${novel.contentList.filter(c => c.type === 'chapter').map((chap) => `<button class="chapter-btn text-left w-full p-3 bg-gray-700/50 rounded-md hover:bg-amber-500/20 transition-colors" data-index="${novel.contentList.indexOf(chap)}"><span class="font-bold text-white">${chap.title}</span><span class="block text-sm text-gray-400">${chap.subtitle}</span></button>`).join('')}</div></div><div><h4 class="text-2xl font-bold text-amber-400 mb-4 border-b-2 border-amber-500/30 pb-2">相關信件</h4><div class="space-y-3">${novel.contentList.filter(c => c.type === 'letter').map((letter) => `<button class="chapter-btn text-left w-full p-3 bg-gray-700/50 rounded-md hover:bg-amber-500/20 transition-colors" data-index="${novel.contentList.indexOf(letter)}"><span class="font-bold text-white">${letter.title}</span></button>`).join('')}</div></div></div></div>`).join('');
         document.querySelectorAll('.chapter-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const button = e.currentTarget;
@@ -314,7 +324,4 @@
             status.innerHTML = "<p class='text-red-400'>糟糕！訊息發送失敗，請檢查您的網路連線。</p>";
         }
     });
-
-    // 修正: 移除此處的 initializePage() 呼叫，改由 data.js 的末端觸發。
-    // initializePage(); 
 })();
