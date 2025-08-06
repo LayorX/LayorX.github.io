@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-TW" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LayorX | 個人網站</title>
+    
+    <!-- GoatCounter Analytics - Note: This will only work on a live server, not on local file:/// -->
+    <script data-goatcounter="https://layorx.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="探索 LayorX 的創作世界，一個集結了影片剪輯、App開發、自動化工具、AI應用與小說創作的個人作品集網站。">
+    <meta name="keywords" content="LayorX, RR, 個人網站, 作品集, 小說, 影片製作, AI創作, 夢境時差">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://layorx.github.io/">
+    <meta property="og:title" content="LayorX | 個人網站">
+    <meta property="og:description" content="探索 LayorX 的創作世界...">
+    <meta property="og:image" content="https://layorx.github.io/data/images/RR頭像.jpg">
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://layorx.github.io/">
+    <meta property="twitter:title" content="LayorX | 個人網站">
+    <meta property="twitter:description" content="探索 LayorX 的創作世界...">
+    <meta property="twitter:image" content="https://layorx.github.io/data/images/RR頭像.jpg">
+
+    <!-- Favicon -->
+    <link rel="apple-touch-icon" sizes="180x180" href="data/images/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="data/images/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="data/images/favicon-16x16.png">
+    <link rel="manifest" href="data/images/site.webmanifest">
+    
+    <!-- Styles and Fonts -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        /* All styles remain the same as the previous version */
+        body { background-color: #111827; color: #d1d5db; font-family: 'Inter', sans-serif; }
+        h1, h2, h3, .font-serif { font-family: 'Noto Serif TC', serif; }
+        .nav-link { position: relative; transition: color 0.3s ease; }
+        .nav-link::after { content: ''; position: absolute; width: 0; height: 2px; bottom: -4px; left: 50%; transform: translateX(-50%); background-color: #f59e0b; transition: width 0.3s ease; }
+        .nav-link:hover::after, .nav-link.active::after { width: 100%; }
+        .nav-link:hover, .nav-link.active { color: #f59e0b; }
+        .content-section { display: none; animation: fadeIn 0.8s ease-in-out; }
+        .content-section.active { display: block; }
+        #home.active { display: flex; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        #home .animated-gradient { background: linear-gradient(135deg, #111827, #1a1a2e, #111827, #2c1a2e); background-size: 400% 400%; animation: gradientAnimation 15s ease infinite; }
+        @keyframes gradientAnimation { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        .reveal { opacity: 0; transform: translateY(50px); transition: all 1s ease-in-out; }
+        .reveal.visible { opacity: 1; transform: translateY(0); }
+        .skill-bar-progress { width: 0%; transition: width 1.5s ease-in-out; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #1f2937; }
+        ::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+        .filter-btn { transition: all 0.3s ease; }
+        .filter-btn.active { background-color: #f59e0b; color: #111827; }
+        .modal { transition: opacity 0.3s ease-in-out; }
+        .modal-content-area { max-height: 80vh; }
+        .modal-content-area::-webkit-scrollbar { width: 6px; }
+        .modal-content-area::-webkit-scrollbar-track { background: #374151; }
+        .modal-content-area::-webkit-scrollbar-thumb { background: #9ca3af; border-radius: 10px; }
+        .text-content-area { line-height: 1.8; font-size: 1.1rem; white-space: pre-wrap; }
+        .text-content-area h2 { font-size: 1.75rem; font-weight: bold; color: #f59e0b; margin-top: 1.5rem; margin-bottom: 1rem; }
+        .text-content-area h3 { font-size: 1.5rem; font-weight: bold; color: #fbbf24; margin-top: 1.25rem; margin-bottom: 0.75rem; }
+        .portfolio-gallery-image { display: none; animation: fadeIn 0.5s; }
+        .portfolio-gallery-image.active { display: block; }
+        .gallery-arrow { position: absolute; top: 50%; transform: translateY(-50%); background-color: rgba(0,0,0,0.5); color: white; border: none; border-radius: 50%; width: 2.5rem; height: 2.5rem; font-size: 1.25rem; cursor: pointer; transition: background-color 0.3s; }
+        .gallery-arrow:hover { background-color: rgba(0,0,0,0.8); }
+        .gallery-arrow.left { left: 1rem; }
+        .gallery-arrow.right { right: 1rem; }
+
+        /* [優化] 針對行動裝置優化 Modal 體驗 */
+        @media (max-width: 767px) {
+            .modal {
+                padding: 0; /* 移除 backdrop 的內邊距 */
+                align-items: flex-start; /* 讓 modal 內容從頂部開始 */
+            }
+
+            /* 針對所有 modal 的主面板進行樣式調整 */
+            .modal > .bg-gray-800 {
+                width: 100vw;
+                height: 100vh;
+                max-width: none;
+                border-radius: 0;
+                display: flex;
+                flex-direction: column; /* 確保內部元素垂直排列 */
+            }
+
+            /* 重新定位關閉按鈕，使其在視窗內部 */
+            .modal .close-modal-btn {
+                position: fixed; /* 固定在視窗上，而不是跟著內容滾動 */
+                top: 0.75rem;
+                right: 0.75rem;
+                z-index: 100; /* 確保在最上層 */
+            }
+
+            /* 讓內容區域可以滾動並填滿可用空間 */
+            .modal .modal-content-area {
+                flex-grow: 1; /* 佔據所有剩餘空間 */
+                overflow-y: auto; /* 只有這個區域可以垂直滾動 */
+                height: 100%;
+                max-width: none;
+            }
+            
+            /* portfolio modal 的細節區塊也要能滾動 */
+            #portfolio-modal-details {
+                flex-grow: 1;
+                overflow-y: auto;
+                /* ✨ [修正] 移除固定的 height: 50%，讓其自由填充剩餘空間 */
+            }
+
+            /* 小說的導覽列高度固定，不被壓縮 */
+            #novel-navigation {
+                flex-shrink: 0;
+            }
+
+            /* ✨ [修正] 確保作品集 Modal 在小螢幕上能正確顯示圖片 */
+            #portfolio-modal .md\:w-3\/5 {
+                flex-shrink: 0; /* 防止圖片容器在 flex 佈局中被壓縮 */
+                width: 100%; /* 確保它佔滿寬度 */
+            }
+
+            #portfolio-modal #portfolio-gallery-images {
+                /* 確保圖片容器有正確的長寬比 */
+                width: 100%;
+                aspect-ratio: 16 / 9;
+            }
+        }
+
+        /* ✨ [優化] 修正作品集預覽圖的顯示方式 */
+        #portfolio-grid img.portfolio-item {
+            object-fit: contain; /* 改為 'contain' 以完整顯示圖片，避免裁切 */
+            background-color: #000; /* 為不同長寬比的圖片提供黑色底板，更有一致性 */
+        }
+    </style>
+</head>
+<body class="overflow-x-hidden">
+
+    <!-- Header / Navigation Bar -->
+    <header id="main-header" class="bg-transparent fixed top-0 left-0 right-0 z-50 transition-all duration-300">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="#home" class="text-2xl font-bold tracking-wider text-white font-serif nav-trigger">LayorX</a>
+            <nav id="desktop-nav" class="hidden md:flex space-x-8"></nav>
+            <button id="mobile-menu-button" class="md:hidden text-white focus:outline-none"><i class="fas fa-bars text-2xl"></i></button>
+        </div>
+        <div id="mobile-menu" class="hidden md:hidden bg-gray-900"></div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-6 py-12 md:py-20">
+        <!-- All sections are dynamically populated by JS -->
+        <section id="home" class="content-section min-h-screen flex-col justify-center items-center text-center -my-12 md:-my-20 -mx-6"></section>
+        <section id="about" class="content-section space-y-24"></section>
+        <section id="portfolio" class="content-section"></section>
+        <section id="videos" class="content-section"></section>
+        <section id="journey" class="content-section"></section>
+        <section id="novels" class="content-section"></section>
+        <section id="blog" class="content-section"></section>
+        <section id="contact" class="content-section text-center"></section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 border-t border-gray-800 mt-20">
+        <div class="container mx-auto px-6 py-6 text-center text-gray-500">
+            <p>&copy; 2025 LayorX. All Rights Reserved.</p>
+        </div>
+    </footer>
+    
+    <!-- Modals -->
+    <div id="novel-modal" class="modal fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4 hidden opacity-0">
+        <div class="bg-gray-800 text-gray-300 rounded-lg shadow-xl w-full max-w-4xl relative">
+            <button class="close-modal-btn absolute -top-4 -right-4 text-white bg-amber-500 rounded-full w-10 h-10 text-2xl flex items-center justify-center">&times;</button>
+            <div id="novel-modal-content" class="modal-content-area p-6 md:p-8 overflow-y-auto"></div>
+            <div id="novel-navigation" class="p-4 border-t border-gray-700 flex justify-between"></div>
+        </div>
+    </div>
+    <div id="portfolio-modal" class="modal fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4 hidden opacity-0">
+        <div class="bg-gray-800 text-gray-300 rounded-lg shadow-xl w-full max-w-5xl relative flex flex-col md:flex-row">
+            <button class="close-modal-btn absolute -top-4 -right-4 text-white bg-amber-500 rounded-full w-10 h-10 text-2xl flex items-center justify-center">&times;</button>
+            <div class="md:w-3/5 p-6 flex flex-col items-center justify-center relative">
+                <div id="portfolio-gallery-images" class="w-full aspect-video relative mb-4"></div>
+                <button id="gallery-prev" class="gallery-arrow left"><i class="fas fa-chevron-left"></i></button>
+                <button id="gallery-next" class="gallery-arrow right"><i class="fas fa-chevron-right"></i></button>
+                <div id="portfolio-gallery-dots" class="flex space-x-2"></div>
+            </div>
+            <div id="portfolio-modal-details" class="md:w-2/5 p-6 modal-content-area overflow-y-auto bg-gray-900/30"></div>
+        </div>
+    </div>
+    <div id="blog-modal" class="modal fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4 hidden opacity-0">
+        <div class="bg-gray-800 text-gray-300 rounded-lg shadow-xl w-full max-w-4xl relative">
+            <button class="close-modal-btn absolute -top-4 -right-4 text-white bg-amber-500 rounded-full w-10 h-10 text-2xl flex items-center justify-center">&times;</button>
+            <div id="blog-modal-content" class="modal-content-area p-6 md:p-8 overflow-y-auto"></div>
+        </div>
+    </div>
+
+    <!-- JavaScript Files -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="data.js"></script>
+    <script src="main.js"></script>
+
+</body>
+</html>
