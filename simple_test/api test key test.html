@@ -115,6 +115,11 @@
             align-self: flex-start; /* 靠左對齊 */
         }
         /* Markdown 渲染樣式 */
+        .ai-message h1, .ai-message h2 {
+            font-weight: bold;
+        }
+        .ai-message h1 { font-size: 1.5rem; margin-bottom: 0.5rem; }
+        .ai-message h2 { font-size: 1.25rem; margin-bottom: 0.5rem; }
         .ai-message code {
             background-color: #4a5568; /* 行內程式碼背景 */
             padding: 0.1rem 0.3rem;
@@ -218,10 +223,9 @@
 <body>
     <div class="container">
         <h1 class="text-4xl font-bold text-center text-white mb-4">AI API 測試器</h1>
+        <button class="next-btn bg-sky-700 text-white font-bold py-3 px-8 rounded-full hover:bg-sky-800 transition-transform transform hover:scale-105" onclick="window.location.href='index.html'">back</button>
 
         <div class="settings-group">
-            <button  class="next-btn bg-sky-700 text-white font-bold py-3 px-8 rounded-full hover:bg-sky-800 transition-transform transform hover:scale-105" onclick="window.location.href='index.html'">back</button>
-
             <h2 class="text-2xl font-bold text-white mb-2">設定</h2>
             <div class="input-group">
                 <label for="modelSelect">選擇 AI 模型:</label>
@@ -230,37 +234,43 @@
                     <!-- 將來可以在這裡添加更多模型選項 -->
                 </select>
             </div>
-        <div class="input-group">
-            
-            <label for="apiKeySelect">選擇 API Key 配置:</label>
-            <select id="apiKeySelect" class="focus:border-blue-400">
-                <option value="AIzaSyBasaBU3srwcOqVQoyT7uZmtXPa4NRi6gU">Default</option>
-                <option value="AIzaSyBl2ysPjnepR6exiYgeTnjim3IBEagTY9w">ERROR TEST</option>
-                <option value="manual">手動輸入 API Key</option> <!-- 新增手動輸入選項 -->
-            </select>
-        </div>
-           
-
-            <!-- 手動 API Key 輸入框的容器，將動態插入到這裡 -->
+            <div class="input-group">
+                <label for="apiKeySelect">選擇 API Key 配置:</label>
+                <select id="apiKeySelect" class="focus:border-blue-400">
+                    <option value="AIzaSyBasaBU3srwcOqVQoyT7uZmtXPa4NRi6gU">Default</option>
+                    <option value="AIzaSyBl2ysPjnepR6exiYgeTnjim3IBEagTY9w">ERROR TEST</option>
+                    <option value="manual">手動輸入 API Key</option> <!-- 新增手動輸入選項 -->
+                </select>
+            </div>
             <div id="manualApiKeyInputContainer" class="input-group"></div>
-
             <div class="input-group">
                 <label for="maxTokensInput">最大生成字數 (max_tokens):</label>
                 <input type="number" id="maxTokensInput" value="1024" min="1" max="8192" step="1" class="focus:border-blue-400">
                 <p class="text-sm text-gray-400 mt-1">限制 AI 單次回應的最大字數。</p>
             </div>
-
             <div class="checkbox-group">
                 <input type="checkbox" id="includeHistoryCheckbox" checked>
                 <label for="includeHistoryCheckbox">包含對話歷史記錄</label>
             </div>
         </div>
 
-        
+        <div class="input-group">
+            <label for="promptInput">輸入您的問題:</label>
+            <textarea id="promptInput" rows="5" placeholder="請輸入您的問題..." class="focus:border-blue-400"></textarea>
+        </div>
 
-        
+        <div class="button-group">
+            <button id="resetButton" class="reset-button">重置對話</button>
+            <button id="toggleMarkdownButton" class="toggle-markdown-button">切換為純文字</button>
+            <button id="sendButton">發送</button>
+        </div>
 
-       
+        <div id="loadingIndicator" class="loading-indicator hidden">
+            <div class="loading-spinner"></div>
+            <span>正在生成回應...</span>
+        </div>
+
+        <div id="errorMessage" class="error-message hidden"></div>
 
         <div class="input-group">
             <label for="responseArea">對話記錄:</label>
@@ -272,28 +282,12 @@
             </div>
             <div id="copySuccessMessage" class="copy-success-message hidden">已複製！</div>
         </div>
-         <div id="errorMessage" class="error-message hidden"></div>
-        <div id="loadingIndicator" class="loading-indicator hidden">
-            <div class="loading-spinner"></div>
-            <span>正在生成回應...</span>
-        </div>
-        <div class="input-group">
-            <label for="promptInput">輸入您的問題:</label>
-            <textarea id="promptInput" rows="5" placeholder="請輸入您的問題..." class="focus:border-blue-400"></textarea>
-        </div>
-
-        <div class="button-group">
-            <button id="resetButton" class="reset-button">重置對話</button>
-            <button id="toggleMarkdownButton" class="toggle-markdown-button">切換為純文字</button>
-            <button id="sendButton">發送</button>
-        </div>
-        <br><br>
     </div>
 
     <script>
         const modelSelect = document.getElementById('modelSelect');
         const apiKeySelect = document.getElementById('apiKeySelect');
-        const manualApiKeyInputContainer = document.getElementById('manualApiKeyInputContainer'); // 新增的容器
+        const manualApiKeyInputContainer = document.getElementById('manualApiKeyInputContainer');
         const maxTokensInput = document.getElementById('maxTokensInput');
         const includeHistoryCheckbox = document.getElementById('includeHistoryCheckbox');
         const promptInput = document.getElementById('promptInput');
@@ -306,141 +300,129 @@
         const copyResponseButton = document.getElementById('copyResponseButton');
         const copySuccessMessage = document.getElementById('copySuccessMessage');
 
-        // API 金鑰留空，Canvas 會在運行時自動提供
-        const defaultCanvasApiKey = apiKeySelect.value;; 
+    
 
-        // 聊天歷史記錄，用於維持對話上下文
-        // 每個訊息物件現在包含一個 `domElement` 屬性，用於直接操作 DOM 元素
         let chatHistory = [];
-        let lastAiResponse = ""; // 用於儲存最新的 AI 回應，以便複製
-        let isMarkdownMode = true; // 初始狀態：markdown
+        let lastAiResponse = ""; 
+        let isMarkdownMode = true; // 初始狀態：Markdown 模式
 
-        // 簡易 Markdown 到 HTML 轉換器
-        function convertSimpleMarkdownToHtml(markdownText) {
+        function escapeHtml(unsafe) {
+            return unsafe
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        function convertMarkdownToHtml(markdownText) {
             let html = markdownText;
 
-            // 1. 處理程式碼區塊: ```code```
-            const codeBlocks = [];
+            // 1. 處理程式碼區塊 ```...```
             html = html.replace(/```([\s\S]*?)```/g, (match, p1) => {
-                codeBlocks.push(p1);
-                return `__CODE_BLOCK_${codeBlocks.length - 1}__`;
+                const escapedContent = escapeHtml(p1);
+                return `<pre><code>${escapedContent}</code></pre>`;
             });
 
-            // 2. 處理行內程式碼: `code`
-            const inlineCodes = [];
+            // 2. 處理行內程式碼 `...`
             html = html.replace(/`(.*?)`/g, (match, p1) => {
-                inlineCodes.push(p1);
-                return `__INLINE_CODE_${inlineCodes.length - 1}__`;
+                const escapedContent = escapeHtml(p1);
+                return `<code>${escapedContent}</code>`;
             });
-            
-            // 3. 轉義剩餘的潛在 HTML 實體 (除了 Markdown 語法可能用到的符號)
-            // 這裡的順序很重要，先處理程式碼，再轉義，防止程式碼中的 < > 被轉義
-            html = html.replace(/&/g, '&amp;')
-                        .replace(/</g, '&lt;')
-                        .replace(/>/g, '&gt;')
-                        .replace(/"/g, '&quot;')
-                        .replace(/'/g, '&#039;');
 
-            // 4. 處理粗體: **text** 或 __text__
+            // 3. 處理標題 # 和 ##
+            html = html.replace(/^##\s(.*$)/gim, '<h2>$1</h2>');
+            html = html.replace(/^#\s(.*$)/gim, '<h1>$1</h1>');
+            
+            // 4. 處理粗體 **...** 或 __...__
             html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
             html = html.replace(/__(.*?)__/g, '<strong>$1</strong>');
-            
-            // 5. 處理斜體: *text* 或 _text_
+
+            // 5. 處理斜體 *...* 或 _..._
             html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
             html = html.replace(/_(.*?)_/g, '<em>$1</em>');
 
-            // 6. 處理引用區塊: > quote (注意：這裡的 &gt; 是轉義後的 >)
-            html = html.replace(/^&gt; (.*)$/gm, '<blockquote>$1</blockquote>');
-
-            // 7. 將佔位符替換回原始的程式碼區塊和行內程式碼
-            codeBlocks.forEach((code, i) => {
-                html = html.replace(`__CODE_BLOCK_${i}__`, `<pre><code>${code}</code></pre>`);
-            });
-            inlineCodes.forEach((code, i) => {
-                html = html.replace(`__INLINE_CODE_${i}__`, `<code>${code}</code>`);
-            });
-
-            // 8. 將剩餘的換行符轉換為 <br>
-            // 由於程式碼和引用區塊已經處理並替換了佔位符，這裡可以直接替換剩餘的換行符
-            html = html.replace(/\n/g, '<br>');
-
-            // 移除塊級元素前後可能多餘的 <br>
+            // 6. 處理引用區塊 > ...
+            html = html.replace(/^> (.*$)/gim, '<blockquote>$1</blockquote>');
+            
+            // 7. 將剩餘的換行符轉換為 <br>，但要排除在 <pre> 內的換行
+            html = html.split('\n').map(line => {
+                // 檢查這行是否在程式碼區塊內
+                if (line.includes('<pre><code>') || line.includes('</code></pre>')) {
+                    return line; // 不在程式碼區塊內，直接返回
+                }
+                // 檢查這行是否在行內程式碼內
+                if (line.includes('<code>') || line.includes('</code>')) {
+                    return line; // 不在行內程式碼內，直接返回
+                }
+                return line + '<br>';
+            }).join('');
+            
+            // 移除塊級元素前後多餘的 <br>
             html = html.replace(/(<\/pre><br>|<br><pre>|<br><blockquote>|<\/blockquote><br>)/g, (match) => match.replace(/<br>/g, ''));
-            html = html.replace(/(<pre><br>|<blockquote><br>)/g, (match) => match.replace(/<br>/g, ''));
 
             return html;
         }
 
-        // 顯示錯誤訊息的函數
         function displayError(message) {
             errorMessageDiv.textContent = message;
             errorMessageDiv.classList.remove('hidden');
         }
 
-        // 清除錯誤訊息的函數
         function clearError() {
             errorMessageDiv.textContent = '';
             errorMessageDiv.classList.add('hidden');
         }
 
-        // 顯示複製成功訊息的函數
         function showCopySuccessMessage() {
             copySuccessMessage.classList.remove('hidden');
             setTimeout(() => {
                 copySuccessMessage.classList.add('hidden');
-            }, 2000); // 2 秒後隱藏
+            }, 2000);
         }
 
-        // 添加訊息到對話記錄區
-        // 此函數現在會返回創建的 DOM 元素，並將其儲存在 chatHistory 中
         function addMessageToResponseArea(text, sender) {
             const messageBubble = document.createElement('div');
             messageBubble.classList.add('message-bubble');
             if (sender === 'user') {
                 messageBubble.classList.add('user-message');
-                messageBubble.textContent = text; // 用戶訊息總是純文字
+                messageBubble.textContent = text;
             } else if (sender === 'ai') {
                 messageBubble.classList.add('ai-message');
-                // AI 訊息的原始文本儲存在 data-original-text 屬性中，以便切換渲染模式
-                messageBubble.dataset.originalText = text; 
-                if (isMarkdownMode) { // 如果是 Markdown 模式，則渲染 HTML
-                    messageBubble.innerHTML = convertSimpleMarkdownToHtml(text);
-                } else { // 否則顯示純文字
+                messageBubble.dataset.originalText = text;
+                if (isMarkdownMode) {
+                    messageBubble.innerHTML = convertMarkdownToHtml(text);
+                } else {
                     messageBubble.textContent = text;
                 }
             }
             responseArea.appendChild(messageBubble);
-            // 自動滾動到底部
             responseArea.scrollTop = responseArea.scrollHeight;
-            return messageBubble; // 返回創建的 DOM 元素
+            return messageBubble;
         }
 
-        // 根據當前 Markdown 模式重新渲染所有訊息
-        // 此函數現在直接修改現有的 DOM 元素，而不是清空再重建
         function reRenderAllMessages() {
             chatHistory.forEach(msg => {
-                if (msg.role === 'model' && msg.domElement) { // 只處理 AI 訊息
+                if (msg.role === 'model' && msg.domElement) {
                     const originalText = msg.parts[0].text;
                     if (isMarkdownMode) {
-                        msg.domElement.innerHTML = convertSimpleMarkdownToHtml(originalText);
+                        msg.domElement.innerHTML = convertMarkdownToHtml(originalText);
                     } else {
                         msg.domElement.textContent = originalText;
                     }
                 }
-                // 用戶訊息始終是純文字，無需重新渲染
             });
-            responseArea.scrollTop = responseArea.scrollHeight; // 滾動到底部
+            responseArea.scrollTop = responseArea.scrollHeight;
         }
 
-        // 指數退避重試邏輯
         async function fetchWithExponentialBackoff(url, options, retries = 5, delay = 1000) {
             for (let i = 0; i < retries; i++) {
                 try {
                     const response = await fetch(url, options);
-                    if (response.status === 429) { // Too Many Requests
+                    if (response.status === 429) {
                         console.warn(`API 限流，正在重試... (第 ${i + 1} 次)`);
                         await new Promise(res => setTimeout(res, delay));
-                        delay *= 2; // 雙倍延遲
+                        delay *= 2;
                         continue;
                     }
                     if (!response.ok) {
@@ -450,81 +432,71 @@
                     return response;
                 } catch (error) {
                     if (i === retries - 1) {
-                        throw error; // 最後一次重試失敗，拋出錯誤
+                        throw error;
                     }
                     console.error(`Fetch 錯誤，正在重試... (第 ${i + 1} 次):`, error);
                     await new Promise(res => setTimeout(res, delay));
-                    delay *= 2; // 雙倍延遲
+                    delay *= 2;
                 }
             }
         }
 
         sendButton.addEventListener('click', async () => {
-            clearError(); // 每次發送前清除之前的錯誤訊息
+            clearError();
             const userPrompt = promptInput.value.trim();
             if (!userPrompt) {
                 displayError("請輸入您的問題！");
                 return;
             }
 
-            // 在對話記錄區顯示用戶訊息，並將其添加到 chatHistory
             const userBubble = addMessageToResponseArea(userPrompt, 'user');
             chatHistory.push({ role: "user", parts: [{ text: userPrompt }], domElement: userBubble });
 
-
             loadingIndicator.classList.remove('hidden');
-            sendButton.disabled = true; // 禁用發送按鈕
-            resetButton.disabled = true; // 禁用重置按鈕
-            toggleMarkdownButton.disabled = true; // 禁用 Markdown 切換按鈕
-            copyResponseButton.classList.add('hidden'); // 隱藏複製按鈕
+            sendButton.disabled = true;
+            resetButton.disabled = true;
+            toggleMarkdownButton.disabled = true;
+            copyResponseButton.classList.add('hidden');
 
-            // 判斷使用哪個 API Key
-            let currentApiKey = defaultCanvasApiKey; // 預設使用 Canvas 提供的 Key
-            if (apiKeySelect.value === 'manual') { // 如果選擇了手動輸入
+            if (apiKeySelect.value === 'manual') {
                 const dynamicManualInput = document.getElementById('dynamicManualApiKeyInput');
                 if (dynamicManualInput && dynamicManualInput.value.trim() !== '') {
-                    currentApiKey = dynamicManualInput.value.trim(); // 使用手動輸入的 Key
+                    currentApiKey = dynamicManualInput.value.trim();
                 } else {
                     displayError("請輸入手動 API Key！");
-                    // 恢復按鈕狀態並退出
                     loadingIndicator.classList.add('hidden');
                     sendButton.disabled = false;
                     resetButton.disabled = false;
                     toggleMarkdownButton.disabled = false;
                     return; 
                 }
+            } else {
+                currentApiKey = apiKeySelect.value;
             }
             
-            // 根據是否包含歷史記錄來構建發送給 API 的內容
             let contentsToSend = [];
             if (includeHistoryCheckbox.checked) {
-                // 複製 chatHistory 中的數據，但不包含 domElement 屬性，因為 API 不需要
                 contentsToSend = chatHistory.map(msg => ({ role: msg.role, parts: msg.parts }));
             } else {
-                // 如果不包含歷史記錄，只發送當前用戶問題
                 contentsToSend.push({ role: "user", parts: [{ text: userPrompt }] });
             }
             
             const selectedModel = modelSelect.value;
-            const selectedApiKey = apiKeySelect.value;
             const maxTokens = parseInt(maxTokensInput.value, 10);
 
-            // 使用選擇的 API Key 構建 URL
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${selectedApiKey}`;
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${currentApiKey}`;
 
             const payload = {
                 contents: contentsToSend,
                 generationConfig: {
-                    maxOutputTokens: maxTokens // 設定最大生成字數
+                    maxOutputTokens: maxTokens
                 }
             };
 
             try {
                 const response = await fetchWithExponentialBackoff(apiUrl, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
 
@@ -539,7 +511,6 @@
                 if (aiResponseContentPart && aiResponseContentPart.text) {
                     aiResponseText = aiResponseContentPart.text;
                 } else if (result.candidates && result.candidates.length > 0 && result.candidates[0].finishReason === "MAX_TOKENS") {
-                    // 如果因為 MAX_TOKENS 而沒有 text 部分，則給出提示
                     aiResponseText = "AI 回應因達到最大字數限制而被截斷。請嘗試增加最大生成字數或縮短問題。";
                     console.warn("AI 回應因達到最大字數限制而被截斷:", result);
                 } else {
@@ -548,46 +519,41 @@
                     displayError("API 回應結構不符預期，請檢查控制台。");
                 }
 
-                // 在對話記錄區顯示 AI 訊息，並將其添加到 chatHistory
                 const aiBubble = addMessageToResponseArea(aiResponseText, 'ai');
                 chatHistory.push({ role: "model", parts: [{ text: aiResponseText }], domElement: aiBubble });
                 
-                lastAiResponse = aiResponseText; // 儲存最新回應
-                copyResponseButton.classList.remove('hidden'); // 顯示複製按鈕
+                lastAiResponse = aiResponseText;
+                copyResponseButton.classList.remove('hidden');
                 
             } catch (error) {
                 console.error("發送請求時發生錯誤:", error);
                 displayError(`錯誤：${error.message || "無法連接到 AI 服務。"}`);
-                addMessageToResponseArea(`錯誤：${error.message || "無法連接到 AI 服務。"}`, 'ai'); // 也在回應區顯示錯誤
+                addMessageToResponseArea(`錯誤：${error.message || "無法連接到 AI 服務。"}`, 'ai');
             } finally {
-                loadingIndicator.classList.add('hidden'); // 隱藏載入指示器
-                sendButton.disabled = false; // 啟用發送按鈕
-                resetButton.disabled = false; // 啟用重置按鈕
-                toggleMarkdownButton.disabled = false; // 啟用 Markdown 切換按鈕
-                promptInput.value = ''; // 清空輸入框
-                promptInput.focus(); // 輸入框重新獲得焦點
+                loadingIndicator.classList.add('hidden');
+                sendButton.disabled = false;
+                resetButton.disabled = false;
+                toggleMarkdownButton.disabled = false;
+                promptInput.value = '';
+                promptInput.focus();
             }
         });
 
-        // 重置按鈕的事件監聽器
         resetButton.addEventListener('click', () => {
-            chatHistory = []; // 清空聊天歷史記錄
-            responseArea.innerHTML = ''; // 清空對話記錄區
-            promptInput.value = ''; // 清空輸入框
-            clearError(); // 清除任何錯誤訊息
-            copyResponseButton.classList.add('hidden'); // 隱藏複製按鈕
-            lastAiResponse = ""; // 清空最新回應
-            // 清除動態生成的手動 API Key 輸入框
+            chatHistory = [];
+            responseArea.innerHTML = '';
+            promptInput.value = '';
+            clearError();
+            copyResponseButton.classList.add('hidden');
+            lastAiResponse = "";
             manualApiKeyInputContainer.innerHTML = '';
-            apiKeySelect.value = defaultCanvasApiKey; // 重置 API Key 下拉選單為預設
+            apiKeySelect.value = "AIzaSyBasaBU3srwcOqVQoyT7uZmtXPa4NRi6gU";
             console.log("聊天歷史記錄已重置。");
-            promptInput.focus(); // 輸入框重新獲得焦點
+            promptInput.focus();
         });
 
-        // 複製按鈕的事件監聽器
         copyResponseButton.addEventListener('click', () => {
             if (lastAiResponse) {
-                // 使用 document.execCommand('copy') 複製到剪貼簿，因為 navigator.clipboard.writeText 可能在某些 iframe 環境下受限
                 const textarea = document.createElement('textarea');
                 textarea.value = lastAiResponse;
                 document.body.appendChild(textarea);
@@ -603,36 +569,30 @@
             }
         });
 
-        // Markdown 切換按鈕的事件監聽器
         toggleMarkdownButton.addEventListener('click', () => {
-            isMarkdownMode = !isMarkdownMode; // 切換模式
-            toggleMarkdownButton.textContent = isMarkdownMode ? '切換為純文字' : '切換為 Markdown'; // 更新按鈕文字
-            reRenderAllMessages(); // 根據新模式重新渲染所有訊息
+            isMarkdownMode = !isMarkdownMode;
+            toggleMarkdownButton.textContent = isMarkdownMode ? '切換為純文字' : '切換為 Markdown';
+            reRenderAllMessages();
         });
 
-        // API Key 下拉選單的事件監聽器
         apiKeySelect.addEventListener('change', () => {
             const selectedOption = apiKeySelect.value;
-            manualApiKeyInputContainer.innerHTML = ''; // 清除之前的動態輸入框
-
+            manualApiKeyInputContainer.innerHTML = '';
             if (selectedOption === 'manual') {
                 const input = document.createElement('input');
                 input.type = 'text';
                 input.id = 'dynamicManualApiKeyInput';
                 input.placeholder = '在此輸入您的 API Key';
-                // 應用 Tailwind 樣式
                 input.className = 'focus:border-blue-400 mt-2 w-full p-3 rounded-xl border border-gray-600 bg-gray-700 text-gray-100 outline-none transition duration-200 ease-in-out'; 
                 manualApiKeyInputContainer.appendChild(input);
-                input.focus(); // 聚焦到新的輸入框
+                input.focus();
             }
         });
 
-        // 最大生成字數輸入框的驗證
         maxTokensInput.addEventListener('input', () => {
             let value = parseInt(maxTokensInput.value, 10);
             const min = parseInt(maxTokensInput.min, 10);
             const max = parseInt(maxTokensInput.max, 10);
-
             if (isNaN(value) || value < min) {
                 maxTokensInput.value = min;
             } else if (value > max) {
@@ -640,18 +600,16 @@
             }
         });
 
-        // 允許在 promptInput 中按 Enter 鍵發送訊息
         promptInput.addEventListener('keydown', (event) => {
-            if (event.key === 'Enter' && !event.shiftKey) { // 按 Enter 發送，Shift + Enter 換行
-                event.preventDefault(); // 阻止默認換行行為
-                sendButton.click(); // 觸發發送按鈕點擊事件
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendButton.click();
             }
         });
 
-        // 初始設定：確保手動輸入框在頁面載入時是隱藏的
         document.addEventListener('DOMContentLoaded', () => {
-            manualApiKeyInputContainer.innerHTML = ''; // 確保容器是空的
-            promptInput.focus(); // 初始聚焦到輸入框
+            manualApiKeyInputContainer.innerHTML = '';
+            promptInput.focus();
         });
     </script>
 </body>
