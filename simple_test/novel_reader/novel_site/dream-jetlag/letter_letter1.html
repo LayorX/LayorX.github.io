@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>✉️ 第一封信《他在夢裡學完了 MIT 四年課程》 - 夢境時差：七封謎信</title>
-    <!-- 修正: 將 typography 作為插件載入，以解決 'require is not defined' 錯誤 -->
     <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -37,8 +36,8 @@
         .nav-btn:hover { background-color: var(--active-bg-main); color: var(--text-main); }
 
         /* 選單與捲軸樣式 */
-        #menu-toggle:checked ~ #menu { transform: translateX(0); opacity: 1; pointer-events: auto; }
-        #menu-toggle:checked ~ label[for="menu-toggle"] { display: block; }
+        #menu-toggle:checked ~ #menu { transform: translateX(0); }
+        #menu-toggle:checked ~ label[for="menu-toggle"] { opacity: 1; pointer-events: auto; }
         #sidebar, #menu, #content-container { scrollbar-width: thin; scrollbar-color: var(--border-main) transparent; }
         #sidebar::-webkit-scrollbar, #menu::-webkit-scrollbar, #content-container::-webkit-scrollbar { width: 5px; }
         #sidebar::-webkit-scrollbar-track, #menu::-webkit-scrollbar-track, #content-container::-webkit-scrollbar-track { background: transparent; }
@@ -75,9 +74,11 @@
         <main class="flex-1 flex flex-col overflow-hidden">
             <header class="bg-transparent p-4 flex justify-between items-center z-10 flex-shrink-0">
                 <div class="flex items-center gap-2">
+                    <!-- 桌面版收合按鈕 -->
                     <button id="sidebar-toggle-btn" class="hidden md:block p-2 rounded-full hover:bg-[var(--active-bg-main)]" title="收合/展開目錄">
                         <svg id="sidebar-toggle-icon" class="w-6 h-6 text-[var(--icon-fill)] transition-transform duration-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/></svg>
                     </button>
+                    <!-- 手機版選單按鈕 -->
                     <label for="menu-toggle" id="menu-btn" class="md:hidden p-2 rounded-full hover:bg-[var(--active-bg-main)] text-[var(--text-main)] cursor-pointer transition-colors">
                         <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="var(--icon-fill)"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/></svg>
                     </label>
@@ -93,7 +94,7 @@
             <div id="content-container" class="flex-1 relative overflow-y-auto">
                 <!-- 手機版彈出菜單 -->
                 <input type="checkbox" id="menu-toggle" class="hidden"/>
-                <div id="menu" class="md:hidden fixed inset-0 bg-[var(--bg-main)] p-0 w-72 h-full shadow-lg transition-transform duration-300 ease-in-out transform -translate-x-full opacity-0 pointer-events-none z-30 flex flex-col">
+                <div id="menu" class="md:hidden fixed inset-0 bg-[var(--bg-main)] p-0 w-72 h-full shadow-lg transition-transform duration-300 ease-in-out transform -translate-x-full z-30 flex flex-col">
                     <div class="p-4 border-b border-[var(--border-main)] flex-shrink-0">
                          <a href="../index.html" class="flex items-center gap-2 text-[var(--link-main)] hover:text-[var(--text-main)] transition-colors duration-300 font-medium">
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
@@ -107,7 +108,7 @@
                         </nav>
                     </div>
                 </div>
-                <label for="menu-toggle" class="md:hidden fixed inset-0 bg-black bg-opacity-25 z-20 hidden cursor-pointer"></label>
+                <label for="menu-toggle" class="md:hidden fixed inset-0 bg-black bg-opacity-25 z-20 opacity-0 pointer-events-none transition-opacity duration-300 cursor-pointer"></label>
 
                 <article id="content-area" class="p-6 md:p-12 prose max-w-2xl mx-auto">
                     <h1 class="text-3xl md:text-4xl font-bold mb-12 !text-[var(--text-main)] border-b-2 border-[var(--border-main)] pb-4">✉️ 第一封信《他在夢裡學完了 MIT 四年課程》</h1>
@@ -181,11 +182,7 @@
 
             // --- 側邊欄收合邏輯 ---
             const updateSidebarIcon = (isCollapsed) => {
-                if (isCollapsed) {
-                    sidebarToggleIcon.style.transform = 'rotate(180deg)';
-                } else {
-                    sidebarToggleIcon.style.transform = 'rotate(0deg)';
-                }
+                sidebarToggleIcon.style.transform = isCollapsed ? 'rotate(180deg)' : 'rotate(0deg)';
             };
 
             const isSidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
@@ -200,13 +197,19 @@
                 updateSidebarIcon(collapsed);
             });
 
-            // --- 手機版選單邏輯 ---
+            // --- 手機版選單邏輯 (修正版) ---
             menuToggle.addEventListener('change', function() {
-                overlay.classList.toggle('hidden', !this.checked);
+                // 當 checkbox 狀態改變時，控制遮罩的顯示
+                if (this.checked) {
+                    overlay.classList.remove('opacity-0', 'pointer-events-none');
+                } else {
+                    overlay.classList.add('opacity-0', 'pointer-events-none');
+                }
             });
             
             overlay.addEventListener('click', () => {
                 menuToggle.checked = false;
+                // 手動觸發 change 事件以更新遮罩狀態
                 menuToggle.dispatchEvent(new Event('change'));
             });
 
