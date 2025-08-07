@@ -122,7 +122,8 @@ const novelsData = [
             { type: 'chapter', title: "📖第二章：《更大的流量，更大的危險》", subtitle: "#我本來想找個奇聞，結果好像找到了國安危機", file: "data/novels/dream-jetlag/chapter-2.txt" },
             { type: 'letter', title: "✉️ 第一封信", file: "data/novels/dream-jetlag/letter-1.txt" },
             { type: 'letter', title: "✉️ 第二封信", file: "data/novels/dream-jetlag/letter-2.txt" }
-        ]
+        ],
+        link:"novel_site/dream-jetlag/chapter_chapter00.html"
     }
 ];
 
