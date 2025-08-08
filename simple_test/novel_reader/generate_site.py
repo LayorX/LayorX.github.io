@@ -1,12 +1,14 @@
 import os
 import re
 import shutil
+import json
 from collections import OrderedDict
 
 # --- 設定 ---
 NOVELS_ROOT_DIR = 'novels'
 BASE_OUTPUT_DIR = 'novel_site'
 TEMPLATE_PATH = 'template.html'
+PWA_ASSETS_DIR = 'pwa_assets' # PWA 圖示來源資料夾
 IMAGE_EXTENSIONS = ('.jpg', '.jpeg', '.png', '.gif', '.webp')
 
 def parse_content_to_html(text_content):
@@ -16,13 +18,84 @@ def parse_content_to_html(text_content):
     for para in paragraphs:
         stripped_para = para.strip()
         if stripped_para:
+            # 將換行符轉換為 <br>，以保留詩歌或特殊格式
             content_with_breaks = stripped_para.replace(os.linesep, "<br>")
             html_output.append(f'<p class="mb-6 leading-loose tracking-wide">{content_with_breaks}</p>')
     return ''.join(html_output)
 
+def generate_pwa_files(output_path, novel_title, files_to_cache):
+    """生成 manifest.json 和 service-worker.js"""
+    manifest = {
+        "name": novel_title,
+        "short_name": novel_title,
+        "start_url": "./index.html",
+        "display": "standalone",
+        "background_color": "#f8fafc",
+        "theme_color": "#f8fafc",
+        "description": f"閱讀 {novel_title}",
+        "icons": [
+            {"src": "icon-192x192.png", "sizes": "192x192", "type": "image/png"},
+            {"src": "icon-512x512.png", "sizes": "512x512", "type": "image/png"}
+        ]
+    }
+    with open(os.path.join(output_path, 'manifest.json'), 'w', encoding='utf-8') as f:
+        json.dump(manifest, f, ensure_ascii=False, indent=2)
+    print("  -> ✨ 已生成 manifest.json")
+
+    cache_version = 'v1'
+    files_js_array = ',\n'.join([f'    "{f}"' for f in files_to_cache])
+    
+    sw_content = f"""
+const CACHE_NAME = '{novel_title}-{cache_version}';
+const urlsToCache = [
+{files_js_array}
+];
+
+self.addEventListener('install', event => {{
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then(cache => {{
+        console.log('Opened cache');
+        return cache.addAll(urlsToCache);
+      }})
+  );
+}});
+
+self.addEventListener('fetch', event => {{
+  event.respondWith(
+    caches.match(event.request)
+      .then(response => {{
+        if (response) {{
+          return response;
+        }}
+        return fetch(event.request);
+      }})
+  );
+}});
+
+self.addEventListener('activate', event => {{
+  const cacheWhitelist = [CACHE_NAME];
+  event.waitUntil(
+    caches.keys().then(cacheNames => {{
+      return Promise.all(
+        cacheNames.map(cacheName => {{
+          if (cacheWhitelist.indexOf(cacheName) === -1) {{
+            return caches.delete(cacheName);
+          }}
+        }})
+      );
+    }})
+  );
+}});
+"""
+    with open(os.path.join(output_path, 'service-worker.js'), 'w', encoding='utf-8') as f:
+        f.write(sw_content)
+    print("  -> ⚙️ 已生成 service-worker.js")
+
+
 def main():
     """主執行函數"""
-    print("🚀 開始生成專業版小說網站...")
+    print("🚀 開始生成 PWA 專業版小說網站...")
 
     if not os.path.exists(BASE_OUTPUT_DIR):
         os.makedirs(BASE_OUTPUT_DIR)
@@ -53,23 +126,39 @@ def main():
         novel_output_path = os.path.join(BASE_OUTPUT_DIR, novel_id)
         os.makedirs(novel_output_path, exist_ok=True)
 
+        # 讀取小說標題與簡介
         novel_title = novel_id.replace('-', ' ').title()
+        novel_synopsis = ''
         info_file_path = os.path.join(novel_src_path, 'info.txt')
         if os.path.exists(info_file_path):
             with open(info_file_path, 'r', encoding='utf-8') as f:
-                novel_title = f.readline().strip()
+                lines = f.readlines()
+                if lines:
+                    novel_title = lines[0].strip()
+                    if len(lines) > 1:
+                        novel_synopsis = '<br>'.join([line.strip() for line in lines[1:] if line.strip()])
         
         print(f"✒️ 小說標題: {novel_title}")
 
+        if os.path.exists(PWA_ASSETS_DIR):
+            for icon_file in os.listdir(PWA_ASSETS_DIR):
+                if icon_file.startswith('icon-') and icon_file.endswith('.png'):
+                    shutil.copy(os.path.join(PWA_ASSETS_DIR, icon_file), novel_output_path)
+            print("  -> 🎨 已複製 PWA 圖示")
+        else:
+            print(f"  -> ⚠️ 警告: 找不到 '{PWA_ASSETS_DIR}' 資料夾，將無法使用 PWA 圖示。")
+
         all_files_in_novel_folder = os.listdir(novel_src_path)
         cover_file_name = None
+        static_files_to_cache = []
         for file_name in all_files_in_novel_folder:
             if not file_name.endswith('.txt'):
                 shutil.copy(os.path.join(novel_src_path, file_name), novel_output_path)
+                static_files_to_cache.append(file_name)
                 if file_name.lower().endswith(IMAGE_EXTENSIONS) and not cover_file_name:
                     cover_file_name = file_name
         
-        all_novels_info.append({'id': novel_id, 'title': novel_title, 'cover': cover_file_name})
+        all_novels_info.append({'id': novel_id, 'title': novel_title, 'cover': cover_file_name, 'synopsis': novel_synopsis})
 
         cover_image_html = ''
         if cover_file_name:
@@ -111,7 +200,7 @@ def main():
                     sub_content = sub_chapters[i+1]
                     sub_page_info = {
                         'title': sub_title,
-                        'subtitle': main_chapter_subtitle, # 小節繼承主章節的註解
+                        'subtitle': main_chapter_subtitle,
                         'html_filename': f"{clean_name_base}-{i//2 + 1}.html",
                         'content': sub_content,
                         'is_sub': True
@@ -119,7 +208,9 @@ def main():
                     all_pages_linear.append(sub_page_info)
                     chapter_hierarchy[main_chapter_title].append(sub_page_info)
 
+        html_files_to_cache = []
         for i, current_page in enumerate(all_pages_linear):
+            html_files_to_cache.append(current_page['html_filename'])
             content_html = parse_content_to_html(current_page['content'])
             
             subtitle_html = ''
@@ -137,12 +228,17 @@ def main():
                     sub_nav_id = f"sub-nav-{main_page['html_filename'].replace('.', '-')}"
                     chevron_rotation = 'rotate-90' if is_current_chapter_group else ''
                     sub_nav_visibility = '' if is_current_chapter_group else 'hidden'
+                    # 【優化】為可收合按鈕添加 aria-expanded 屬性，提升可訪問性
+                    aria_expanded = 'true' if is_current_chapter_group else 'false'
+
                     nav_html += f'''
-                        <div>
-                            <button data-toggle-target="{sub_nav_id}" class="chapter-toggle-btn w-full block p-3 rounded-md hover:bg-[var(--active-bg-main)] transition-colors duration-200 flex justify-between items-center text-left {main_active_class} {parent_active_class}">
-                                <span>{main_title}</span>
-                                <svg class="chevron-icon w-4 h-4 transition-transform duration-200 flex-shrink-0 {chevron_rotation}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>
-                            </button>
+                        <div class="chapter-group">
+                            <div class="chapter-toggle-btn flex justify-between items-center rounded-md hover:bg-[var(--active-bg-main)] transition-colors duration-200 {main_active_class} {parent_active_class}">
+                                <a href="{main_page["html_filename"]}" class="chapter-link flex-grow p-3">{main_title}</a>
+                                <button data-toggle-target="{sub_nav_id}" class="chevron-btn flex-shrink-0 p-3" aria-expanded="{aria_expanded}">
+                                    <svg class="chevron-icon w-4 h-4 transition-transform duration-200 {chevron_rotation}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>
+                                </button>
+                            </div>
                             <div id="{sub_nav_id}" class="sub-nav-container mt-1 space-y-1 border-l-2 border-[var(--border-main)] pl-3 ml-4 {sub_nav_visibility}">
                     '''
                     for sub_page in pages[1:]:
@@ -178,6 +274,7 @@ def main():
             output_html = output_html.replace('{{CHAPTER_SUBTITLE_HTML}}', subtitle_html)
             output_html = output_html.replace('{{CHAPTER_CONTENT_HTML}}', content_html)
             output_html = output_html.replace('{{CHAPTER_LIST_HTML}}', nav_html)
+            # 【修正】手機版目錄也使用相同的 nav_html 變數，保持一致性
             output_html = output_html.replace('{{MOBILE_CHAPTER_LIST_HTML}}', nav_html)
             output_html = output_html.replace('{{COVER_IMAGE_HTML}}', cover_image_html)
             output_html = output_html.replace('{{CHAPTER_NAVIGATION}}', chapter_nav_html)
@@ -189,28 +286,36 @@ def main():
 
         if all_pages_linear:
             first_page_filename = all_pages_linear[0]['html_filename']
+            # 【優化】使用 f-string，更現代且可讀性更高
             index_content = f'<meta http-equiv="refresh" content="0; url={first_page_filename}" />'
             with open(os.path.join(novel_output_path, 'index.html'), 'w', encoding='utf-8') as f:
                 f.write(index_content)
             print(f"  -> ➡️ 已建立小說入口 index.html")
+            
+            files_to_cache = ['./index.html'] + html_files_to_cache + static_files_to_cache + ['icon-192x192.png', 'icon-512x512.png']
+            generate_pwa_files(novel_output_path, novel_title, files_to_cache)
 
     main_index_content = f"""
     <!DOCTYPE html><html lang="zh-Hant"><head><meta charset="UTF-8"><title>小說書庫</title>
-    <script src="https://cdn.tailwindcss.com?plugins=typography,aspect-ratio"></script>
+    <script src="https://cdn.tailwindcss.com?plugins=typography,aspect-ratio,line-clamp"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Noto+Serif+TC:wght@700&display=swap" rel="stylesheet">
     <style>body {{ font-family: 'Inter', sans-serif; }} h2 {{ font-family: 'Noto Serif TC', serif; }}</style></head>
-    <body class="bg-slate-100"><div class="container mx-auto p-8 max-w-6xl">
+    <body class="bg-slate-100"><div class="container mx-auto p-8 max-w-7xl">
     <h1 class="text-4xl font-bold text-center text-slate-800 mb-12" style="font-family: 'Noto Serif TC', serif;">小說書庫</h1>
-    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
     """
     for novel in all_novels_info:
         cover_path = f"{novel['id']}/{novel['cover']}" if novel['cover'] else "https://placehold.co/400x600/e2e8f0/adb5bd?text=No+Cover"
+        synopsis_html = f'<p class="mt-2 text-sm text-slate-600 line-clamp-3">{novel["synopsis"]}</p>' if novel["synopsis"] else ''
         main_index_content += f"""
         <a href="{novel['id']}/index.html" class="group block bg-white rounded-lg shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
             <div class="aspect-[2/3] overflow-hidden rounded-t-lg">
                 <img src="{cover_path}" alt="{novel['title']}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
             </div>
-            <div class="p-4"><h2 class="text-lg font-bold text-slate-800 truncate">{novel['title']}</h2></div>
+            <div class="p-4">
+                <h2 class="text-lg font-bold text-slate-800 truncate">{novel['title']}</h2>
+                {synopsis_html}
+            </div>
         </a>
         """
     main_index_content += "</div></div></body></html>"
