@@ -16,7 +16,7 @@
     
     <!-- 用於鍵盤導覽 -->
     <link rel="prev" href="chapter_chapter02.html">
-    <link rel="next" href="chapter_chapter03.html">
+    <link rel="next" href="chapter_chapter02-2.html">
     <style>
         :root {
             --font-sans: 'Inter', sans-serif;
@@ -34,12 +34,12 @@
         
         body { font-family: var(--font-sans); background-color: var(--bg-main); color: var(--text-main); transition: background-color 0.4s ease, color 0.4s ease; }
         
-        .prose { font-family: var(--font-serif); color: var(--text-main); }
-        .prose p { font-size: 1.125rem; line-height: 2; letter-spacing: 0.05em; transition: font-size 0.3s ease; }
+        .prose { font-family: var(--font-serif); color: var(--text-main); transition: all 0.3s ease; }
+        .prose p { font-size: 1.125rem; line-height: 2; letter-spacing: 0.05em; transition: font-size 0.3s ease, line-height 0.3s ease, letter-spacing 0.3s ease; }
         .prose h1, .prose h2, .prose h3 { font-family: var(--font-sans); color: var(--text-main); }
         
-        .theme-switcher-btn svg, .setting-btn svg { fill: var(--icon-fill); transition: fill 0.3s ease; }
-        .theme-switcher-btn:hover svg, .setting-btn:hover svg, .theme-switcher-btn.active svg { fill: var(--text-main); }
+        .theme-switcher-btn svg, .setting-btn svg, #fullscreen-btn svg { fill: var(--icon-fill); transition: fill 0.3s ease; }
+        .theme-switcher-btn:hover svg, .setting-btn:hover svg, #fullscreen-btn:hover svg, .theme-switcher-btn.active svg { fill: var(--text-main); }
 
         .nav-btn { font-family: var(--font-sans); color: var(--link-main); padding: 0.5rem 1rem; border-radius: 0.5rem; transition: background-color 0.3s, color 0.3s; font-weight: 500; }
         .nav-btn:hover { background-color: var(--active-bg-main); color: var(--text-main); }
@@ -58,27 +58,39 @@
         .sub-nav-container { max-height: 1000px; overflow: hidden; transition: max-height 0.5s ease-in-out; }
         .sub-nav-container.hidden { max-height: 0; }
         
-        /* 字體大小樣式 */
+        /* 字體大小 */
         .font-size-sm .prose p { font-size: 1rem; }
         .font-size-md .prose p { font-size: 1.125rem; }
         .font-size-lg .prose p { font-size: 1.25rem; }
 
-        /* 字體風格樣式 */
+        /* 字體風格 */
         .font-family-serif .prose { font-family: var(--font-serif); }
         .font-family-sans .prose { font-family: var(--font-sans); }
-        .font-family-sans .prose p { letter-spacing: 0.025em; } /* 非襯線字體微調字距 */
+        .font-family-sans .prose p { letter-spacing: 0.025em; }
 
+        /* 【新增】行高 */
+        .line-height-tight .prose p { line-height: 1.7; }
+        .line-height-normal .prose p { line-height: 2; }
+        .line-height-loose .prose p { line-height: 2.3; }
+
+        /* 【新增】字距 */
+        .letter-spacing-tight .prose p { letter-spacing: 0.025em; }
+        .letter-spacing-normal .prose p { letter-spacing: 0.05em; }
+        .letter-spacing-loose .prose p { letter-spacing: 0.075em; }
+
+        /* 【新增】頁面邊距 */
+        .page-margin-narrow .prose { max-width: 48rem; } /* max-w-3xl */
+        .page-margin-normal .prose { max-width: 42rem; } /* max-w-2xl */
+        .page-margin-wide .prose { max-width: 36rem; } /* max-w-xl */
     </style>
 </head>
-<body class="theme-paper font-size-md font-family-serif" data-novel-id="dream-jetlag">
+<body class="theme-paper font-size-md font-family-serif line-height-normal letter-spacing-normal page-margin-normal" data-novel-id="dream-jetlag">
 
-    <!-- 閱讀進度條 -->
     <div id="progress-bar-container" class="fixed top-0 left-0 w-full h-1 z-20">
         <div id="progress-bar" class="h-full bg-blue-500 transition-all duration-150" style="width: 0%;"></div>
     </div>
 
     <div id="app-container" class="flex h-screen bg-[var(--bg-main)] overflow-hidden">
-        <!-- 側邊欄/目錄 (桌面版) -->
         <aside id="sidebar" class="hidden md:flex flex-col w-72 lg:w-80 bg-transparent border-r border-[var(--border-main)] flex-shrink-0">
             <div class="p-4 border-b border-[var(--border-main)] flex-shrink-0">
                 <a href="../index.html" class="flex items-center gap-2 text-[var(--link-main)] hover:text-[var(--text-main)] transition-colors duration-300 font-medium">
@@ -86,7 +98,11 @@
                     返回書庫
                 </a>
             </div>
-            <div class="flex-1 p-4 overflow-y-auto">
+            <!-- 【新增】章節搜尋框 -->
+            <div class="p-4 border-b border-[var(--border-main)]">
+                <input type="search" id="desktop-chapter-search" placeholder="搜尋章節..." class="w-full px-3 py-2 text-sm bg-transparent border border-[var(--border-main)] rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-[var(--text-main)] placeholder-[var(--link-main)]">
+            </div>
+            <div id="desktop-chapter-list-container" class="flex-1 p-4 overflow-y-auto">
                 <div class="aspect-w-3 aspect-h-4 mb-4"><img src="cover.jpg" alt="夢境時差：七封謎信 封面" class="w-full h-full object-cover rounded-lg shadow-md"></div>
                 <h2 class="text-xl font-bold mb-4 text-[var(--text-main)]">夢境時差：七封謎信</h2>
                 <nav id="chapter-list">
@@ -108,7 +124,7 @@
                                 </button>
                             </div>
                             <div id="sub-nav-chapter_chapter02-html" class="sub-nav-container mt-1 space-y-1 border-l-2 border-[var(--border-main)] pl-3 ml-4 ">
-                    <a href="chapter_chapter02-1.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 bg-[var(--active-bg-main)] font-bold text-[var(--text-main)]">2-1：深海巨怪</a></div></div>
+                    <a href="chapter_chapter02-1.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 bg-[var(--active-bg-main)] font-bold text-[var(--text-main)]">2-1：深海巨怪</a><a href="chapter_chapter02-2.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">2-2 蜂擁而至</a></div></div>
                         <div class="chapter-group">
                             <div class="chapter-toggle-btn flex justify-between items-center rounded-md hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)] ">
                                 <a href="chapter_chapter03.html" class="chapter-link flex-grow p-3">📖第三章：《輿論的漩渦，夢境的加密》託夢！</a>
@@ -149,7 +165,6 @@
             </div>
         </aside>
         
-        <!-- 主要內容區 -->
         <main class="flex-1 flex flex-col overflow-hidden">
             <header class="bg-transparent p-4 flex justify-between items-center z-10 flex-shrink-0">
                 <div class="flex items-center gap-2">
@@ -165,28 +180,61 @@
                     <span id="progress-percent" class="text-sm font-mono text-[var(--icon-fill)] w-12 text-left">0%</span>
                 </div>
                 <div class="flex items-center space-x-1">
-                    <!-- 設定按鈕 -->
+                    <!-- 【新增】全螢幕按鈕 -->
+                    <button id="fullscreen-btn" class="p-2 rounded-full hover:bg-[var(--active-bg-main)] transition-colors" title="全螢幕">
+                        <svg id="fullscreen-enter-icon" class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.5 2A1.5 1.5 0 003 3.5v3A1.5 1.5 0 004.5 8h3A1.5 1.5 0 009 6.5v-3A1.5 1.5 0 007.5 2h-3zM3 13.5A1.5 1.5 0 014.5 12h3a1.5 1.5 0 011.5 1.5v3A1.5 1.5 0 017.5 18h-3A1.5 1.5 0 013 16.5v-3zM12 3.5A1.5 1.5 0 0113.5 2h3A1.5 1.5 0 0118 3.5v3A1.5 1.5 0 0116.5 8h-3A1.5 1.5 0 0112 6.5v-3zM13.5 12A1.5 1.5 0 0012 13.5v3a1.5 1.5 0 001.5 1.5h3a1.5 1.5 0 001.5-1.5v-3A1.5 1.5 0 0016.5 12h-3z" clip-rule="evenodd" /></svg>
+                        <svg id="fullscreen-exit-icon" class="w-5 h-5 hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M2 5.5A1.5 1.5 0 013.5 4h3A1.5 1.5 0 018 5.5v3A1.5 1.5 0 016.5 10h-3A1.5 1.5 0 012 8.5v-3zM12 5.5A1.5 1.5 0 0113.5 4h3A1.5 1.5 0 0118 5.5v3a1.5 1.5 0 01-1.5 1.5h-3A1.5 1.5 0 0112 8.5v-3zM3.5 12A1.5 1.5 0 002 13.5v3A1.5 1.5 0 003.5 18h3A1.5 1.5 0 008 16.5v-3A1.5 1.5 0 006.5 12h-3zM13.5 12a1.5 1.5 0 00-1.5 1.5v3a1.5 1.5 0 001.5 1.5h3a1.5 1.5 0 001.5-1.5v-3a1.5 1.5 0 00-1.5-1.5h-3z" clip-rule="evenodd" /></svg>
+                    </button>
                     <div class="relative">
                         <button id="setting-toggle-btn" class="setting-btn p-2 rounded-full hover:bg-[var(--active-bg-main)] transition-colors" title="閱讀設定" aria-haspopup="true" aria-expanded="false">
                             <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M10 3a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM10 8.5a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM11.5 15.5a1.5 1.5 0 10-3 0 1.5 1.5 0 003 0z" /></svg>
                         </button>
-                        <div id="setting-panel" class="hidden absolute right-0 mt-2 w-56 bg-[var(--bg-main)] rounded-lg shadow-lg border border-[var(--border-main)] p-4 z-20" role="menu">
-                            <div class="mb-4">
-                                <label class="block text-sm font-medium text-[var(--text-main)] mb-2">字體大小</label>
-                                <div class="flex justify-between items-center">
-                                    <button data-action="set-font-size" data-value="sm" class="setting-option-btn">小</button>
-                                    <button data-action="set-font-size" data-value="md" class="setting-option-btn">中</button>
-                                    <button data-action="set-font-size" data-value="lg" class="setting-option-btn">大</button>
+                        <div id="setting-panel" class="hidden absolute right-0 mt-2 w-64 bg-[var(--bg-main)] rounded-lg shadow-lg border border-[var(--border-main)] p-4 z-20" role="menu">
+                            <!-- 字體大小 -->
+                            <div class="grid grid-cols-2 gap-x-4 gap-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-[var(--text-main)] mb-2">字體大小</label>
+                                    <div class="flex justify-between items-center">
+                                        <button data-action="set-font-size" data-value="sm" class="setting-option-btn">小</button>
+                                        <button data-action="set-font-size" data-value="md" class="setting-option-btn">中</button>
+                                        <button data-action="set-font-size" data-value="lg" class="setting-option-btn">大</button>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-[var(--text-main)] mb-2">字體風格</label>
+                                    <div class="flex justify-between items-center">
+                                        <button data-action="set-font-family" data-value="serif" class="setting-option-btn">襯線</button>
+                                        <button data-action="set-font-family" data-value="sans" class="setting-option-btn">非襯線</button>
+                                    </div>
+                                </div>
+                                <!-- 【新增】行高 -->
+                                <div>
+                                    <label class="block text-sm font-medium text-[var(--text-main)] mb-2">行高</label>
+                                    <div class="flex justify-between items-center">
+                                        <button data-action="set-line-height" data-value="tight" class="setting-option-btn">緊湊</button>
+                                        <button data-action="set-line-height" data-value="normal" class="setting-option-btn">標準</button>
+                                        <button data-action="set-line-height" data-value="loose" class="setting-option-btn">寬鬆</button>
+                                    </div>
+                                </div>
+                                <!-- 【新增】字距 -->
+                                <div>
+                                    <label class="block text-sm font-medium text-[var(--text-main)] mb-2">字距</label>
+                                    <div class="flex justify-between items-center">
+                                        <button data-action="set-letter-spacing" data-value="tight" class="setting-option-btn">緊湊</button>
+                                        <button data-action="set-letter-spacing" data-value="normal" class="setting-option-btn">標準</button>
+                                        <button data-action="set-letter-spacing" data-value="loose" class="setting-option-btn">寬鬆</button>
+                                    </div>
+                                </div>
+                                <!-- 【新增】頁面邊距 -->
+                                <div class="col-span-2">
+                                    <label class="block text-sm font-medium text-[var(--text-main)] mb-2">頁面邊距</label>
+                                    <div class="flex justify-between items-center">
+                                        <button data-action="set-page-margin" data-value="narrow" class="setting-option-btn">窄</button>
+                                        <button data-action="set-page-margin" data-value="normal" class="setting-option-btn">中</button>
+                                        <button data-action="set-page-margin" data-value="wide" class="setting-option-btn">寬</button>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="mb-4">
-                                <label class="block text-sm font-medium text-[var(--text-main)] mb-2">字體風格</label>
-                                <div class="flex justify-between items-center">
-                                    <button data-action="set-font-family" data-value="serif" class="setting-option-btn">襯線</button>
-                                    <button data-action="set-font-family" data-value="sans" class="setting-option-btn">非襯線</button>
-                                </div>
-                            </div>
-                            <!-- 【新增】位置記憶開關 -->
                             <div class="mt-4 pt-4 border-t border-[var(--border-main)]">
                                 <label for="remember-position-toggle" class="flex justify-between items-center cursor-pointer">
                                     <span class="text-sm font-medium text-[var(--text-main)]">記住閱讀位置</span>
@@ -197,7 +245,7 @@
                                 </label>
                             </div>
                         </div>
-                         <style>.setting-option-btn { padding: 4px 12px; border-radius: 999px; font-size: 0.875rem; background-color: transparent; border: 1px solid var(--border-main); color: var(--link-main); transition: all 0.2s; } .setting-option-btn.active, .setting-option-btn:hover { background-color: var(--active-bg-main); color: var(--text-main); border-color: var(--link-main); }</style>
+                         <style>.setting-option-btn { flex-grow: 1; text-align: center; padding: 4px 8px; border-radius: 999px; font-size: 0.875rem; background-color: transparent; border: 1px solid var(--border-main); color: var(--link-main); transition: all 0.2s; } .setting-option-btn:not(:last-child) { margin-right: 4px; } .setting-option-btn.active, .setting-option-btn:hover { background-color: var(--active-bg-main); color: var(--text-main); border-color: var(--link-main); }</style>
                     </div>
                     <button data-theme="paper" class="theme-switcher-btn p-2 rounded-full hover:bg-[var(--active-bg-main)] transition-colors" title="日間模式"><svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58c-.39-.39-1.02-.39-1.41 0l-1.42 1.42c-.39.39-.39 1.02 0 1.41.39.39 1.02.39 1.41 0l1.42-1.42c.39-.39.39-1.02 0-1.41zm13.42 13.42c-.39-.39-1.02-.39-1.41 0l-1.42 1.42c-.39.39-.39 1.02 0 1.41.39.39 1.02.39 1.41 0l1.42-1.42c.39-.39.39-1.02 0-1.41zM20.42 5.99c.39-.39.39-1.02 0-1.41l-1.42-1.42c-.39-.39-1.02-.39-1.41 0-.39.39-.39 1.02 0 1.41l1.42 1.42c.39.39 1.02.39 1.41 0zM4.58 19.41c.39-.39.39-1.02 0-1.41l-1.42-1.42c-.39-.39-1.02-.39-1.41 0-.39.39-.39 1.02 0 1.41l1.42 1.42c.39.39 1.02.39 1.41 0z"/></svg></button>
                     <button data-theme="sepia" class="theme-switcher-btn p-2 rounded-full hover:bg-[var(--active-bg-main)] transition-colors" title="懷舊模式"><svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zM12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5z"/></svg></button>
@@ -206,7 +254,6 @@
             </header>
             
             <div id="content-container" class="flex-1 relative overflow-y-auto">
-                <!-- 手機版彈出菜單 -->
                 <div id="menu" class="md:hidden fixed inset-0 bg-[var(--bg-main)] p-0 w-72 h-full shadow-lg transition-transform duration-300 ease-in-out transform -translate-x-full z-30 flex flex-col">
                     <div class="p-4 border-b border-[var(--border-main)] flex-shrink-0">
                          <a href="../index.html" class="flex items-center gap-2 text-[var(--link-main)] hover:text-[var(--text-main)] transition-colors duration-300 font-medium">
@@ -214,65 +261,13 @@
                             返回書庫
                         </a>
                     </div>
-                    <div class="flex-1 p-4 overflow-y-auto">
+                    <!-- 【新增】手機版章節搜尋框 -->
+                    <div class="p-4 border-b border-[var(--border-main)]">
+                         <input type="search" id="mobile-chapter-search" placeholder="搜尋章節..." class="w-full px-3 py-2 text-sm bg-transparent border border-[var(--border-main)] rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-[var(--text-main)] placeholder-[var(--link-main)]">
+                    </div>
+                    <div id="mobile-chapter-list-container" class="flex-1 p-4 overflow-y-auto">
                         <h2 class="text-xl font-bold mb-4 text-[var(--text-main)]">夢境時差：七封謎信</h2>
-                        <nav id="mobile-chapter-list">
-                            <a href="chapter_chapter00.html" class="chapter-link block p-3 rounded-md hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">📖序章：《哇哇哇！奇人異事！》啟動！</a>
-                        <div class="chapter-group">
-                            <div class="chapter-toggle-btn flex justify-between items-center rounded-md hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)] ">
-                                <a href="chapter_chapter01.html" class="chapter-link flex-grow p-3">📖第一章：《他在夢裡學完了 MIT 四年課程》夢創協同！</a>
-                                <button data-toggle-target="sub-nav-chapter_chapter01-html" class="chevron-btn flex-shrink-0 p-3" aria-expanded="false">
-                                    <svg class="chevron-icon w-4 h-4 transition-transform duration-200 " xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>
-                                </button>
-                            </div>
-                            <div id="sub-nav-chapter_chapter01-html" class="sub-nav-container mt-1 space-y-1 border-l-2 border-[var(--border-main)] pl-3 ml-4 hidden">
-                    <a href="chapter_chapter01-1.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">1-1：【哇哇哇！奇人異事！】夢創協同 Ep1</a><a href="chapter_chapter01-2.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">1-2：第一封信</a></div></div>
-                        <div class="chapter-group">
-                            <div class="chapter-toggle-btn flex justify-between items-center rounded-md hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)] ">
-                                <a href="chapter_chapter02.html" class="chapter-link flex-grow p-3">📖第二章：《更大的流量，更大的危險》留言!</a>
-                                <button data-toggle-target="sub-nav-chapter_chapter02-html" class="chevron-btn flex-shrink-0 p-3" aria-expanded="true">
-                                    <svg class="chevron-icon w-4 h-4 transition-transform duration-200 rotate-90" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>
-                                </button>
-                            </div>
-                            <div id="sub-nav-chapter_chapter02-html" class="sub-nav-container mt-1 space-y-1 border-l-2 border-[var(--border-main)] pl-3 ml-4 ">
-                    <a href="chapter_chapter02-1.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 bg-[var(--active-bg-main)] font-bold text-[var(--text-main)]">2-1：深海巨怪</a></div></div>
-                        <div class="chapter-group">
-                            <div class="chapter-toggle-btn flex justify-between items-center rounded-md hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)] ">
-                                <a href="chapter_chapter03.html" class="chapter-link flex-grow p-3">📖第三章：《輿論的漩渦，夢境的加密》託夢！</a>
-                                <button data-toggle-target="sub-nav-chapter_chapter03-html" class="chevron-btn flex-shrink-0 p-3" aria-expanded="false">
-                                    <svg class="chevron-icon w-4 h-4 transition-transform duration-200 " xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>
-                                </button>
-                            </div>
-                            <div id="sub-nav-chapter_chapter03-html" class="sub-nav-container mt-1 space-y-1 border-l-2 border-[var(--border-main)] pl-3 ml-4 hidden">
-                    <a href="chapter_chapter03-1.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">3-1：發燒影片</a><a href="chapter_chapter03-2.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">3-2：夢創協同 Ep2 - 第一個證據</a><a href="chapter_chapter03-3.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">3-3：黑書卷軸</a><a href="chapter_chapter03-4.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">3-4：旁觀者</a></div></div>
-                        <div class="chapter-group">
-                            <div class="chapter-toggle-btn flex justify-between items-center rounded-md hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)] ">
-                                <a href="chapter_chapter04.html" class="chapter-link flex-grow p-3">📖第四章：《預言者的回聲，與瘋狂的啟動！》</a>
-                                <button data-toggle-target="sub-nav-chapter_chapter04-html" class="chevron-btn flex-shrink-0 p-3" aria-expanded="false">
-                                    <svg class="chevron-icon w-4 h-4 transition-transform duration-200 " xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>
-                                </button>
-                            </div>
-                            <div id="sub-nav-chapter_chapter04-html" class="sub-nav-container mt-1 space-y-1 border-l-2 border-[var(--border-main)] pl-3 ml-4 hidden">
-                    <a href="chapter_chapter04-1.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">4-1：煎熬的等待</a><a href="chapter_chapter04-2.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">4-2：夢創協同 Ep3 - 預言者的回聲</a><a href="chapter_chapter04-3.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">4-3： D.I.R.E</a><a href="chapter_chapter04-4.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">4-4：三發預言</a></div></div>
-                        <div class="chapter-group">
-                            <div class="chapter-toggle-btn flex justify-between items-center rounded-md hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)] ">
-                                <a href="chapter_chapter05.html" class="chapter-link flex-grow p-3">📖第五章：《當信眾狂熱！信任的裂痕！》</a>
-                                <button data-toggle-target="sub-nav-chapter_chapter05-html" class="chevron-btn flex-shrink-0 p-3" aria-expanded="false">
-                                    <svg class="chevron-icon w-4 h-4 transition-transform duration-200 " xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>
-                                </button>
-                            </div>
-                            <div id="sub-nav-chapter_chapter05-html" class="sub-nav-container mt-1 space-y-1 border-l-2 border-[var(--border-main)] pl-3 ml-4 hidden">
-                    <a href="chapter_chapter05-1.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">5-1：當預言成真，恐懼才真正開始。</a><a href="chapter_chapter05-2.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">5-2：數位狩獵：當訊息成為武器</a><a href="chapter_chapter05-3.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">5-3：沉默的代價，如果我不是我</a><a href="chapter_chapter05-4.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">5-4：夢的入口，百張床</a><a href="chapter_chapter05-5.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">5-5：先鋒夢協者:狸、熊、兔、鴉</a><a href="chapter_chapter05-6.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">5-6：雙重連夢：在夢中抵達進階</a></div></div>
-                        <div class="chapter-group">
-                            <div class="chapter-toggle-btn flex justify-between items-center rounded-md hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)] ">
-                                <a href="chapter_chapter06.html" class="chapter-link flex-grow p-3">📖第六章：《師爺駕到，全員撤退！》</a>
-                                <button data-toggle-target="sub-nav-chapter_chapter06-html" class="chevron-btn flex-shrink-0 p-3" aria-expanded="false">
-                                    <svg class="chevron-icon w-4 h-4 transition-transform duration-200 " xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>
-                                </button>
-                            </div>
-                            <div id="sub-nav-chapter_chapter06-html" class="sub-nav-container mt-1 space-y-1 border-l-2 border-[var(--border-main)] pl-3 ml-4 hidden">
-                    <a href="chapter_chapter06-1.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">6-1：師爺的現身</a><a href="chapter_chapter06-2.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">6-2：第四封信</a><a href="chapter_chapter06-3.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">6-3：可樂味的夢境試煉</a><a href="chapter_chapter06-4.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">6-4：O的孤軍奮戰</a><a href="chapter_chapter06-5.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">6-5：計畫代號：FLASH</a><a href="chapter_chapter06-6.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">6-6：休門與生門</a><a href="chapter_chapter06-7.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">6-7：FLASH！</a><a href="chapter_chapter06-8.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">6-8 ：首爾封鎖，夢境餘波</a><a href="chapter_chapter06-9.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">6-9：四號安全屋</a></div></div><a href="letter_letter1.html" class="chapter-link block p-3 rounded-md hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">✉️ 第一封信《他在夢裡學完了 MIT 四年課程》</a><a href="letter_letter2.html" class="chapter-link block p-3 rounded-md hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">✉️ 第二封信《來自夢境的加密訊息》</a><a href="letter_letter3.html" class="chapter-link block p-3 rounded-md hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">✉️ 第二封信《預言的迴響》</a><a href="letter_letter4.html" class="chapter-link block p-3 rounded-md hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">✉️ 第四封信《夢境的矛與盾》</a>
-                        </nav>
+                        <nav id="mobile-chapter-list"></nav>
                     </div>
                 </div>
                 <div id="menu-overlay" class="md:hidden fixed inset-0 bg-black bg-opacity-25 z-20 opacity-0 pointer-events-none transition-opacity duration-300 cursor-pointer"></div>
@@ -287,25 +282,13 @@
         三樓最狠：『坐等「爸，我回來了」出片打臉』。」</p><p class="mb-6 leading-loose tracking-wide">我沒搭話，只是手指飛快滑過留言區，像在掃描戰場。</p><p class="mb-6 leading-loose tracking-wide">是的，這裡已經不再是討論區，而是輿論開火的第一線。</p><p class="mb-6 leading-loose tracking-wide">【留言縮影】
 🟢 信眾：「卡位！這題材直接讓我雞皮疙瘩，太上頭了！」
 🔴 酸民：「夢裡時間2400倍？你當觀眾沒看過七龍珠喔？」
-🟡 蹭流量：「猴哥懶人爆」已經上傳懶人包，直接把我們歸類成《2025年度最荒謬懸疑劇》。</p><p class="mb-6 leading-loose tracking-wide">老K搖頭：「你真的捅馬蜂窩了啦，老兄。」</p><p class="mb-6 leading-loose tracking-wide">我不語，只是靜靜地，打開筆電，重新讀了一遍那封信。</p><p class="mb-6 leading-loose tracking-wide">──總共會寄來七封。</p><p class="mb-6 leading-loose tracking-wide">「七封」這數字，太乾淨。太像劇本了。像是被精心設計好的敘事節奏，又像宗教儀式裡的數字密碼。</p><p class="mb-6 leading-loose tracking-wide">留言區的吵鬧聲、新聞的節目熱度，全都只是煙霧彈。</p><p class="mb-6 leading-loose tracking-wide">真正讓我起雞皮疙瘩的，是那段話：</p><p class="mb-6 leading-loose tracking-wide">「……他說這跟『睡眠品質』、『神經傳導效率』、『腦區動用密度』都有關，講得我一頭霧水。」</p><p class="mb-6 leading-loose tracking-wide">我打開藏在硬碟深處的系統——那是還在科技圈打滾時，和幾位資訊狂人一起架設的地下資料庫。專門收錄那些主流引擎查不到的禁區詞彙與黑色研究。</p><p class="mb-6 leading-loose tracking-wide">我們戲稱它叫「深海巨怪」。</p><p class="mb-6 leading-loose tracking-wide">每次我在節目裡說「來源機密不能公開」，十之八九就是牠的嘴裡撈出來的東西。</p><p class="mb-6 leading-loose tracking-wide">正當我準備輸入關鍵詞，老K突然彈跳坐起，手機幾乎砸到自己臉上。</p><p class="mb-6 leading-loose tracking-wide">「幹，他真的來了。」</p><p class="mb-6 leading-loose tracking-wide">---</p><p class="mb-6 leading-loose tracking-wide">2-2 蜂擁而至</p><p class="mb-6 leading-loose tracking-wide">我走過去，看他手機螢幕上的推播通知——</p><p class="mb-6 leading-loose tracking-wide">【影片上線通知】
-頻道：「爸，我回來了」
-標題：《【揭穿真相】老度最新影片全是抄！假的、編的、算好的？給你三個鐵證⚠️》
-縮圖是一張我皺眉的截圖，紅色驚嘆號與斗大的「#造假？」貼在我額頭旁。</p><p class="mb-6 leading-loose tracking-wide">我點開影片，熟悉的懟人語氣衝出喇叭：</p><p class="mb-6 leading-loose tracking-wide">「老度，你我無冤無仇。但作為一個以真相為信仰的頻道，我必須說——你這支影片，漏洞百出。」</p><p class="mb-6 leading-loose tracking-wide">「MIT 四年課程？你知道選課制度多複雜嗎？夢中學習？說難聽點，就是拿靈異包裝科幻，玩文字遊戲唬爛。」</p><p class="mb-6 leading-loose tracking-wide">「第二，什麼『神經傳導密度』？Google Scholar 上根本一篇都查不到好嗎？如果有任何汙衊，我開直播道歉。」</p><p class="mb-6 leading-loose tracking-wide">「第三，別以為你不接業配就等於正義。你這場表演，我今天就用邏輯有一說一，一條條剝開來看。」</p><p class="mb-6 leading-loose tracking-wide">留言區又炸了。</p><p class="mb-6 leading-loose tracking-wide">一邊狂刷：「終於有人說真話了！」
-另一邊嗆爆：「蹭熱度蹭成這樣，乾脆叫你爸回來開台好了！」</p><p class="mb-6 leading-loose tracking-wide">「猴哥懶人爆」也更新了影片。中立、平穩，像在報天氣：</p><p class="mb-6 leading-loose tracking-wide">「最近YT圈有個超紅話題：老度最新系列【哇哇哇！奇人異事！】裡的『夢創協同』影片。贊成者認為這可能開啟人類潛能新篇章，反對方則認為是偽科學。目前輿論持續升溫，真假如何，仍待驗證。」</p><p class="mb-6 leading-loose tracking-wide">老K瞇眼看著我：「『爸，我回來了』這傢伙打算當葉問，一打十了嗎？」</p><p class="mb-6 leading-loose tracking-wide">我卻沒笑。心裡的那股寒意越來越濃。</p><p class="mb-6 leading-loose tracking-wide">怎麼會那麼快抓到「腦區動用密度」這個詞？不但點出，還直接攻擊。</p><p class="mb-6 leading-loose tracking-wide">那不是巧合，是刻意。</p><p class="mb-6 leading-loose tracking-wide">老K也感覺不對勁：「老度，這真的太準了。你不覺得…有人在餵他資料？」</p><p class="mb-6 leading-loose tracking-wide">我輕聲道：「我也是這麼想的。」</p><p class="mb-6 leading-loose tracking-wide">我轉回電腦，將三個關鍵詞輸入「深海巨怪」：</p><p class="mb-6 leading-loose tracking-wide">「睡眠品質」——            常見醫學研究。
-「神經傳導效率」——    神經科學標準術語。
-「腦區動用密度（Neural Zone Utilization Density）」——</p><p class="mb-6 leading-loose tracking-wide">──螢幕一閃。</p><p class="mb-6 leading-loose tracking-wide">只有一筆結果。</p><p class="mb-6 leading-loose tracking-wide">檔案來源：D.I.R.E.（Dream Integration Research Entity）
-標題：《潛意識資訊整合訓練：階段一試驗報告》
-封存日期：2001年，標記：絕密（已解密）</p><p class="mb-6 leading-loose tracking-wide">我的呼吸停了一秒。</p><p class="mb-6 leading-loose tracking-wide">這不是任何科普、論文會用的詞。這是情報圈、腦神經特案才會接觸的機密字眼。</p><p class="mb-6 leading-loose tracking-wide">我喃喃自語：「這封信…可能根本不是投稿，是求救。甚至——是測試。」</p><p class="mb-6 leading-loose tracking-wide">老K咽了口唾沫：「靠…所以我們是不是踩到什麼不能踩的線？」</p><p class="mb-6 leading-loose tracking-wide">「不是我們，是我。」我輕聲道，「也許這就是他的目的。」</p><p class="mb-6 leading-loose tracking-wide">我腦中閃過一句話：</p><p class="mb-6 leading-loose tracking-wide">「如果全世界有一批人正在默默訓練這個能力，我們是不是正活在另一場文明的門檻前？」</p><p class="mb-6 leading-loose tracking-wide">那是老K前幾天講的。現在，這句話聽起來一點也不像玩笑。</p><p class="mb-6 leading-loose tracking-wide">「叮咚。」</p><p class="mb-6 leading-loose tracking-wide">電腦跳出一聲刺耳的新信通知。</p><p class="mb-6 leading-loose tracking-wide">發件人：RR。</p><p class="mb-6 leading-loose tracking-wide">簡短兩句：</p><p class="mb-6 leading-loose tracking-wide">「謝謝你把它公開。輿論的風向不出我所料。
-下一封信，我會提供『第一個證據』。請準備好。」</p><p class="mb-6 leading-loose tracking-wide">老K湊過來，表情罕見地嚴肅：「……證據？這不是節目效果了。」</p><p class="mb-6 leading-loose tracking-wide">我闔上所有網頁，只留下這封信。</p><p class="mb-6 leading-loose tracking-wide">現在我明白了。那些罵戰、蹭流、惡搞影片，全都是佈景。</p><p class="mb-6 leading-loose tracking-wide">RR不是在投搞。他在引導。引導我們進入他設計的敘事節奏。</p><p class="mb-6 leading-loose tracking-wide">而我們的角色，不過是他佈局中一顆還沒察覺的棋。</p><p class="mb-6 leading-loose tracking-wide">我對著攝影機的反光，像是低聲問觀眾：</p><p class="mb-6 leading-loose tracking-wide">「大家有沒有發現啊……當一個故事開始挑戰你所有的認知時，你的本能會想否定它。
-但如果你從質疑裡，抓住一絲不屬於故事本身的真實──
-那才是真正該怕的東西。」</p><p class="mb-6 leading-loose tracking-wide">我深吸一口氣，點開回信介面，輸入一句話：</p><p class="mb-6 leading-loose tracking-wide">「我會繼續。等你下一封信。」</p><p class="mb-6 leading-loose tracking-wide">《第二章 結束》</p>
-                    <div class="flex justify-between mt-12 pt-6 border-t border-[var(--border-main)]"><a href="chapter_chapter02.html" id="prev-page-link" class="nav-btn">← 上一節</a><a href="chapter_chapter03.html" id="next-page-link" class="nav-btn">下一節 →</a></div>
+🟡 蹭流量：「猴哥懶人爆」已經上傳懶人包，直接把我們歸類成《2025年度最荒謬懸疑劇》。</p><p class="mb-6 leading-loose tracking-wide">老K搖頭：「你真的捅馬蜂窩了啦，老兄。」</p><p class="mb-6 leading-loose tracking-wide">我不語，只是靜靜地，打開筆電，重新讀了一遍那封信。</p><p class="mb-6 leading-loose tracking-wide">──總共會寄來七封。</p><p class="mb-6 leading-loose tracking-wide">「七封」這數字，太乾淨。太像劇本了。像是被精心設計好的敘事節奏，又像宗教儀式裡的數字密碼。</p><p class="mb-6 leading-loose tracking-wide">留言區的吵鬧聲、新聞的節目熱度，全都只是煙霧彈。</p><p class="mb-6 leading-loose tracking-wide">真正讓我起雞皮疙瘩的，是那段話：</p><p class="mb-6 leading-loose tracking-wide">「……他說這跟『睡眠品質』、『神經傳導效率』、『腦區動用密度』都有關，講得我一頭霧水。」</p><p class="mb-6 leading-loose tracking-wide">我打開藏在硬碟深處的系統——那是還在科技圈打滾時，和幾位資訊狂人一起架設的地下資料庫。專門收錄那些主流引擎查不到的禁區詞彙與黑色研究。</p><p class="mb-6 leading-loose tracking-wide">我們戲稱它叫「深海巨怪」。</p><p class="mb-6 leading-loose tracking-wide">每次我在節目裡說「來源機密不能公開」，十之八九就是牠的嘴裡撈出來的東西。</p><p class="mb-6 leading-loose tracking-wide">正當我準備輸入關鍵詞，老K突然彈跳坐起，手機幾乎砸到自己臉上。</p><p class="mb-6 leading-loose tracking-wide">「幹，他真的來了。」</p><p class="mb-6 leading-loose tracking-wide">---</p>
+                    <div class="flex justify-between mt-12 pt-6 border-t border-[var(--border-main)]"><a href="chapter_chapter02.html" id="prev-page-link" class="nav-btn">← 上一節</a><a href="chapter_chapter02-2.html" id="next-page-link" class="nav-btn">下一節 →</a></div>
                 </article>
             </div>
         </main>
     </div>
 
-    <!-- 浮動功能按鈕 -->
     <div class="fixed bottom-6 right-6 z-20 flex flex-col gap-3">
         <button id="scroll-to-top" class="fab-btn hidden" title="回到頂部">
             <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4l-8 8h5v8h6v-8h5l-8-8z"/></svg>
@@ -316,7 +299,6 @@
     </div>
     <style>.fab-btn { background-color: var(--active-bg-main); color: var(--icon-fill); width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1); transition: all 0.3s ease; } .fab-btn:hover { transform: scale(1.1); box-shadow: 0 6px 16px rgba(0,0,0,0.15); }</style>
     
-    <!-- 上次閱讀位置提示 -->
     <div id="last-read-toast" class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 bg-[var(--bg-main)] text-[var(--text-main)] px-6 py-3 rounded-lg shadow-xl border border-[var(--border-main)] z-30 flex items-center gap-4">
         <p class="text-sm">要跳轉至上次閱讀的位置嗎？</p>
         <a id="last-read-link" href="#" class="font-bold text-blue-500 text-sm hover:underline">跳轉</a>
@@ -346,12 +328,19 @@
             const header = document.querySelector('header');
             const rememberPositionToggle = document.getElementById('remember-position-toggle');
             const desktopNav = document.getElementById('chapter-list');
-            const mobileNav = document.getElementById('mobile-chapter-list');
+            const mobileNavContainer = document.getElementById('mobile-chapter-list');
+            const fullscreenBtn = document.getElementById('fullscreen-btn');
+            const fullscreenEnterIcon = document.getElementById('fullscreen-enter-icon');
+            const fullscreenExitIcon = document.getElementById('fullscreen-exit-icon');
+            const desktopChapterSearch = document.getElementById('desktop-chapter-search');
+            const mobileChapterSearch = document.getElementById('mobile-chapter-search');
 
             // --- 函式定義 ---
 
-            // 【重構】設定管理
-            const getSettings = () => JSON.parse(localStorage.getItem('readingSettings')) || { size: 'md', family: 'serif', rememberPosition: false };
+            const getSettings = () => JSON.parse(localStorage.getItem('readingSettings')) || { 
+                size: 'md', family: 'serif', rememberPosition: false,
+                lineHeight: 'normal', letterSpacing: 'normal', pageMargin: 'normal'
+            };
 
             const saveReadingSetting = (key, value) => {
                 const settings = getSettings();
@@ -362,15 +351,37 @@
             
             const applyReadingSettings = () => {
                 const settings = getSettings();
-                // 字體大小
-                document.body.classList.remove('font-size-sm', 'font-size-md', 'font-size-lg');
-                document.body.classList.add(`font-size-${settings.size}`);
-                document.querySelectorAll('[data-action="set-font-size"]').forEach(btn => btn.classList.toggle('active', btn.dataset.value === settings.size));
-                // 字體風格
-                document.body.classList.remove('font-family-serif', 'font-family-sans');
-                document.body.classList.add(`font-family-${settings.family}`);
-                document.querySelectorAll('[data-action="set-font-family"]').forEach(btn => btn.classList.toggle('active', btn.dataset.value === settings.family));
-                // 【新增】記住位置開關
+                const classPrefixes = ['font-size-', 'font-family-', 'line-height-', 'letter-spacing-', 'page-margin-'];
+                const newClasses = [
+                    `font-size-${settings.size}`,
+                    `font-family-${settings.family}`,
+                    `line-height-${settings.lineHeight}`,
+                    `letter-spacing-${settings.letterSpacing}`,
+                    `page-margin-${settings.pageMargin}`
+                ];
+
+                // 清理舊的 class
+                const bodyClassList = document.body.classList;
+                bodyClassList.forEach(cls => {
+                    if (classPrefixes.some(prefix => cls.startsWith(prefix))) {
+                        bodyClassList.remove(cls);
+                    }
+                });
+                
+                // 添加新的 class
+                document.body.classList.add(...newClasses);
+
+                // 更新設定面板按鈕狀態
+                document.querySelectorAll('[data-action]').forEach(btn => {
+                    const [action, key] = btn.dataset.action.split('-');
+                    const settingKey = key === 'fontsize' ? 'size' : key === 'fontfamily' ? 'family' : key === 'lineheight' ? 'lineHeight' : key === 'letterspacing' ? 'letterSpacing' : 'pageMargin';
+                    if (settings[settingKey] === btn.dataset.value) {
+                         btn.classList.add('active');
+                    } else {
+                         btn.classList.remove('active');
+                    }
+                });
+                
                 if (rememberPositionToggle) {
                     rememberPositionToggle.checked = !!settings.rememberPosition;
                 }
@@ -417,6 +428,54 @@
                 });
             };
 
+            // 【新增】全螢幕功能
+            const toggleFullScreen = () => {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen().catch(err => {
+                        alert(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+                    });
+                } else {
+                    document.exitFullscreen();
+                }
+            };
+
+            const updateFullscreenIcons = () => {
+                if (document.fullscreenElement) {
+                    fullscreenEnterIcon.classList.add('hidden');
+                    fullscreenExitIcon.classList.remove('hidden');
+                } else {
+                    fullscreenEnterIcon.classList.remove('hidden');
+                    fullscreenExitIcon.classList.add('hidden');
+                }
+            };
+
+            // 【新增】章節搜尋功能
+            const filterChapters = (query, navContainer) => {
+                const lowerCaseQuery = query.toLowerCase().trim();
+                const chapterLinks = navContainer.querySelectorAll('a.chapter-link');
+                const chapterGroups = navContainer.querySelectorAll('.chapter-group');
+
+                chapterGroups.forEach(group => {
+                    const linksInGroup = group.querySelectorAll('a.chapter-link');
+                    let groupHasMatch = false;
+                    linksInGroup.forEach(link => {
+                        const title = link.textContent.toLowerCase();
+                        const isMatch = title.includes(lowerCaseQuery);
+                        if (isMatch) {
+                            groupHasMatch = true;
+                        }
+                        // 對子項目進行顯示/隱藏
+                        if (link.parentElement.classList.contains('sub-nav-container')) {
+                            link.style.display = isMatch ? 'block' : 'none';
+                        }
+                    });
+                    
+                    // 根據是否有匹配項來決定整個群組的顯示/隱藏
+                    group.style.display = groupHasMatch ? 'block' : 'none';
+                });
+            };
+
+
             // --- 初始化與事件綁定 ---
 
             // 1. 初始化主題和閱讀設定
@@ -424,18 +483,18 @@
             setTheme(currentTheme);
             applyReadingSettings();
 
-            // 2. 【修復】複製並修正手機版目錄，確保 ID 唯一性
-            if (desktopNav && mobileNav) {
-                mobileNav.innerHTML = desktopNav.innerHTML;
-                mobileNav.querySelectorAll('[id]').forEach(el => {
+            // 2. 複製並修正手機版目錄
+            if (desktopNav && mobileNavContainer) {
+                mobileNavContainer.innerHTML = desktopNav.innerHTML;
+                mobileNavContainer.querySelectorAll('[id]').forEach(el => {
                     el.id = 'mobile-' + el.id;
                 });
-                mobileNav.querySelectorAll('[data-toggle-target]').forEach(el => {
+                mobileNavContainer.querySelectorAll('[data-toggle-target]').forEach(el => {
                     el.dataset.toggleTarget = 'mobile-' + el.dataset.toggleTarget;
                 });
             }
 
-            // 3. 側邊欄收合功能
+            // 3. 側邊欄收合
             const updateSidebarIcon = (isCollapsed) => {
                 sidebarToggleIcon.style.transform = isCollapsed ? 'rotate(180deg)' : 'rotate(0deg)';
             };
@@ -448,7 +507,7 @@
                 updateSidebarIcon(collapsed);
             });
 
-            // 4. 手機版選單事件
+            // 4. 手機版選單
             menuBtn.addEventListener('click', () => toggleMenu());
             overlay.addEventListener('click', () => toggleMenu(true));
             mobileMenu.addEventListener('click', (e) => {
@@ -457,7 +516,7 @@
                 }
             });
             
-            // 5. 目錄收合事件 (桌面與手機)
+            // 5. 目錄收合
             setupChapterToggles('#chapter-list');
             setupChapterToggles('#mobile-chapter-list');
 
@@ -475,7 +534,6 @@
 
                 clearTimeout(scrollTimeout);
                 scrollTimeout = setTimeout(() => {
-                    // 【修改】僅在設定開啟時儲存位置
                     if (getSettings().rememberPosition) {
                         localStorage.setItem(lastReadStorageKey, JSON.stringify({
                             href: window.location.pathname,
@@ -485,7 +543,6 @@
                 }, 500);
             });
 
-            // 7. 【修改】僅在設定開啟時處理上次閱讀位置
             if (getSettings().rememberPosition) {
                 const lastReadData = JSON.parse(localStorage.getItem(lastReadStorageKey));
                 if (lastReadData && lastReadData.href) {
@@ -501,11 +558,11 @@
             }
             lastReadClose.addEventListener('click', () => lastReadToast.classList.add('hidden'));
 
-            // 8. 浮動按鈕事件
+            // 7. 浮動按鈕
             scrollToTopBtn.addEventListener('click', () => contentContainer.scrollTo({ top: 0, behavior: 'smooth' }));
             scrollToBottomBtn.addEventListener('click', () => contentContainer.scrollTo({ top: contentContainer.scrollHeight, behavior: 'smooth' }));
             
-            // 9. 鍵盤導覽
+            // 8. 鍵盤導覽
             document.addEventListener('keydown', (e) => {
                 if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
                 const prevLink = document.querySelector('link[rel="prev"]');
@@ -514,7 +571,7 @@
                 if (e.key === 'ArrowRight' && nextLink?.href) window.location.href = nextLink.href;
             });
 
-            // 10. 設定面板與主題切換事件
+            // 9. 設定面板、主題切換、全螢幕
             header.addEventListener('click', (e) => {
                 const themeBtn = e.target.closest('.theme-switcher-btn');
                 if (themeBtn && themeBtn.dataset.theme) {
@@ -536,16 +593,28 @@
                 const btn = e.target.closest('[data-action]');
                 if (btn) {
                     const { action, value } = btn.dataset;
-                    if (action === 'set-font-size') saveReadingSetting('size', value);
-                    if (action === 'set-font-family') saveReadingSetting('family', value);
+                    const settingMap = {
+                        'set-font-size': 'size', 'set-font-family': 'family',
+                        'set-line-height': 'lineHeight', 'set-letter-spacing': 'letterSpacing',
+                        'set-page-margin': 'pageMargin'
+                    };
+                    if(settingMap[action]) {
+                        saveReadingSetting(settingMap[action], value);
+                    }
                 }
             });
-            // 【新增】為位置記憶開關綁定事件
             rememberPositionToggle.addEventListener('change', (e) => {
                 saveReadingSetting('rememberPosition', e.target.checked);
             });
+            fullscreenBtn.addEventListener('click', toggleFullScreen);
+            document.addEventListener('fullscreenchange', updateFullscreenIcons);
 
-            // 11. PWA Service Worker Registration
+            // 10. 章節搜尋
+            desktopChapterSearch.addEventListener('input', (e) => filterChapters(e.target.value, desktopNav));
+            mobileChapterSearch.addEventListener('input', (e) => filterChapters(e.target.value, mobileNavContainer));
+
+
+            // 11. PWA
             if ('serviceWorker' in navigator) {
                 window.addEventListener('load', () => {
                     navigator.serviceWorker.register('./service-worker.js')
