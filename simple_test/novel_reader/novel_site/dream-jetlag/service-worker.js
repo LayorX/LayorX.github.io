@@ -8,6 +8,7 @@ const urlsToCache = [
     "chapter_chapter01-2.html",
     "chapter_chapter02.html",
     "chapter_chapter02-1.html",
+    "chapter_chapter02-2.html",
     "chapter_chapter03.html",
     "chapter_chapter03-1.html",
     "chapter_chapter03-2.html",
