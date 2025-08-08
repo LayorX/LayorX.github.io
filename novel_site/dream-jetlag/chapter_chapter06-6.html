@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>6-6：休門與生門 - 夢境時差：七封謎信</title>
+    <script src="https://cdn.tailwindcss.com?plugins=typography,aspect-ratio"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Noto+Serif+TC:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- PWA and SEO -->
+    <meta name="theme-color" content="#f8fafc">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192x192.png">
+    
+    <!-- 用於鍵盤導覽 -->
+    <link rel="prev" href="chapter_chapter06-5.html">
+    <link rel="next" href="chapter_chapter06-7.html">
+    <style>
+        :root {
+            --font-sans: 'Inter', sans-serif;
+            --font-serif: 'Noto Serif TC', serif;
+            
+            /* 色彩主題 */
+            --bg-paper: #f8fafc; --text-paper: #334155; --border-paper: #e2e8f0; --link-paper: #475569; --active-bg-paper: #e2e8f0; --icon-fill-paper: #64748b;
+            --bg-sepia: #f4f0e8; --text-sepia: #5f4b32; --border-sepia: #e9dec9; --link-sepia: #8a5a44; --active-bg-sepia: #e9dec9; --icon-fill-sepia: #5f4b32;
+            --bg-night: #0f172a; --text-night: #94a3b8; --border-night: #334155; --link-night: #94a3b8; --active-bg-night: #1e293b; --icon-fill-night: #94a3b8;
+        }
+
+        .theme-paper { --bg-main: var(--bg-paper); --text-main: var(--text-paper); --border-main: var(--border-paper); --link-main: var(--link-paper); --active-bg-main: var(--active-bg-paper); --icon-fill: var(--icon-fill-paper); }
+        .theme-sepia { --bg-main: var(--bg-sepia); --text-main: var(--text-sepia); --border-main: var(--border-sepia); --link-main: var(--link-sepia); --active-bg-main: var(--active-bg-sepia); --icon-fill: var(--icon-fill-sepia); }
+        .theme-night { --bg-main: var(--bg-night); --text-main: var(--text-night); --border-main: var(--border-night); --link-main: var(--link-night); --active-bg-main: var(--active-bg-night); --icon-fill: var(--icon-fill-night); }
+        
+        body { font-family: var(--font-sans); background-color: var(--bg-main); color: var(--text-main); transition: background-color 0.4s ease, color 0.4s ease; }
+        
+        .prose { font-family: var(--font-serif); color: var(--text-main); }
+        .prose p { font-size: 1.125rem; line-height: 2; letter-spacing: 0.05em; transition: font-size 0.3s ease; }
+        .prose h1, .prose h2, .prose h3 { font-family: var(--font-sans); color: var(--text-main); }
+        
+        .theme-switcher-btn svg, .setting-btn svg { fill: var(--icon-fill); transition: fill 0.3s ease; }
+        .theme-switcher-btn:hover svg, .setting-btn:hover svg, .theme-switcher-btn.active svg { fill: var(--text-main); }
+
+        .nav-btn { font-family: var(--font-sans); color: var(--link-main); padding: 0.5rem 1rem; border-radius: 0.5rem; transition: background-color 0.3s, color 0.3s; font-weight: 500; }
+        .nav-btn:hover { background-color: var(--active-bg-main); color: var(--text-main); }
+
+        /* 選單與捲軸樣式 */
+        #menu-toggle:checked ~ #menu { transform: translateX(0); }
+        #menu-toggle:checked ~ label[for="menu-toggle"] { opacity: 1; pointer-events: auto; }
+        #sidebar, #menu, #content-container { scrollbar-width: thin; scrollbar-color: var(--border-main) transparent; }
+        #sidebar::-webkit-scrollbar, #menu::-webkit-scrollbar, #content-container::-webkit-scrollbar { width: 5px; }
+        #sidebar::-webkit-scrollbar-track, #menu::-webkit-scrollbar-track, #content-container::-webkit-scrollbar-track { background: transparent; }
+        #sidebar::-webkit-scrollbar-thumb, #menu::-webkit-scrollbar-thumb, #content-container::-webkit-scrollbar-thumb { background-color: var(--border-main); border-radius: 20px; }
+
+        /* 側邊欄收合動畫 */
+        #sidebar { transition: margin-left 0.3s ease-in-out; }
+        .sidebar-collapsed #sidebar { margin-left: -18rem; } /* w-72 */
+        @media (min-width: 1024px) { .sidebar-collapsed #sidebar { margin-left: -20rem; } } /* lg:w-80 */
+        
+        .sub-nav-container { max-height: 1000px; overflow: hidden; transition: max-height 0.5s ease-in-out; }
+        .sub-nav-container.hidden { max-height: 0; }
+        
+        /* 字體大小樣式 */
+        .font-size-sm .prose p { font-size: 1rem; }
+        .font-size-md .prose p { font-size: 1.125rem; }
+        .font-size-lg .prose p { font-size: 1.25rem; }
+
+        /* 字體風格樣式 */
+        .font-family-serif .prose { font-family: var(--font-serif); }
+        .font-family-sans .prose { font-family: var(--font-sans); }
+        .font-family-sans .prose p { letter-spacing: 0.025em; } /* 非襯線字體微調字距 */
+
+    </style>
+</head>
+<body class="theme-paper font-size-md font-family-serif" data-novel-id="dream-jetlag">
+
+    <!-- 閱讀進度條 -->
+    <div id="progress-bar-container" class="fixed top-0 left-0 w-full h-1 z-20">
+        <div id="progress-bar" class="h-full bg-blue-500 transition-all duration-150" style="width: 0%;"></div>
+    </div>
+
+    <div id="app-container" class="flex h-screen bg-[var(--bg-main)] overflow-hidden">
+        <!-- 側邊欄/目錄 (桌面版) -->
+        <aside id="sidebar" class="hidden md:flex flex-col w-72 lg:w-80 bg-transparent border-r border-[var(--border-main)] flex-shrink-0">
+            <div class="p-4 border-b border-[var(--border-main)] flex-shrink-0">
+                <a href="../index.html" class="flex items-center gap-2 text-[var(--link-main)] hover:text-[var(--text-main)] transition-colors duration-300 font-medium">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                    返回書庫
+                </a>
+            </div>
+            <div class="flex-1 p-4 overflow-y-auto">
+                <div class="aspect-w-3 aspect-h-4 mb-4"><img src="cover.jpg" alt="夢境時差：七封謎信 封面" class="w-full h-full object-cover rounded-lg shadow-md"></div>
+                <h2 class="text-xl font-bold mb-4 text-[var(--text-main)]">夢境時差：七封謎信</h2>
+                <nav id="chapter-list">
+                    <a href="chapter_chapter00.html" class="chapter-link block p-3 rounded-md hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">📖序章：《哇哇哇！奇人異事！》啟動！</a>
+                        <div>
+                            <button data-toggle-target="sub-nav-chapter_chapter01-html" class="chapter-toggle-btn w-full block p-3 rounded-md hover:bg-[var(--active-bg-main)] transition-colors duration-200 flex justify-between items-center text-left text-[var(--link-main)] ">
+                                <span>📖第一章：《他在夢裡學完了 MIT 四年課程》夢創協同！</span>
+                                <svg class="chevron-icon w-4 h-4 transition-transform duration-200 flex-shrink-0 " xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>
+                            </button>
+                            <div id="sub-nav-chapter_chapter01-html" class="sub-nav-container mt-1 space-y-1 border-l-2 border-[var(--border-main)] pl-3 ml-4 hidden">
+                    <a href="chapter_chapter01-1.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">1-1：【哇哇哇！奇人異事！】夢創協同 Ep1</a><a href="chapter_chapter01-2.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">1-2：第一封信</a></div></div>
+                        <div>
+                            <button data-toggle-target="sub-nav-chapter_chapter02-html" class="chapter-toggle-btn w-full block p-3 rounded-md hover:bg-[var(--active-bg-main)] transition-colors duration-200 flex justify-between items-center text-left text-[var(--link-main)] ">
+                                <span>📖第二章：《更大的流量，更大的危險》留言!</span>
+                                <svg class="chevron-icon w-4 h-4 transition-transform duration-200 flex-shrink-0 " xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>
+                            </button>
+                            <div id="sub-nav-chapter_chapter02-html" class="sub-nav-container mt-1 space-y-1 border-l-2 border-[var(--border-main)] pl-3 ml-4 hidden">
+                    <a href="chapter_chapter02-1.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">2-1：深海巨怪</a></div></div>
+                        <div>
+                            <button data-toggle-target="sub-nav-chapter_chapter03-html" class="chapter-toggle-btn w-full block p-3 rounded-md hover:bg-[var(--active-bg-main)] transition-colors duration-200 flex justify-between items-center text-left text-[var(--link-main)] ">
+                                <span>📖第三章：《輿論的漩渦，夢境的加密》託夢！</span>
+                                <svg class="chevron-icon w-4 h-4 transition-transform duration-200 flex-shrink-0 " xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>
+                            </button>
+                            <div id="sub-nav-chapter_chapter03-html" class="sub-nav-container mt-1 space-y-1 border-l-2 border-[var(--border-main)] pl-3 ml-4 hidden">
+                    <a href="chapter_chapter03-1.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">3-1：發燒影片</a><a href="chapter_chapter03-2.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">3-2：夢創協同 Ep2 - 第一個證據</a><a href="chapter_chapter03-3.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">3-3：黑書卷軸</a><a href="chapter_chapter03-4.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">3-4：旁觀者</a></div></div>
+                        <div>
+                            <button data-toggle-target="sub-nav-chapter_chapter04-html" class="chapter-toggle-btn w-full block p-3 rounded-md hover:bg-[var(--active-bg-main)] transition-colors duration-200 flex justify-between items-center text-left text-[var(--link-main)] ">
+                                <span>📖第四章：《預言者的回聲，與瘋狂的啟動！》</span>
+                                <svg class="chevron-icon w-4 h-4 transition-transform duration-200 flex-shrink-0 " xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>
+                            </button>
+                            <div id="sub-nav-chapter_chapter04-html" class="sub-nav-container mt-1 space-y-1 border-l-2 border-[var(--border-main)] pl-3 ml-4 hidden">
+                    <a href="chapter_chapter04-1.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">4-1：煎熬的等待</a><a href="chapter_chapter04-2.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">4-2：夢創協同 Ep3 - 預言者的回聲</a><a href="chapter_chapter04-3.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">4-3： D.I.R.E</a><a href="chapter_chapter04-4.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">4-4：三發預言</a></div></div>
+                        <div>
+                            <button data-toggle-target="sub-nav-chapter_chapter05-html" class="chapter-toggle-btn w-full block p-3 rounded-md hover:bg-[var(--active-bg-main)] transition-colors duration-200 flex justify-between items-center text-left text-[var(--link-main)] ">
+                                <span>📖第五章：《當信眾狂熱！信任的裂痕！》</span>
+                                <svg class="chevron-icon w-4 h-4 transition-transform duration-200 flex-shrink-0 " xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>
+                            </button>
+                            <div id="sub-nav-chapter_chapter05-html" class="sub-nav-container mt-1 space-y-1 border-l-2 border-[var(--border-main)] pl-3 ml-4 hidden">
+                    <a href="chapter_chapter05-1.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">5-1：當預言成真，恐懼才真正開始。</a><a href="chapter_chapter05-2.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">5-2：數位狩獵：當訊息成為武器</a><a href="chapter_chapter05-3.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">5-3：沉默的代價，如果我不是我</a><a href="chapter_chapter05-4.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">5-4：夢的入口，百張床</a><a href="chapter_chapter05-5.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">5-5：先鋒夢協者:狸、熊、兔、鴉</a><a href="chapter_chapter05-6.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">5-6：雙重連夢：在夢中抵達進階</a></div></div>
+                        <div>
+                            <button data-toggle-target="sub-nav-chapter_chapter06-html" class="chapter-toggle-btn w-full block p-3 rounded-md hover:bg-[var(--active-bg-main)] transition-colors duration-200 flex justify-between items-center text-left text-[var(--link-main)] ">
+                                <span>📖第六章：《師爺駕到，全員撤退！》</span>
+                                <svg class="chevron-icon w-4 h-4 transition-transform duration-200 flex-shrink-0 rotate-90" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>
+                            </button>
+                            <div id="sub-nav-chapter_chapter06-html" class="sub-nav-container mt-1 space-y-1 border-l-2 border-[var(--border-main)] pl-3 ml-4 ">
+                    <a href="chapter_chapter06-1.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">6-1：師爺的現身</a><a href="chapter_chapter06-2.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">6-2：第四封信</a><a href="chapter_chapter06-3.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">6-3：可樂味的夢境試煉</a><a href="chapter_chapter06-4.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">6-4：O的孤軍奮戰</a><a href="chapter_chapter06-5.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">6-5：計畫代號：FLASH</a><a href="chapter_chapter06-6.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 bg-[var(--active-bg-main)] font-bold text-[var(--text-main)]">6-6：休門與生門</a><a href="chapter_chapter06-7.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">6-7：FLASH！</a><a href="chapter_chapter06-8.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">6-8 ：首爾封鎖，夢境餘波</a><a href="chapter_chapter06-9.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">6-9：四號安全屋</a></div></div><a href="letter_letter1.html" class="chapter-link block p-3 rounded-md hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">✉️ 第一封信《他在夢裡學完了 MIT 四年課程》</a><a href="letter_letter2.html" class="chapter-link block p-3 rounded-md hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">✉️ 第二封信《來自夢境的加密訊息》</a><a href="letter_letter3.html" class="chapter-link block p-3 rounded-md hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">✉️ 第二封信《預言的迴響》</a><a href="letter_letter4.html" class="chapter-link block p-3 rounded-md hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">✉️ 第四封信《夢境的矛與盾》</a>
+                </nav>
+            </div>
+        </aside>
+        
+        <!-- 主要內容區 -->
+        <main class="flex-1 flex flex-col overflow-hidden">
+            <header class="bg-transparent p-4 flex justify-between items-center z-10 flex-shrink-0">
+                <div class="flex items-center gap-2">
+                    <button id="sidebar-toggle-btn" class="hidden md:block p-2 rounded-full hover:bg-[var(--active-bg-main)]" title="收合/展開目錄">
+                        <svg id="sidebar-toggle-icon" class="w-6 h-6 text-[var(--icon-fill)] transition-transform duration-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/></svg>
+                    </button>
+                    <label for="menu-toggle" id="menu-btn" class="md:hidden p-2 rounded-full hover:bg-[var(--active-bg-main)] text-[var(--text-main)] cursor-pointer transition-colors">
+                        <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="var(--icon-fill)"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/></svg>
+                    </label>
+                </div>
+                <div class="flex items-center text-center">
+                    <h1 class="text-base font-medium text-[var(--text-main)] opacity-70 truncate mx-4">6-6：休門與生門</h1>
+                    <span id="progress-percent" class="text-sm font-mono text-[var(--icon-fill)] w-12 text-left">0%</span>
+                </div>
+                <div class="flex items-center space-x-1">
+                    <!-- 設定按鈕 -->
+                    <div class="relative">
+                        <button id="setting-toggle-btn" class="setting-btn p-2 rounded-full hover:bg-[var(--active-bg-main)] transition-colors" title="閱讀設定">
+                            <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M10 3a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM10 8.5a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM11.5 15.5a1.5 1.5 0 10-3 0 1.5 1.5 0 003 0z" /></svg>
+                        </button>
+                        <!-- 設定面板 -->
+                        <div id="setting-panel" class="hidden absolute right-0 mt-2 w-48 bg-[var(--bg-main)] rounded-lg shadow-lg border border-[var(--border-main)] p-4 z-20">
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-[var(--text-main)] mb-2">字體大小</label>
+                                <div class="flex justify-between items-center">
+                                    <button data-action="set-font-size" data-value="sm" class="setting-option-btn">小</button>
+                                    <button data-action="set-font-size" data-value="md" class="setting-option-btn">中</button>
+                                    <button data-action="set-font-size" data-value="lg" class="setting-option-btn">大</button>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-[var(--text-main)] mb-2">字體風格</label>
+                                <div class="flex justify-between items-center">
+                                    <button data-action="set-font-family" data-value="serif" class="setting-option-btn">襯線</button>
+                                    <button data-action="set-font-family" data-value="sans" class="setting-option-btn">非襯線</button>
+                                </div>
+                            </div>
+                        </div>
+                         <style>.setting-option-btn { padding: 4px 12px; border-radius: 999px; font-size: 0.875rem; background-color: transparent; border: 1px solid var(--border-main); color: var(--link-main); transition: all 0.2s; } .setting-option-btn.active, .setting-option-btn:hover { background-color: var(--active-bg-main); color: var(--text-main); border-color: var(--link-main); }</style>
+                    </div>
+                    <button onclick="setTheme('paper')" class="theme-switcher-btn p-2 rounded-full hover:bg-[var(--active-bg-main)] transition-colors" title="日間模式"><svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58c-.39-.39-1.02-.39-1.41 0l-1.42 1.42c-.39.39-.39 1.02 0 1.41.39.39 1.02.39 1.41 0l1.42-1.42c.39-.39.39-1.02 0-1.41zm13.42 13.42c-.39-.39-1.02-.39-1.41 0l-1.42 1.42c-.39.39-.39 1.02 0 1.41.39.39 1.02.39 1.41 0l1.42-1.42c.39-.39.39-1.02 0-1.41zM20.42 5.99c.39-.39.39-1.02 0-1.41l-1.42-1.42c-.39-.39-1.02-.39-1.41 0-.39.39-.39 1.02 0 1.41l1.42 1.42c.39.39 1.02.39 1.41 0zM4.58 19.41c.39-.39.39-1.02 0-1.41l-1.42-1.42c-.39-.39-1.02-.39-1.41 0-.39.39-.39 1.02 0 1.41l1.42 1.42c.39.39 1.02.39 1.41 0z"/></svg></button>
+                    <button onclick="setTheme('sepia')" class="theme-switcher-btn p-2 rounded-full hover:bg-[var(--active-bg-main)] transition-colors" title="懷舊模式"><svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zM12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5z"/></svg></button>
+                    <button onclick="setTheme('night')" class="theme-switcher-btn p-2 rounded-full hover:bg-[var(--active-bg-main)] transition-colors" title="夜間模式"><svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9c.83 0 1.64-.11 2.4-.31-.3-.13-.59-.29-.87-.48-.69-.48-1.29-1.12-1.72-1.85C11.23 17.5 11 16.78 11 16c0-2.21 1.79-4 4-4 .78 0 1.5.23 2.15.62.73.43 1.37 1.03 1.85 1.72.19.28.35.57.48.87.2-.76.31-1.57.31-2.4 0-4.97-4.03-9-9-9z"/></svg></button>
+                </div>
+            </header>
+            
+            <div id="content-container" class="flex-1 relative overflow-y-auto">
+                <!-- 手機版彈出菜單 -->
+                <input type="checkbox" id="menu-toggle" class="hidden"/>
+                <div id="menu" class="md:hidden fixed inset-0 bg-[var(--bg-main)] p-0 w-72 h-full shadow-lg transition-transform duration-300 ease-in-out transform -translate-x-full z-30 flex flex-col">
+                    <div class="p-4 border-b border-[var(--border-main)] flex-shrink-0">
+                         <a href="../index.html" class="flex items-center gap-2 text-[var(--link-main)] hover:text-[var(--text-main)] transition-colors duration-300 font-medium">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                            返回書庫
+                        </a>
+                    </div>
+                    <div class="flex-1 p-4 overflow-y-auto">
+                        <h2 class="text-xl font-bold mb-4 text-[var(--text-main)]">夢境時差：七封謎信</h2>
+                        <nav id="mobile-chapter-list">
+                            <a href="chapter_chapter00.html" class="chapter-link block p-3 rounded-md hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">📖序章：《哇哇哇！奇人異事！》啟動！</a>
+                        <div>
+                            <button data-toggle-target="sub-nav-chapter_chapter01-html" class="chapter-toggle-btn w-full block p-3 rounded-md hover:bg-[var(--active-bg-main)] transition-colors duration-200 flex justify-between items-center text-left text-[var(--link-main)] ">
+                                <span>📖第一章：《他在夢裡學完了 MIT 四年課程》夢創協同！</span>
+                                <svg class="chevron-icon w-4 h-4 transition-transform duration-200 flex-shrink-0 " xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>
+                            </button>
+                            <div id="sub-nav-chapter_chapter01-html" class="sub-nav-container mt-1 space-y-1 border-l-2 border-[var(--border-main)] pl-3 ml-4 hidden">
+                    <a href="chapter_chapter01-1.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">1-1：【哇哇哇！奇人異事！】夢創協同 Ep1</a><a href="chapter_chapter01-2.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">1-2：第一封信</a></div></div>
+                        <div>
+                            <button data-toggle-target="sub-nav-chapter_chapter02-html" class="chapter-toggle-btn w-full block p-3 rounded-md hover:bg-[var(--active-bg-main)] transition-colors duration-200 flex justify-between items-center text-left text-[var(--link-main)] ">
+                                <span>📖第二章：《更大的流量，更大的危險》留言!</span>
+                                <svg class="chevron-icon w-4 h-4 transition-transform duration-200 flex-shrink-0 " xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>
+                            </button>
+                            <div id="sub-nav-chapter_chapter02-html" class="sub-nav-container mt-1 space-y-1 border-l-2 border-[var(--border-main)] pl-3 ml-4 hidden">
+                    <a href="chapter_chapter02-1.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">2-1：深海巨怪</a></div></div>
+                        <div>
+                            <button data-toggle-target="sub-nav-chapter_chapter03-html" class="chapter-toggle-btn w-full block p-3 rounded-md hover:bg-[var(--active-bg-main)] transition-colors duration-200 flex justify-between items-center text-left text-[var(--link-main)] ">
+                                <span>📖第三章：《輿論的漩渦，夢境的加密》託夢！</span>
+                                <svg class="chevron-icon w-4 h-4 transition-transform duration-200 flex-shrink-0 " xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>
+                            </button>
+                            <div id="sub-nav-chapter_chapter03-html" class="sub-nav-container mt-1 space-y-1 border-l-2 border-[var(--border-main)] pl-3 ml-4 hidden">
+                    <a href="chapter_chapter03-1.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">3-1：發燒影片</a><a href="chapter_chapter03-2.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">3-2：夢創協同 Ep2 - 第一個證據</a><a href="chapter_chapter03-3.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">3-3：黑書卷軸</a><a href="chapter_chapter03-4.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">3-4：旁觀者</a></div></div>
+                        <div>
+                            <button data-toggle-target="sub-nav-chapter_chapter04-html" class="chapter-toggle-btn w-full block p-3 rounded-md hover:bg-[var(--active-bg-main)] transition-colors duration-200 flex justify-between items-center text-left text-[var(--link-main)] ">
+                                <span>📖第四章：《預言者的回聲，與瘋狂的啟動！》</span>
+                                <svg class="chevron-icon w-4 h-4 transition-transform duration-200 flex-shrink-0 " xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>
+                            </button>
+                            <div id="sub-nav-chapter_chapter04-html" class="sub-nav-container mt-1 space-y-1 border-l-2 border-[var(--border-main)] pl-3 ml-4 hidden">
+                    <a href="chapter_chapter04-1.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">4-1：煎熬的等待</a><a href="chapter_chapter04-2.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">4-2：夢創協同 Ep3 - 預言者的回聲</a><a href="chapter_chapter04-3.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">4-3： D.I.R.E</a><a href="chapter_chapter04-4.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">4-4：三發預言</a></div></div>
+                        <div>
+                            <button data-toggle-target="sub-nav-chapter_chapter05-html" class="chapter-toggle-btn w-full block p-3 rounded-md hover:bg-[var(--active-bg-main)] transition-colors duration-200 flex justify-between items-center text-left text-[var(--link-main)] ">
+                                <span>📖第五章：《當信眾狂熱！信任的裂痕！》</span>
+                                <svg class="chevron-icon w-4 h-4 transition-transform duration-200 flex-shrink-0 " xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>
+                            </button>
+                            <div id="sub-nav-chapter_chapter05-html" class="sub-nav-container mt-1 space-y-1 border-l-2 border-[var(--border-main)] pl-3 ml-4 hidden">
+                    <a href="chapter_chapter05-1.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">5-1：當預言成真，恐懼才真正開始。</a><a href="chapter_chapter05-2.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">5-2：數位狩獵：當訊息成為武器</a><a href="chapter_chapter05-3.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">5-3：沉默的代價，如果我不是我</a><a href="chapter_chapter05-4.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">5-4：夢的入口，百張床</a><a href="chapter_chapter05-5.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">5-5：先鋒夢協者:狸、熊、兔、鴉</a><a href="chapter_chapter05-6.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">5-6：雙重連夢：在夢中抵達進階</a></div></div>
+                        <div>
+                            <button data-toggle-target="sub-nav-chapter_chapter06-html" class="chapter-toggle-btn w-full block p-3 rounded-md hover:bg-[var(--active-bg-main)] transition-colors duration-200 flex justify-between items-center text-left text-[var(--link-main)] ">
+                                <span>📖第六章：《師爺駕到，全員撤退！》</span>
+                                <svg class="chevron-icon w-4 h-4 transition-transform duration-200 flex-shrink-0 rotate-90" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>
+                            </button>
+                            <div id="sub-nav-chapter_chapter06-html" class="sub-nav-container mt-1 space-y-1 border-l-2 border-[var(--border-main)] pl-3 ml-4 ">
+                    <a href="chapter_chapter06-1.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">6-1：師爺的現身</a><a href="chapter_chapter06-2.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">6-2：第四封信</a><a href="chapter_chapter06-3.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">6-3：可樂味的夢境試煉</a><a href="chapter_chapter06-4.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">6-4：O的孤軍奮戰</a><a href="chapter_chapter06-5.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">6-5：計畫代號：FLASH</a><a href="chapter_chapter06-6.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 bg-[var(--active-bg-main)] font-bold text-[var(--text-main)]">6-6：休門與生門</a><a href="chapter_chapter06-7.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">6-7：FLASH！</a><a href="chapter_chapter06-8.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">6-8 ：首爾封鎖，夢境餘波</a><a href="chapter_chapter06-9.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">6-9：四號安全屋</a></div></div><a href="letter_letter1.html" class="chapter-link block p-3 rounded-md hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">✉️ 第一封信《他在夢裡學完了 MIT 四年課程》</a><a href="letter_letter2.html" class="chapter-link block p-3 rounded-md hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">✉️ 第二封信《來自夢境的加密訊息》</a><a href="letter_letter3.html" class="chapter-link block p-3 rounded-md hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">✉️ 第二封信《預言的迴響》</a><a href="letter_letter4.html" class="chapter-link block p-3 rounded-md hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">✉️ 第四封信《夢境的矛與盾》</a>
+                        </nav>
+                    </div>
+                </div>
+                <label for="menu-toggle" class="md:hidden fixed inset-0 bg-black bg-opacity-25 z-20 opacity-0 pointer-events-none transition-opacity duration-300 cursor-pointer"></label>
+
+                <article id="content-area" class="p-6 md:p-12 prose max-w-2xl mx-auto">
+                    <h1 class="text-3xl md:text-4xl font-bold mb-2 !text-[var(--text-main)] text-center">6-6：休門與生門</h1>
+                    <p class="text-lg italic text-[var(--text-main)] opacity-75 mt-2 mb-10 text-center font-serif">#醒來，是為了再次入睡。</p>
+                    <p class="mb-6 leading-loose tracking-wide">【場景：廢棄倉庫】</p><p class="mb-6 leading-loose tracking-wide">畫面再次回到破舊倉庫中。O擦了擦嘴角的鮮血，心中默念著：「……還有9個。」
+他搖搖晃晃的身軀終於撐不住了，靠著牆壁坐倒在地。但他沒有放棄，而是立刻雙手合十，雙腳交叉盤坐，進入一種極度專注的冥想狀態。</p><p class="mb-6 leading-loose tracking-wide">遠處的陰影中，一個放蕩不羈的少年走了出來。他身穿黑色西裝，卻硬是穿出了一種流浪漢的頹廢感，臉上的純白面具也被他反骨地用黑色噴漆塗上了詭異的笑臉。
+他用一種命令的口吻，對著周遭的陰影驚訝地說道：「喂！快上啊！Z、X、C，別讓他偷偷摸摸地回血！那是在仿傚古代內功的元氣回補，是『休門』！」</p><p class="mb-6 leading-loose tracking-wide">話音剛落，天花板的橫樑上，兩名手持武士刀的高手從天而降，刀光凜冽，向下劈砍！
+只見O再次嘆了口氣，猛然睜開眼，身體往前迅速翻滾，險之又險地躲開了攻擊。
+兩名武士雙雙落空，一個刀尖著地，發出「沙沙」聲，如毒蛇般貼地向前衝；另一個則擺出居合斬的架式，心中默念：「斬！」</p><p class="mb-6 leading-loose tracking-wide">但奇妙的是，O的動作比10分鐘前更加輕盈了，身體像是瞬間恢復到與巨漢戰鬥前的狀態。面對兩人的夾擊，O只是巧妙地轉身，用起了太極般的巧勁，借力使力。
+「砰！」
+兩個武士在錯愕中，互相撞在一起，傷到了對方。還沒等他們反應過來，O的左手早已轉起了那根伸縮電擊棍。
+「咖咖——吱吱！」
+兩人早已失去知覺，準備倒地。但這次，O沒有再費心降低聲響，他知道已經沒有意義了。他甚至不等兩個武士倒地，眼神便銳利地射向了遠方。</p><p class="mb-6 leading-loose tracking-wide">咻！咻！
+兩顆帶著微弱電光的子彈，精準地打在O原本站立的位置。但此刻，遠處的狙擊手已經感到全身酥麻，無力地垂下了槍。O不知何時已經站在他的身後，但眼神卻始終注視著角落裡那個放蕩不羈的男子。</p><p class="mb-6 leading-loose tracking-wide">那個流浪西裝男，有著一頭飄逸的長髮和不修邊幅的鬍渣，臉上卻掛著痴狂的笑容，帶著一種詭異的傲視感。
+他雙手插在口袋裡，彎腰向前，用一種彷彿看穿一切的眼神說道：「這是開了『休門』對吧？傳說中八門遁甲裡，恢復體力的那一關。有趣，真是有趣。」他的眼神中，透露著智慧與過量的自信。</p><p class="mb-6 leading-loose tracking-wide">只一個眼神，一句話，O馬上就明白了——對方也是「同類」。</p><p class="mb-6 leading-loose tracking-wide">O把玩著手中的電擊棍，讓它從左手手掌繞過虎口，一圈又一圈，用同樣傲慢的語氣回敬道：「你說呢？」
+兩人雙眼對視，都是睥睨一切的感覺。但一邊是沉著冷漠，另一邊，則是放蕩不羈。</p><p class="mb-6 leading-loose tracking-wide">O猛然前衝，流浪西裝男也笑著跟上。就在他雙手離開口袋的瞬間，掏出的竟然是兩把微型機關槍！
+「沒時間多想了，他那身寬鬆的西裝是為了藏軍火庫嗎？」O心中閃過這個念頭，立刻急停轉向，狼狽地躲避。</p><p class="mb-6 leading-loose tracking-wide">「噠噠噠噠噠噠噠——！！！」
+流浪男發出狂笑，機槍的火舌也隨著他的笑聲瘋狂掃射，動態視力完全跟得上O的高速移動。</p><p class="mb-6 leading-loose tracking-wide">子彈很快就打光了，流浪男順勢丟掉機關槍，從背後抽出了一根閃亮的銀白色金屬球棒。他雙腳一蹬，以一種意想不到的速度瞬間來到O的面前，球棒帶著風聲狠狠砸下！
+「噹！！」
+O用電擊棍勉強擋住，卻被巨大的力道震得連連後退。這是他第一次，在正面力量對抗中，感受到被死死壓制的感覺。</p><p class="mb-6 leading-loose tracking-wide">流浪男子假裝有禮貌地彎腰，做出一個「請」的手勢，實則諷刺地說道：「你好，我叫Orb。代號……嘛，我想你已經知道了。」
+O的瞳孔一縮：「新『O』啊……」
+他心想，難怪在打鬥時，一直有種莫名被監視的噁心感覺。以前在D.I.R.E.看別人練習時，對方也曾對O說過同樣的話。現在，他稍微能體會那種感覺了。</p><p class="mb-6 leading-loose tracking-wide">「哈哈哈哈哈！」狂妄的笑聲來自Orb，「說到底，我還真得感謝你離開，才讓我有機會得到這麼多資源，成長這麼快！」</p><p class="mb-6 leading-loose tracking-wide">O不以為意，心中已經盤算好了，並時刻注意著手錶上的時間。
+Orb奸笑著，再次舉起球棒：「解決你，我就能堂堂正正地成為『O』了，而不是什麼『代理O』！聽了就煩！」
+話音未落，球棒已經重重地打在O防禦的電擊棍上。O雖然擋住了，卻防不住那股巨力，整個人被擊退了好幾步。</p><p class="mb-6 leading-loose tracking-wide">此時，O剛好退到了倉庫的正中央。四面八方，最後的六個人影都出現了，將他團團圍住。他們看著Orb的眼神，明顯帶著畏懼。
+Orb微微上揚額頭，下令道：「解決他！」</p><p class="mb-6 leading-loose tracking-wide">O看了一眼手錶上的時間。
+「……還要撐5分鐘。」
+他迅速在眾人包圍過來前，往自己後腰的脊椎處猛力按壓了一下，低吼道：
+「『生門』……開！！！」</p><p class="mb-6 leading-loose tracking-wide">一股更強大的力量從他體內爆發，他的皮膚因血液高速流動而泛起一層淡淡的紅色。連Orb都露出了驚訝的表情。
+O的速度與力量再次大幅飆升，他如同一道紅色閃電，飛快地繞著最後六人穿梭。他清楚地記下了所有人的特徵、武器、身高、呼吸節奏……
+🎬 畫面快速蒙太奇，O在圍攻中閃躲、反擊，雖然不斷受傷，卻總能在最後一刻化解危機，甚至還趁亂解決了一名敵人。但Orb的實力太強，逐漸變成了Orb一個人在追著O打的局面。</p>
+                    <div class="flex justify-between mt-12 pt-6 border-t border-[var(--border-main)]"><a href="chapter_chapter06-5.html" id="prev-page-link" class="nav-btn">← 上一節</a><a href="chapter_chapter06-7.html" id="next-page-link" class="nav-btn">下一節 →</a></div>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 浮動功能按鈕 -->
+    <div class="fixed bottom-6 right-6 z-20 flex flex-col gap-3">
+        <button id="scroll-to-top" class="fab-btn hidden" title="回到頂部">
+            <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4l-8 8h5v8h6v-8h5l-8-8z"/></svg>
+        </button>
+        <button id="scroll-to-bottom" class="fab-btn" title="前往底部">
+            <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 20l8-8h-5V4h-6v8H4l8 8z"/></svg>
+        </button>
+    </div>
+    <style>.fab-btn { background-color: var(--active-bg-main); color: var(--icon-fill); width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1); transition: all 0.3s ease; } .fab-btn:hover { transform: scale(1.1); box-shadow: 0 6px 16px rgba(0,0,0,0.15); }</style>
+    
+    <!-- 上次閱讀位置提示 -->
+    <div id="last-read-toast" class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 bg-[var(--bg-main)] text-[var(--text-main)] px-6 py-3 rounded-lg shadow-xl border border-[var(--border-main)] z-30 flex items-center gap-4">
+        <p class="text-sm">要跳轉至上次閱讀的位置嗎？</p>
+        <a id="last-read-link" href="#" class="font-bold text-blue-500 text-sm hover:underline">跳轉</a>
+        <button id="last-read-close" class="text-[var(--icon-fill)] hover:text-[var(--text-main)]">&times;</button>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const NOVEL_ID = document.body.dataset.novelId;
+            const appContainer = document.getElementById('app-container');
+            const contentContainer = document.getElementById('content-container');
+            const menuToggle = document.getElementById('menu-toggle');
+            const mobileMenu = document.getElementById('menu');
+            const overlay = document.querySelector('label[for="menu-toggle"]');
+            const sidebarToggleBtn = document.getElementById('sidebar-toggle-btn');
+            const sidebarToggleIcon = document.getElementById('sidebar-toggle-icon');
+            const scrollToTopBtn = document.getElementById('scroll-to-top');
+            const scrollToBottomBtn = document.getElementById('scroll-to-bottom');
+            const progressBar = document.getElementById('progress-bar');
+            const progressPercent = document.getElementById('progress-percent');
+            const settingToggleBtn = document.getElementById('setting-toggle-btn');
+            const settingPanel = document.getElementById('setting-panel');
+            const lastReadToast = document.getElementById('last-read-toast');
+            const lastReadLink = document.getElementById('last-read-link');
+            const lastReadClose = document.getElementById('last-read-close');
+
+            // --- 主題設定 ---
+            const setTheme = (theme) => {
+                document.body.classList.remove('theme-paper', 'theme-sepia', 'theme-night');
+                document.body.classList.add(`theme-${theme}`);
+                localStorage.setItem('readingTheme', theme);
+                document.querySelectorAll('.theme-switcher-btn').forEach(btn => {
+                    btn.classList.toggle('active', btn.getAttribute('onclick') === `setTheme('${theme}')`);
+                });
+            };
+
+            // --- 閱讀設定 (字體) ---
+            const applyReadingSettings = () => {
+                const settings = JSON.parse(localStorage.getItem('readingSettings')) || { size: 'md', family: 'serif' };
+                
+                document.body.classList.remove('font-size-sm', 'font-size-md', 'font-size-lg');
+                document.body.classList.add(`font-size-${settings.size}`);
+                
+                document.body.classList.remove('font-family-serif', 'font-family-sans');
+                document.body.classList.add(`font-family-${settings.family}`);
+
+                // 更新設定面板按鈕狀態
+                document.querySelectorAll('[data-action="set-font-size"]').forEach(btn => btn.classList.toggle('active', btn.dataset.value === settings.size));
+                document.querySelectorAll('[data-action="set-font-family"]').forEach(btn => btn.classList.toggle('active', btn.dataset.value === settings.family));
+            };
+
+            const saveReadingSetting = (key, value) => {
+                const settings = JSON.parse(localStorage.getItem('readingSettings')) || { size: 'md', family: 'serif' };
+                settings[key] = value;
+                localStorage.setItem('readingSettings', JSON.stringify(settings));
+                applyReadingSettings();
+            };
+
+            // --- 初始化 ---
+            const currentTheme = localStorage.getItem('readingTheme') || 'paper';
+            setTheme(currentTheme);
+            applyReadingSettings();
+
+            // --- 側邊欄收合 ---
+            const updateSidebarIcon = (isCollapsed) => {
+                sidebarToggleIcon.style.transform = isCollapsed ? 'rotate(180deg)' : 'rotate(0deg)';
+            };
+            const isSidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+            if (isSidebarCollapsed) appContainer.classList.add('sidebar-collapsed');
+            updateSidebarIcon(isSidebarCollapsed);
+
+            sidebarToggleBtn.addEventListener('click', () => {
+                const collapsed = appContainer.classList.toggle('sidebar-collapsed');
+                localStorage.setItem('sidebarCollapsed', collapsed);
+                updateSidebarIcon(collapsed);
+            });
+
+            // --- 手機選單 ---
+            menuToggle.addEventListener('change', function() {
+                overlay.classList.toggle('opacity-0', !this.checked);
+                overlay.classList.toggle('pointer-events-none', !this.checked);
+            });
+            overlay.addEventListener('click', () => {
+                menuToggle.checked = false;
+                menuToggle.dispatchEvent(new Event('change'));
+            });
+            mobileMenu.addEventListener('click', (e) => {
+                if (e.target.closest('a')) {
+                    menuToggle.checked = false;
+                    menuToggle.dispatchEvent(new Event('change'));
+                }
+            });
+            
+            // --- 目錄收合 ---
+            const setupChapterToggles = (containerSelector) => {
+                document.querySelector(containerSelector)?.addEventListener('click', (e) => {
+                    const toggleBtn = e.target.closest('.chapter-toggle-btn');
+                    if (toggleBtn) {
+                        e.preventDefault();
+                        const targetElement = document.getElementById(toggleBtn.dataset.toggleTarget);
+                        targetElement?.classList.toggle('hidden');
+                        toggleBtn.querySelector('.chevron-icon')?.classList.toggle('rotate-90');
+                    }
+                });
+            };
+            setupChapterToggles('#chapter-list');
+            setupChapterToggles('#mobile-chapter-list');
+
+            // --- 閱讀進度 & 記憶位置 ---
+            let scrollTimeout;
+            const lastReadStorageKey = `lastRead_${NOVEL_ID}`;
+
+            contentContainer.addEventListener('scroll', () => {
+                const scrollableHeight = contentContainer.scrollHeight - contentContainer.clientHeight;
+                const scrollTop = contentContainer.scrollTop;
+                const percent = scrollableHeight > 0 ? (scrollTop / scrollableHeight) * 100 : 0;
+                
+                progressBar.style.width = `${percent}%`;
+                progressPercent.textContent = `${Math.round(percent)}%`;
+
+                scrollToTopBtn.classList.toggle('hidden', scrollTop <= 200);
+
+                // 儲存閱讀位置 (延遲執行以避免效能問題)
+                clearTimeout(scrollTimeout);
+                scrollTimeout = setTimeout(() => {
+                    const data = {
+                        href: window.location.href,
+                        scrollTop: scrollTop,
+                        title: document.querySelector('h1').textContent
+                    };
+                    localStorage.setItem(lastReadStorageKey, JSON.stringify(data));
+                }, 500);
+            });
+
+            // --- 頁面載入時檢查上次閱讀位置 ---
+            const lastReadData = JSON.parse(localStorage.getItem(lastReadStorageKey));
+            if (lastReadData) {
+                if (lastReadData.href === window.location.href) {
+                    // 如果是同一頁，直接滾動
+                    setTimeout(() => contentContainer.scrollTo({ top: lastReadData.scrollTop, behavior: 'smooth' }), 100);
+                } else {
+                    // 如果是不同頁，顯示提示
+                    lastReadLink.href = lastReadData.href;
+                    lastReadToast.classList.remove('hidden');
+                }
+            }
+            lastReadClose.addEventListener('click', () => lastReadToast.classList.add('hidden'));
+
+            // --- 浮動按鈕 ---
+            scrollToTopBtn.addEventListener('click', () => contentContainer.scrollTo({ top: 0, behavior: 'smooth' }));
+            scrollToBottomBtn.addEventListener('click', () => contentContainer.scrollTo({ top: contentContainer.scrollHeight, behavior: 'smooth' }));
+            
+            // --- 鍵盤導覽 ---
+            document.addEventListener('keydown', (e) => {
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+                if (e.key === 'ArrowLeft') document.querySelector('link[rel="prev"]')?.href && (window.location.href = document.querySelector('link[rel="prev"]').href);
+                if (e.key === 'ArrowRight') document.querySelector('link[rel="next"]')?.href && (window.location.href = document.querySelector('link[rel="next"]').href);
+            });
+
+            // --- 設定面板 ---
+            settingToggleBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                settingPanel.classList.toggle('hidden');
+            });
+            document.addEventListener('click', (e) => {
+                if (!settingPanel.contains(e.target) && !settingToggleBtn.contains(e.target)) {
+                    settingPanel.classList.add('hidden');
+                }
+            });
+            settingPanel.addEventListener('click', (e) => {
+                const btn = e.target.closest('[data-action]');
+                if (btn) {
+                    const { action, value } = btn.dataset;
+                    if (action === 'set-font-size') saveReadingSetting('size', value);
+                    if (action === 'set-font-family') saveReadingSetting('family', value);
+                }
+            });
+
+            // --- PWA Service Worker Registration ---
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                    navigator.serviceWorker.register('./service-worker.js')
+                        .then(registration => {
+                            console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                        })
+                        .catch(err => {
+                            console.log('ServiceWorker registration failed: ', err);
+                        });
+                });
+            }
+
+            // 為 window 綁定全域事件
+            window.setTheme = setTheme;
+        });
+    </script>
+</body>
+</html>

@@ -3,11 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>📖第四章《預言者的回聲，與瘋狂的啟動！》 - 夢境時差：七封謎信</title>
-    <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
+    <title>📖第四章：《預言者的回聲，與瘋狂的啟動！》 - 夢境時差：七封謎信</title>
+    <script src="https://cdn.tailwindcss.com?plugins=typography,aspect-ratio"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Noto+Serif+TC:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- PWA and SEO -->
+    <meta name="theme-color" content="#f8fafc">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192x192.png">
+    
+    <!-- 用於鍵盤導覽 -->
+    <link rel="prev" href="chapter_chapter03-4.html">
+    <link rel="next" href="chapter_chapter04-1.html">
     <style>
         :root {
             --font-sans: 'Inter', sans-serif;
@@ -26,11 +35,11 @@
         body { font-family: var(--font-sans); background-color: var(--bg-main); color: var(--text-main); transition: background-color 0.4s ease, color 0.4s ease; }
         
         .prose { font-family: var(--font-serif); color: var(--text-main); }
-        .prose p { font-size: 1.125rem; line-height: 2; letter-spacing: 0.05em; }
+        .prose p { font-size: 1.125rem; line-height: 2; letter-spacing: 0.05em; transition: font-size 0.3s ease; }
         .prose h1, .prose h2, .prose h3 { font-family: var(--font-sans); color: var(--text-main); }
         
-        .theme-switcher-btn svg { fill: var(--icon-fill); transition: fill 0.3s ease; }
-        .theme-switcher-btn:hover svg, .theme-switcher-btn.active svg { fill: var(--text-main); }
+        .theme-switcher-btn svg, .setting-btn svg { fill: var(--icon-fill); transition: fill 0.3s ease; }
+        .theme-switcher-btn:hover svg, .setting-btn:hover svg, .theme-switcher-btn.active svg { fill: var(--text-main); }
 
         .nav-btn { font-family: var(--font-sans); color: var(--link-main); padding: 0.5rem 1rem; border-radius: 0.5rem; transition: background-color 0.3s, color 0.3s; font-weight: 500; }
         .nav-btn:hover { background-color: var(--active-bg-main); color: var(--text-main); }
@@ -47,10 +56,28 @@
         #sidebar { transition: margin-left 0.3s ease-in-out; }
         .sidebar-collapsed #sidebar { margin-left: -18rem; } /* w-72 */
         @media (min-width: 1024px) { .sidebar-collapsed #sidebar { margin-left: -20rem; } } /* lg:w-80 */
+        
+        .sub-nav-container { max-height: 1000px; overflow: hidden; transition: max-height 0.5s ease-in-out; }
+        .sub-nav-container.hidden { max-height: 0; }
+        
+        /* 字體大小樣式 */
+        .font-size-sm .prose p { font-size: 1rem; }
+        .font-size-md .prose p { font-size: 1.125rem; }
+        .font-size-lg .prose p { font-size: 1.25rem; }
+
+        /* 字體風格樣式 */
+        .font-family-serif .prose { font-family: var(--font-serif); }
+        .font-family-sans .prose { font-family: var(--font-sans); }
+        .font-family-sans .prose p { letter-spacing: 0.025em; } /* 非襯線字體微調字距 */
 
     </style>
 </head>
-<body class="theme-paper">
+<body class="theme-paper font-size-md font-family-serif" data-novel-id="dream-jetlag">
+
+    <!-- 閱讀進度條 -->
+    <div id="progress-bar-container" class="fixed top-0 left-0 w-full h-1 z-20">
+        <div id="progress-bar" class="h-full bg-blue-500 transition-all duration-150" style="width: 0%;"></div>
+    </div>
 
     <div id="app-container" class="flex h-screen bg-[var(--bg-main)] overflow-hidden">
         <!-- 側邊欄/目錄 (桌面版) -->
@@ -65,7 +92,49 @@
                 <div class="aspect-w-3 aspect-h-4 mb-4"><img src="cover.jpg" alt="夢境時差：七封謎信 封面" class="w-full h-full object-cover rounded-lg shadow-md"></div>
                 <h2 class="text-xl font-bold mb-4 text-[var(--text-main)]">夢境時差：七封謎信</h2>
                 <nav id="chapter-list">
-                    <a href="chapter_chapter00.html" class="chapter-link block p-3 rounded-md hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">📖序章：《哇哇哇！奇人異事！》啟動！</a><a href="chapter_chapter01.html" class="chapter-link block p-3 rounded-md hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">📖第一章：《他在夢裡學完了 MIT 四年課程》夢創協同！</a><a href="chapter_chapter02.html" class="chapter-link block p-3 rounded-md hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">📖第二章：《更大的流量，更大的危險》留言!</a><a href="chapter_chapter03.html" class="chapter-link block p-3 rounded-md hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">📖第三章：《輿論的漩渦，夢境的加密》託夢！</a><a href="chapter_chapter04.html" class="chapter-link block p-3 rounded-md hover:bg-[var(--active-bg-main)] transition-colors duration-200 bg-[var(--active-bg-main)] font-bold text-[var(--text-main)]">📖第四章《預言者的回聲，與瘋狂的啟動！》</a><a href="chapter_chapter05.html" class="chapter-link block p-3 rounded-md hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">📖第五章：《當信眾狂熱！信任的裂痕！》</a><a href="letter_letter1.html" class="chapter-link block p-3 rounded-md hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">✉️ 第一封信《他在夢裡學完了 MIT 四年課程》</a><a href="letter_letter2.html" class="chapter-link block p-3 rounded-md hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">✉️ 第二封信《來自夢境的加密訊息》</a>
+                    <a href="chapter_chapter00.html" class="chapter-link block p-3 rounded-md hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">📖序章：《哇哇哇！奇人異事！》啟動！</a>
+                        <div>
+                            <button data-toggle-target="sub-nav-chapter_chapter01-html" class="chapter-toggle-btn w-full block p-3 rounded-md hover:bg-[var(--active-bg-main)] transition-colors duration-200 flex justify-between items-center text-left text-[var(--link-main)] ">
+                                <span>📖第一章：《他在夢裡學完了 MIT 四年課程》夢創協同！</span>
+                                <svg class="chevron-icon w-4 h-4 transition-transform duration-200 flex-shrink-0 " xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>
+                            </button>
+                            <div id="sub-nav-chapter_chapter01-html" class="sub-nav-container mt-1 space-y-1 border-l-2 border-[var(--border-main)] pl-3 ml-4 hidden">
+                    <a href="chapter_chapter01-1.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">1-1：【哇哇哇！奇人異事！】夢創協同 Ep1</a><a href="chapter_chapter01-2.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">1-2：第一封信</a></div></div>
+                        <div>
+                            <button data-toggle-target="sub-nav-chapter_chapter02-html" class="chapter-toggle-btn w-full block p-3 rounded-md hover:bg-[var(--active-bg-main)] transition-colors duration-200 flex justify-between items-center text-left text-[var(--link-main)] ">
+                                <span>📖第二章：《更大的流量，更大的危險》留言!</span>
+                                <svg class="chevron-icon w-4 h-4 transition-transform duration-200 flex-shrink-0 " xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>
+                            </button>
+                            <div id="sub-nav-chapter_chapter02-html" class="sub-nav-container mt-1 space-y-1 border-l-2 border-[var(--border-main)] pl-3 ml-4 hidden">
+                    <a href="chapter_chapter02-1.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">2-1：深海巨怪</a></div></div>
+                        <div>
+                            <button data-toggle-target="sub-nav-chapter_chapter03-html" class="chapter-toggle-btn w-full block p-3 rounded-md hover:bg-[var(--active-bg-main)] transition-colors duration-200 flex justify-between items-center text-left text-[var(--link-main)] ">
+                                <span>📖第三章：《輿論的漩渦，夢境的加密》託夢！</span>
+                                <svg class="chevron-icon w-4 h-4 transition-transform duration-200 flex-shrink-0 " xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>
+                            </button>
+                            <div id="sub-nav-chapter_chapter03-html" class="sub-nav-container mt-1 space-y-1 border-l-2 border-[var(--border-main)] pl-3 ml-4 hidden">
+                    <a href="chapter_chapter03-1.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">3-1：發燒影片</a><a href="chapter_chapter03-2.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">3-2：夢創協同 Ep2 - 第一個證據</a><a href="chapter_chapter03-3.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">3-3：黑書卷軸</a><a href="chapter_chapter03-4.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">3-4：旁觀者</a></div></div>
+                        <div>
+                            <button data-toggle-target="sub-nav-chapter_chapter04-html" class="chapter-toggle-btn w-full block p-3 rounded-md hover:bg-[var(--active-bg-main)] transition-colors duration-200 flex justify-between items-center text-left bg-[var(--active-bg-main)] font-bold text-[var(--text-main)] ">
+                                <span>📖第四章：《預言者的回聲，與瘋狂的啟動！》</span>
+                                <svg class="chevron-icon w-4 h-4 transition-transform duration-200 flex-shrink-0 rotate-90" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>
+                            </button>
+                            <div id="sub-nav-chapter_chapter04-html" class="sub-nav-container mt-1 space-y-1 border-l-2 border-[var(--border-main)] pl-3 ml-4 ">
+                    <a href="chapter_chapter04-1.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">4-1：煎熬的等待</a><a href="chapter_chapter04-2.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">4-2：夢創協同 Ep3 - 預言者的回聲</a><a href="chapter_chapter04-3.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">4-3： D.I.R.E</a><a href="chapter_chapter04-4.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">4-4：三發預言</a></div></div>
+                        <div>
+                            <button data-toggle-target="sub-nav-chapter_chapter05-html" class="chapter-toggle-btn w-full block p-3 rounded-md hover:bg-[var(--active-bg-main)] transition-colors duration-200 flex justify-between items-center text-left text-[var(--link-main)] ">
+                                <span>📖第五章：《當信眾狂熱！信任的裂痕！》</span>
+                                <svg class="chevron-icon w-4 h-4 transition-transform duration-200 flex-shrink-0 " xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>
+                            </button>
+                            <div id="sub-nav-chapter_chapter05-html" class="sub-nav-container mt-1 space-y-1 border-l-2 border-[var(--border-main)] pl-3 ml-4 hidden">
+                    <a href="chapter_chapter05-1.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">5-1：當預言成真，恐懼才真正開始。</a><a href="chapter_chapter05-2.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">5-2：數位狩獵：當訊息成為武器</a><a href="chapter_chapter05-3.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">5-3：沉默的代價，如果我不是我</a><a href="chapter_chapter05-4.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">5-4：夢的入口，百張床</a><a href="chapter_chapter05-5.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">5-5：先鋒夢協者:狸、熊、兔、鴉</a><a href="chapter_chapter05-6.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">5-6：雙重連夢：在夢中抵達進階</a></div></div>
+                        <div>
+                            <button data-toggle-target="sub-nav-chapter_chapter06-html" class="chapter-toggle-btn w-full block p-3 rounded-md hover:bg-[var(--active-bg-main)] transition-colors duration-200 flex justify-between items-center text-left text-[var(--link-main)] ">
+                                <span>📖第六章：《師爺駕到，全員撤退！》</span>
+                                <svg class="chevron-icon w-4 h-4 transition-transform duration-200 flex-shrink-0 " xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>
+                            </button>
+                            <div id="sub-nav-chapter_chapter06-html" class="sub-nav-container mt-1 space-y-1 border-l-2 border-[var(--border-main)] pl-3 ml-4 hidden">
+                    <a href="chapter_chapter06-1.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">6-1：師爺的現身</a><a href="chapter_chapter06-2.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">6-2：第四封信</a><a href="chapter_chapter06-3.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">6-3：可樂味的夢境試煉</a><a href="chapter_chapter06-4.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">6-4：O的孤軍奮戰</a><a href="chapter_chapter06-5.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">6-5：計畫代號：FLASH</a><a href="chapter_chapter06-6.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">6-6：休門與生門</a><a href="chapter_chapter06-7.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">6-7：FLASH！</a><a href="chapter_chapter06-8.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">6-8 ：首爾封鎖，夢境餘波</a><a href="chapter_chapter06-9.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">6-9：四號安全屋</a></div></div><a href="letter_letter1.html" class="chapter-link block p-3 rounded-md hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">✉️ 第一封信《他在夢裡學完了 MIT 四年課程》</a><a href="letter_letter2.html" class="chapter-link block p-3 rounded-md hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">✉️ 第二封信《來自夢境的加密訊息》</a><a href="letter_letter3.html" class="chapter-link block p-3 rounded-md hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">✉️ 第二封信《預言的迴響》</a><a href="letter_letter4.html" class="chapter-link block p-3 rounded-md hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">✉️ 第四封信《夢境的矛與盾》</a>
                 </nav>
             </div>
         </aside>
@@ -74,17 +143,43 @@
         <main class="flex-1 flex flex-col overflow-hidden">
             <header class="bg-transparent p-4 flex justify-between items-center z-10 flex-shrink-0">
                 <div class="flex items-center gap-2">
-                    <!-- 桌面版收合按鈕 -->
                     <button id="sidebar-toggle-btn" class="hidden md:block p-2 rounded-full hover:bg-[var(--active-bg-main)]" title="收合/展開目錄">
                         <svg id="sidebar-toggle-icon" class="w-6 h-6 text-[var(--icon-fill)] transition-transform duration-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/></svg>
                     </button>
-                    <!-- 手機版選單按鈕 -->
                     <label for="menu-toggle" id="menu-btn" class="md:hidden p-2 rounded-full hover:bg-[var(--active-bg-main)] text-[var(--text-main)] cursor-pointer transition-colors">
                         <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="var(--icon-fill)"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/></svg>
                     </label>
                 </div>
-                <h1 class="text-base font-medium text-center text-[var(--text-main)] opacity-70 truncate mx-4">📖第四章《預言者的回聲，與瘋狂的啟動！》</h1>
+                <div class="flex items-center text-center">
+                    <h1 class="text-base font-medium text-[var(--text-main)] opacity-70 truncate mx-4">📖第四章：《預言者的回聲，與瘋狂的啟動！》</h1>
+                    <span id="progress-percent" class="text-sm font-mono text-[var(--icon-fill)] w-12 text-left">0%</span>
+                </div>
                 <div class="flex items-center space-x-1">
+                    <!-- 設定按鈕 -->
+                    <div class="relative">
+                        <button id="setting-toggle-btn" class="setting-btn p-2 rounded-full hover:bg-[var(--active-bg-main)] transition-colors" title="閱讀設定">
+                            <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M10 3a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM10 8.5a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM11.5 15.5a1.5 1.5 0 10-3 0 1.5 1.5 0 003 0z" /></svg>
+                        </button>
+                        <!-- 設定面板 -->
+                        <div id="setting-panel" class="hidden absolute right-0 mt-2 w-48 bg-[var(--bg-main)] rounded-lg shadow-lg border border-[var(--border-main)] p-4 z-20">
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-[var(--text-main)] mb-2">字體大小</label>
+                                <div class="flex justify-between items-center">
+                                    <button data-action="set-font-size" data-value="sm" class="setting-option-btn">小</button>
+                                    <button data-action="set-font-size" data-value="md" class="setting-option-btn">中</button>
+                                    <button data-action="set-font-size" data-value="lg" class="setting-option-btn">大</button>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-[var(--text-main)] mb-2">字體風格</label>
+                                <div class="flex justify-between items-center">
+                                    <button data-action="set-font-family" data-value="serif" class="setting-option-btn">襯線</button>
+                                    <button data-action="set-font-family" data-value="sans" class="setting-option-btn">非襯線</button>
+                                </div>
+                            </div>
+                        </div>
+                         <style>.setting-option-btn { padding: 4px 12px; border-radius: 999px; font-size: 0.875rem; background-color: transparent; border: 1px solid var(--border-main); color: var(--link-main); transition: all 0.2s; } .setting-option-btn.active, .setting-option-btn:hover { background-color: var(--active-bg-main); color: var(--text-main); border-color: var(--link-main); }</style>
+                    </div>
                     <button onclick="setTheme('paper')" class="theme-switcher-btn p-2 rounded-full hover:bg-[var(--active-bg-main)] transition-colors" title="日間模式"><svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58c-.39-.39-1.02-.39-1.41 0l-1.42 1.42c-.39.39-.39 1.02 0 1.41.39.39 1.02.39 1.41 0l1.42-1.42c.39-.39.39-1.02 0-1.41zm13.42 13.42c-.39-.39-1.02-.39-1.41 0l-1.42 1.42c-.39.39-.39 1.02 0 1.41.39.39 1.02.39 1.41 0l1.42-1.42c.39-.39.39-1.02 0-1.41zM20.42 5.99c.39-.39.39-1.02 0-1.41l-1.42-1.42c-.39-.39-1.02-.39-1.41 0-.39.39-.39 1.02 0 1.41l1.42 1.42c.39.39 1.02.39 1.41 0zM4.58 19.41c.39-.39.39-1.02 0-1.41l-1.42-1.42c-.39-.39-1.02-.39-1.41 0-.39.39-.39 1.02 0 1.41l1.42 1.42c.39.39 1.02.39 1.41 0z"/></svg></button>
                     <button onclick="setTheme('sepia')" class="theme-switcher-btn p-2 rounded-full hover:bg-[var(--active-bg-main)] transition-colors" title="懷舊模式"><svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zM12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5z"/></svg></button>
                     <button onclick="setTheme('night')" class="theme-switcher-btn p-2 rounded-full hover:bg-[var(--active-bg-main)] transition-colors" title="夜間模式"><svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9c.83 0 1.64-.11 2.4-.31-.3-.13-.59-.29-.87-.48-.69-.48-1.29-1.12-1.72-1.85C11.23 17.5 11 16.78 11 16c0-2.21 1.79-4 4-4 .78 0 1.5.23 2.15.62.73.43 1.37 1.03 1.85 1.72.19.28.35.57.48.87.2-.76.31-1.57.31-2.4 0-4.97-4.03-9-9-9z"/></svg></button>
@@ -104,93 +199,59 @@
                     <div class="flex-1 p-4 overflow-y-auto">
                         <h2 class="text-xl font-bold mb-4 text-[var(--text-main)]">夢境時差：七封謎信</h2>
                         <nav id="mobile-chapter-list">
-                            <a href="chapter_chapter00.html" class="chapter-link block p-3 rounded-md hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">📖序章：《哇哇哇！奇人異事！》啟動！</a><a href="chapter_chapter01.html" class="chapter-link block p-3 rounded-md hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">📖第一章：《他在夢裡學完了 MIT 四年課程》夢創協同！</a><a href="chapter_chapter02.html" class="chapter-link block p-3 rounded-md hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">📖第二章：《更大的流量，更大的危險》留言!</a><a href="chapter_chapter03.html" class="chapter-link block p-3 rounded-md hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">📖第三章：《輿論的漩渦，夢境的加密》託夢！</a><a href="chapter_chapter04.html" class="chapter-link block p-3 rounded-md hover:bg-[var(--active-bg-main)] transition-colors duration-200 bg-[var(--active-bg-main)] font-bold text-[var(--text-main)]">📖第四章《預言者的回聲，與瘋狂的啟動！》</a><a href="chapter_chapter05.html" class="chapter-link block p-3 rounded-md hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">📖第五章：《當信眾狂熱！信任的裂痕！》</a><a href="letter_letter1.html" class="chapter-link block p-3 rounded-md hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">✉️ 第一封信《他在夢裡學完了 MIT 四年課程》</a><a href="letter_letter2.html" class="chapter-link block p-3 rounded-md hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">✉️ 第二封信《來自夢境的加密訊息》</a>
+                            <a href="chapter_chapter00.html" class="chapter-link block p-3 rounded-md hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">📖序章：《哇哇哇！奇人異事！》啟動！</a>
+                        <div>
+                            <button data-toggle-target="sub-nav-chapter_chapter01-html" class="chapter-toggle-btn w-full block p-3 rounded-md hover:bg-[var(--active-bg-main)] transition-colors duration-200 flex justify-between items-center text-left text-[var(--link-main)] ">
+                                <span>📖第一章：《他在夢裡學完了 MIT 四年課程》夢創協同！</span>
+                                <svg class="chevron-icon w-4 h-4 transition-transform duration-200 flex-shrink-0 " xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>
+                            </button>
+                            <div id="sub-nav-chapter_chapter01-html" class="sub-nav-container mt-1 space-y-1 border-l-2 border-[var(--border-main)] pl-3 ml-4 hidden">
+                    <a href="chapter_chapter01-1.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">1-1：【哇哇哇！奇人異事！】夢創協同 Ep1</a><a href="chapter_chapter01-2.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">1-2：第一封信</a></div></div>
+                        <div>
+                            <button data-toggle-target="sub-nav-chapter_chapter02-html" class="chapter-toggle-btn w-full block p-3 rounded-md hover:bg-[var(--active-bg-main)] transition-colors duration-200 flex justify-between items-center text-left text-[var(--link-main)] ">
+                                <span>📖第二章：《更大的流量，更大的危險》留言!</span>
+                                <svg class="chevron-icon w-4 h-4 transition-transform duration-200 flex-shrink-0 " xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>
+                            </button>
+                            <div id="sub-nav-chapter_chapter02-html" class="sub-nav-container mt-1 space-y-1 border-l-2 border-[var(--border-main)] pl-3 ml-4 hidden">
+                    <a href="chapter_chapter02-1.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">2-1：深海巨怪</a></div></div>
+                        <div>
+                            <button data-toggle-target="sub-nav-chapter_chapter03-html" class="chapter-toggle-btn w-full block p-3 rounded-md hover:bg-[var(--active-bg-main)] transition-colors duration-200 flex justify-between items-center text-left text-[var(--link-main)] ">
+                                <span>📖第三章：《輿論的漩渦，夢境的加密》託夢！</span>
+                                <svg class="chevron-icon w-4 h-4 transition-transform duration-200 flex-shrink-0 " xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>
+                            </button>
+                            <div id="sub-nav-chapter_chapter03-html" class="sub-nav-container mt-1 space-y-1 border-l-2 border-[var(--border-main)] pl-3 ml-4 hidden">
+                    <a href="chapter_chapter03-1.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">3-1：發燒影片</a><a href="chapter_chapter03-2.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">3-2：夢創協同 Ep2 - 第一個證據</a><a href="chapter_chapter03-3.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">3-3：黑書卷軸</a><a href="chapter_chapter03-4.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">3-4：旁觀者</a></div></div>
+                        <div>
+                            <button data-toggle-target="sub-nav-chapter_chapter04-html" class="chapter-toggle-btn w-full block p-3 rounded-md hover:bg-[var(--active-bg-main)] transition-colors duration-200 flex justify-between items-center text-left bg-[var(--active-bg-main)] font-bold text-[var(--text-main)] ">
+                                <span>📖第四章：《預言者的回聲，與瘋狂的啟動！》</span>
+                                <svg class="chevron-icon w-4 h-4 transition-transform duration-200 flex-shrink-0 rotate-90" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>
+                            </button>
+                            <div id="sub-nav-chapter_chapter04-html" class="sub-nav-container mt-1 space-y-1 border-l-2 border-[var(--border-main)] pl-3 ml-4 ">
+                    <a href="chapter_chapter04-1.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">4-1：煎熬的等待</a><a href="chapter_chapter04-2.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">4-2：夢創協同 Ep3 - 預言者的回聲</a><a href="chapter_chapter04-3.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">4-3： D.I.R.E</a><a href="chapter_chapter04-4.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">4-4：三發預言</a></div></div>
+                        <div>
+                            <button data-toggle-target="sub-nav-chapter_chapter05-html" class="chapter-toggle-btn w-full block p-3 rounded-md hover:bg-[var(--active-bg-main)] transition-colors duration-200 flex justify-between items-center text-left text-[var(--link-main)] ">
+                                <span>📖第五章：《當信眾狂熱！信任的裂痕！》</span>
+                                <svg class="chevron-icon w-4 h-4 transition-transform duration-200 flex-shrink-0 " xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>
+                            </button>
+                            <div id="sub-nav-chapter_chapter05-html" class="sub-nav-container mt-1 space-y-1 border-l-2 border-[var(--border-main)] pl-3 ml-4 hidden">
+                    <a href="chapter_chapter05-1.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">5-1：當預言成真，恐懼才真正開始。</a><a href="chapter_chapter05-2.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">5-2：數位狩獵：當訊息成為武器</a><a href="chapter_chapter05-3.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">5-3：沉默的代價，如果我不是我</a><a href="chapter_chapter05-4.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">5-4：夢的入口，百張床</a><a href="chapter_chapter05-5.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">5-5：先鋒夢協者:狸、熊、兔、鴉</a><a href="chapter_chapter05-6.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">5-6：雙重連夢：在夢中抵達進階</a></div></div>
+                        <div>
+                            <button data-toggle-target="sub-nav-chapter_chapter06-html" class="chapter-toggle-btn w-full block p-3 rounded-md hover:bg-[var(--active-bg-main)] transition-colors duration-200 flex justify-between items-center text-left text-[var(--link-main)] ">
+                                <span>📖第六章：《師爺駕到，全員撤退！》</span>
+                                <svg class="chevron-icon w-4 h-4 transition-transform duration-200 flex-shrink-0 " xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>
+                            </button>
+                            <div id="sub-nav-chapter_chapter06-html" class="sub-nav-container mt-1 space-y-1 border-l-2 border-[var(--border-main)] pl-3 ml-4 hidden">
+                    <a href="chapter_chapter06-1.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">6-1：師爺的現身</a><a href="chapter_chapter06-2.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">6-2：第四封信</a><a href="chapter_chapter06-3.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">6-3：可樂味的夢境試煉</a><a href="chapter_chapter06-4.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">6-4：O的孤軍奮戰</a><a href="chapter_chapter06-5.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">6-5：計畫代號：FLASH</a><a href="chapter_chapter06-6.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">6-6：休門與生門</a><a href="chapter_chapter06-7.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">6-7：FLASH！</a><a href="chapter_chapter06-8.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">6-8 ：首爾封鎖，夢境餘波</a><a href="chapter_chapter06-9.html" class="chapter-link block p-2 rounded-md text-sm hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">6-9：四號安全屋</a></div></div><a href="letter_letter1.html" class="chapter-link block p-3 rounded-md hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">✉️ 第一封信《他在夢裡學完了 MIT 四年課程》</a><a href="letter_letter2.html" class="chapter-link block p-3 rounded-md hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">✉️ 第二封信《來自夢境的加密訊息》</a><a href="letter_letter3.html" class="chapter-link block p-3 rounded-md hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">✉️ 第二封信《預言的迴響》</a><a href="letter_letter4.html" class="chapter-link block p-3 rounded-md hover:bg-[var(--active-bg-main)] transition-colors duration-200 text-[var(--link-main)]">✉️ 第四封信《夢境的矛與盾》</a>
                         </nav>
                     </div>
                 </div>
                 <label for="menu-toggle" class="md:hidden fixed inset-0 bg-black bg-opacity-25 z-20 opacity-0 pointer-events-none transition-opacity duration-300 cursor-pointer"></label>
 
                 <article id="content-area" class="p-6 md:p-12 prose max-w-2xl mx-auto">
-                    <h1 class="text-3xl md:text-4xl font-bold mb-12 !text-[var(--text-main)] border-b-2 border-[var(--border-main)] pb-4">📖第四章《預言者的回聲，與瘋狂的啟動！》</h1>
-                    <p class="mb-6 leading-loose tracking-wide"># 我的理性崩潰了，你的冒險卻開始了。</p><p class="mb-6 leading-loose tracking-wide">---</p><p class="mb-6 leading-loose tracking-wide">【老度的工作室・上次影片上線後一週的日常】</p><p class="mb-6 leading-loose tracking-wide">牆上的百萬訂閱獎牌依舊閃耀，但獎牌下的老度，卻顯得有些心事重重。
-他坐在升降電腦桌前，指尖無意識地輕敲著桌面，螢幕上是無數與「夢境協同」相關的論文和論壇討論，眼神銳利，卻也透著一絲困惑。
-對面的沙發上，老K正用腳趾頭夾著零食包裝，嘴裡哼著跑調的動漫主題曲，看似漫不經心，但眼神卻時不時地瞟向老度。</p><p class="mb-6 leading-loose tracking-wide">老度（輕聲，像在自言自語）：「……已經一週了。」</p><p class="mb-6 leading-loose tracking-wide">老K（猛地坐起來，零食包裝從腳趾間滑落）：
-「幹，老度！你又來了！這一週你都快變成『夢境哲學家』了，整天念叨著什麼『夢境真實性』、『潛意識協同』。我耳朵都快長繭了！」</p><p class="mb-6 leading-loose tracking-wide">老度（轉頭看向老K，眉頭微皺）：
-「你說呢？上次RR那封信，那個『托夢』的證據，難道你一點感覺都沒有嗎？
-    你仔細想想，當時我們在節目裡，對於『夢創協同』的五階段、還有『托夢』、『連夢』、『夢實』那三項進階能力，
-    我們是不是說得太順暢了？簡直像是——」
-老K（拍大腿）：
-「像是我們自己編的！靠北，那天晚上我回家，真的有點毛。
-    我還特地去翻了我們那集節目所有的腳本草稿、腦力激盪的筆記，翻來翻去，真的找不到任何關於那三項能力的隻字片語！」</p><p class="mb-6 leading-loose tracking-wide">老度（嚴肅點頭）：
-「是真的很恐怖。RR說那是一種『潛意識資訊植入』，你無意識地接收了訊息，然後將它當成自己的靈感自然流露 。
-    你說，這是不是比直接在你腦袋裡裝晶片還可怕？因為你連反抗都不知道怎麼反抗！」</p><p class="mb-6 leading-loose tracking-wide">老K：
-「所以我這一週，每天晚上睡覺前，我都試著『訓練』一下我的『低階』能力。
-    我想說，既然他說能加速，那我試試看能不能學點什麼新技能。
-    我試著在睡前死命想著怎麼用3D建模做出一個精緻的鋼鐵人模型，結果你猜怎麼著？」</p><p class="mb-6 leading-loose tracking-wide">老度：「你做出了一個鋼鐵人模型？」</p><p class="mb-6 leading-loose tracking-wide">老K（沮喪地搖頭）：「沒有！我醒來後，發現我只是夢到自己被鋼鐵人追著跑，然後早上起來，脖子超級酸！而且還特別想吃雞腿便當！這算什麼？『夢境加速飢餓感』嗎？！」</p><p class="mb-6 leading-loose tracking-wide">老度（忍不住輕笑，然後又恢復嚴肅）：
-「你這個可能只是單純的睡眠品質不好。但你說的那個『白天一直想著某件事，還能在入睡時，讓大腦保持清醒運作，身體卻全然放鬆』 
-    這個條件，我也試了幾次，真的很難。感覺就像你叫一個人一邊笑一邊哭一樣矛盾。」</p><p class="mb-6 leading-loose tracking-wide">老K：「真的！我就覺得那個O說的也太輕鬆了！我們這種凡人，白天上班就夠燒腦了，晚上還要『有意識地無意識』，這不是折磨嗎？」</p><p class="mb-6 leading-loose tracking-wide">老度：
-「這一週，我除了思考這些，也在『深海巨怪』資料庫裡撈了更多東西。你上次說的『腦區動用密度』 ，那個詞確實很機密。
-    我找到了一些更古老的文獻，雖然不是直接證明，但確實有些地方，會暗示到人類在『深度睡眠』中，
-    能達到一種『超越現實時間』的認知狀    態。只不過，他們都用很隱晦的詞語去形容，像是『天啟』、『頓悟』、『神諭』。」</p><p class="mb-6 leading-loose tracking-wide">老K：「所以這不是科幻，是玄學？」</p><p class="mb-6 leading-loose tracking-wide">老度：
-「也許，玄學只是古人對我們無法理解的『科技』的另一種稱呼。
-    更讓我毛骨悚然的是，這一週我們節目的留言區，出現了一些很奇怪的現象。」</p><p class="mb-6 leading-loose tracking-wide">（畫面切換到留言區縮影，出現一些奇怪的、重複性的、或者語氣異常的留言，比之前更頻繁。例如：「我夢到自己走在一條沒有盡頭的貿易航線上，然後就醒了。」「我最近總是聽到奇怪的電流聲，是不是有人在『連夢』？」）</p><p class="mb-6 leading-loose tracking-wide">老度：「這些留言，有的看似是觀眾瞎掰，但有些字詞組合，或是描述的細節，卻意外地與我們上次影片的內容不謀而合。有種感覺，好像『某些東西』，正在透過這些留言，滲透進來。」</p><p class="mb-6 leading-loose tracking-wide">老K：「靠，你是說，我們可能無意間打開了什麼『夢境傳訊』的管道？那會不會有什麼奇怪的東西，透過這些留言，要對我們幹嘛？」</p><p class="mb-6 leading-loose tracking-wide">老度：「我也不知道。我只知道，這七天都還沒有收到RR的第三封信，我心裡越來越不安。感覺這個故事，隨時可能『斷片』。我甚至開始懷疑，RR是不是也被那些『幕後勢力』抓走了？」</p><p class="mb-6 leading-loose tracking-wide">老K：「該不會真的像觀眾說的，他是個『未來人』，現在被政府監控了吧？」</p><p class="mb-6 leading-loose tracking-wide">老度：「我重新檢查了RR之前寄來的信件寄送資訊，他用的IP位址很普通，但時間點卻有點不尋常...」</p><p class="mb-6 leading-loose tracking-wide">（螢幕右下角突然閃爍，響起一聲清脆的郵件提示音，劃破了工作室裡的寂靜。兩人同時看向螢幕，收件匣裡跳出一封新信件。寄件人：RR，主旨：《預言者的回聲》。）</p><p class="mb-6 leading-loose tracking-wide">老K（猛地從沙發上彈起，手機幾乎砸到自己臉上，聲音都變調了）：「幹！他來了！真的來了！ 第三封信！」</p><p class="mb-6 leading-loose tracking-wide">老度（沉思了幾秒，手指輕輕推了推眼鏡，眼神銳利得像一把刀）：「準備直播。這次，我們要讓觀眾，看清楚這一切。」</p><p class="mb-6 leading-loose tracking-wide">🎙️【老度與老K的第三封信：現場直播與深度解讀】</p><p class="mb-6 leading-loose tracking-wide">老度：「哇～哇～～哇～～～！奇人異事又來啦！」</p><p class="mb-6 leading-loose tracking-wide">老K（坐在一旁，表情比平常嚴肅許多，他舉起手機，讓攝影機特寫螢幕上的日期與時間，但表情明顯有些緊張）：
-「今天我們要讀的，是觀眾最期待、也是我們最緊張的一封信！它遲到了一週，但它來了！」</p><p class="mb-6 leading-loose tracking-wide">老度（點頭，眼神深邃）：
-「RR來信了，最熱騰騰的，我們都還沒看過，直接一鏡到底一起來看看，標題是《預言者的回聲》。
-    RR在信中說，他要讓我們了解O過去的真實經歷，而且，還有一些，關於『未來』的訊息。」</p><p class="mb-6 leading-loose tracking-wide">老K（瞪大眼睛，身體前傾）：「關於未來？！ 他終於要出殺招了嗎？」</p><p class="mb-6 leading-loose tracking-wide">【直播聊天室互動片段】
-💬 夢境觀察者1號： 哇靠！RR真的來了！我等這集等了一週！
-💬 潛意識漫遊者： 老度表情好嚴肅，感覺這次真的有料！
-💬 不信邪的阿伯： 又要開始唬爛了嗎？看我等等怎麼打臉！
-💬 鋼鐵人迷： 老K的鋼鐵人模型呢？有沒有在夢裡做出來？（笑）</p><p class="mb-6 leading-loose tracking-wide">老度（深吸一口氣，點開信件，螢幕上的文字緩緩浮現。他開始朗讀。）</p><p class="mb-6 leading-loose tracking-wide">「老度，你好。上次的影片確實如我所料，引發了巨大的反響。那些輿論的分裂、網路上的攻訫，以及你所感覺到的那股『不尋常的節奏』，都證明了我們正在觸及的，遠比表面上看到的更深。你已經親身經歷過『托夢』的證據，現在，是時候讓你了解『O』過去的真實經歷了。」</p><p class="mb-6 leading-loose tracking-wide">老K：「他連我們私底下的討論都預料到了！這個RR，簡直像個先知！」</p><p class="mb-6 leading-loose tracking-wide">💬 預言家信徒： RR大神！膜拜！他真的什麼都知道！
-💬 理性分析師： 預料到討論不代表什麼，可能是巧合或資訊收集。老度別被牽著鼻子走啊！</p><p class="mb-6 leading-loose tracking-wide">老度（語氣開始帶有說書人的引導性）：「RR說：『接下來，我繼續來講講O跟我後續的故事。』」</p><p class="mb-6 leading-loose tracking-wide">（畫面切換：快速剪輯著RR和O一起在白板前討論的模糊畫面，兩人剪影交疊，O眼神堅定地望向遠方，牆上佈滿筆記和公式，暗示著他們共同研究的歲月。）</p><p class="mb-6 leading-loose tracking-wide">老度：
-「RR描述說，自從O發現他也『不小心』進入了『低階』的夢創協同狀態後，O整個人都『興奮』了起來。
-    各位觀眾，你想想看，一個被形容成『冷冷的』、『不懂人情世故』的天才 ，居然會因為發現『同類』而興奮，這意味著什麼？
-    這代表O其實內心深處，是非常渴望被理解，渴望找到能與他並肩而行的人。」</p><p class="mb-6 leading-loose tracking-wide">老K：「哇，這才是真正的『師父領進門』啊！ 難怪O會對他另眼相看，畢竟遇到同類，是不是？」</p><p class="mb-6 leading-loose tracking-wide">💬 O的粉絲： O原來這麼可愛！反差萌！
-💬 夢境心理學： 天才的孤獨感，找到共鳴者確實會非常激動。這很符合心理學！</p><p class="mb-6 leading-loose tracking-wide">老度：「RR當時問O：『要非常認真集中注意力，身體卻還要放鬆，這不是前後矛盾嗎？』 O當時用他一貫那種淡淡的語氣，卻帶著一絲罕見的認真說：『沒錯。』」</p><p class="mb-6 leading-loose tracking-wide">（畫面切換：螢幕上浮現一個簡單的動畫，一邊是緊繃的腦部圖像，另一邊是放鬆的人體剪影，中間一個問號。）</p><p class="mb-6 leading-loose tracking-wide">老度：
-「O解釋說：『所以這才是為什麼這能力很難被觸發的原因之一。
-    你不但要有超越常人的執念，白天一直想著某件事，還能在入睡時，讓大腦保持清醒運作，身體卻全然放鬆，才有機會進入。』」</p><p class="mb-6 leading-loose tracking-wide">老K：「所以說，這根本是『社畜的最高境界』啊！ 白天加班，晚上睡著還繼續加班，這哪是能力，這是詛咒吧？！」</p><p class="mb-6 leading-loose tracking-wide">💬 加班狗： 靠北，這不就是我嗎？！我每天都在『夢創協同』！
-💬 失眠俱樂部： 難怪我一直學不會，我連睡著都沒辦法放鬆……</p><p class="mb-6 leading-loose tracking-wide">老度（輕笑）：「確實。RR說，就是因為他能使用這能力後，O對他變得更好了，原本O計畫年底要回美國辦事情，也因此取消了。」</p><p class="mb-6 leading-loose tracking-wide">（畫面閃回：小O坐在書桌前，牆上貼滿筆記，他專注地盯著螢幕，眼神中帶著一絲對未來的憧憬，背景是台灣的街景，而非美國。）</p><p class="mb-6 leading-loose tracking-wide">老度：
-「『O告訴我，他10歲的夢想就是成為一所學校的校長。那所學校專門收那些異想天開、特立獨行的孩子們。
-    他有很熱誠的教學想法，他說就像印度電影《三個傻瓜》中的主角一樣，他最後也創建了一所學校，專門收體制外的學生。
-    所以他現在要跟我好好繼續研究這個能力，要在台灣建立一所特殊學校。』」</p><p class="mb-6 leading-loose tracking-wide">老K：「天哪！所以這個天才其實有顆『教育家的心』？ 我還以為他只懂程式碼和方程式咧！這也太反差萌了吧？！」</p><p class="mb-6 leading-loose tracking-wide">💬 教育改革者： 這才是真正的教育家！支持O校長！
-💬 夢境學校： 什麼時候招生？我第一個報名！</p><p class="mb-6 leading-loose tracking-wide">老度（點頭）：
-「RR說他當時也很好奇，問O：『為什麼那邊有特殊機構他不好好待著，怎麼會跑到一個新創公司「蟻居」著呢？這點我一直想不通，終於有機會問他了。』
-    結果O用他一貫那種淡淡的語氣說：『你居然還想不到？多用點大腦，或是夢裡多想想。』」</p><p class="mb-6 leading-loose tracking-wide">老K（攤手）：「果然是天才的傲慢啊！ 這就是所謂的『凡人無法理解之痛』吧？他根本不知道我們『凡人』的世界有多難啊！」</p><p class="mb-6 leading-loose tracking-wide">💬 凡人代表： 老K說出了我的心聲！天才的世界我們不懂！
-💬 邏輯鬼才： O的意思是，答案就在之前的資訊裡，只是RR沒連起來？</p><p class="mb-6 leading-loose tracking-wide">老度（語氣漸趨嚴肅，螢幕上出現D.I.R.E.的字樣，背景音效開始低沉）：
-「RR說，O終於開始講述他在美國的經歷。O因為突出的能力，馬上就被那群人發現了。
-    起初O以為真的是一個學術殿堂，但他漸漸發現，那裡根本不是什麼象牙塔，而是一個被多方勢力角逐的『戰場』。」</p><p class="mb-6 leading-loose tracking-wide">（畫面切至一個圖示，像是一個巨大的棋盤，上面散落著不同的國家旗幟和組織標誌，暗示著多方勢力的角逐。背景音效加入一些軍事演習的環境音。）</p><p class="mb-6 leading-loose tracking-wide">老度：「O將『夢創協同』形容為一種『戰略級資源』，而他所在的機構，也就是我們之前在『深海巨怪』資料庫裡查到的，那個美國的D.I.R.E.，夢境整合研究組織 ，正試圖將其『武器化』。各位觀眾，你想想，『武器化』是什麼概念？這不是開玩笑的，是真的不是開玩笑！」</p><p class="mb-6 leading-loose tracking-wide">老K（倒吸一口涼氣）：「哇靠！這是什麼《全面啟動》結合《魔鬼終結者》的劇情啊？ 太誇張了吧！所以他們真的在搞什麼『夢境軍事計畫』？」💬 陰謀論大師： 我早就說了！政府一定有秘密計畫！
-💬 電影迷： 哇，這比好萊塢大片還刺激！
-💬 軍事迷： 夢境武器化？這聽起來比核彈還可怕！</p><p class="mb-6 leading-loose tracking-wide">老度：「RR在信中特別點出，他們的研究方向極其危險。從利用『托夢』進行輿論操控、思想植入，到透過『連夢』培養超級士兵，甚至嘗試捕捉和控制『超階』夢協者，以窺探未來的可能性。各位觀眾，這想想就恐怖了。如果有人能在夢裡控制你的思想，那還得了？」</p><p class="mb-6 leading-loose tracking-wide">（畫面閃回：模糊的實驗室景象，有人痛苦地抱頭，監控螢幕上閃爍著數據，暗示著精神壓力與非人對待。畫面瞬間切換到一個空蕩蕩的鐵籠。）</p><p class="mb-6 leading-loose tracking-wide">老度：「RR說，O在那裡，不僅是研究者，更是『實驗品』。他親眼目睹了許多夢協者因無法承受精神壓力而崩潰，或是在高層的權力鬥爭中成為犧牲品。他意識到，這個能力若被不受約束的權力所掌握，將會是人類的災難，而他親眼看著自己的同類一個一個倒下受到非人對待，知道有一天一定會輪到自己。」</p><p class="mb-6 leading-loose tracking-wide">老K：「這聽起來簡直是地獄啊！ 那O怎麼逃出來的？他沒有被抓起來『實驗』嗎？」</p><p class="mb-6 leading-loose tracking-wide">💬 正義使者： 太可憐了！O一定要逃出來！
-💬 夢協者自救會： 我們是不是也可能被當成實驗品？細思極恐！</p><p class="mb-6 leading-loose tracking-wide">老度：「RR說，O在美國的那些夢協者，基本上夢境時間只有現實世界的100到500倍。但那個時候的O，他的夢境加速已經平均可以是2000倍左右 ！各位觀眾，這什麼概念？這根本是開外掛啊！ 別人加班一小時，他已經加班四小時了！難怪他能那麼快拿到雙博士學位 ！」</p><p class="mb-6 leading-loose tracking-wide">老K：「哇！這太離譜了吧！所以O的能力，反而成為他最大的『原罪』？」</p><p class="mb-6 leading-loose tracking-wide">老度：「沒錯。RR在信中特別強調：『一旦被那些人知道O有能力到2000倍的速度，那一定是下一個地獄的開始。』因為這對那些企圖『武器化』夢協能力的勢力來說，簡直是無法想像的戰略資源。」</p><p class="mb-6 leading-loose tracking-wide">（畫面切換到一個充滿混亂、閃光和碎片化圖像的蒙太奇，暗示實驗失控的場景。）</p><p class="mb-6 leading-loose tracking-wide">老度：「RR說，O的逃離，源於一次代號為『摩西 (Moses)』的實驗。那是一次試圖人為創造『超階』協同者的瘋狂計畫，但實驗失控了。在巨大的混亂中，O 藉助一位神秘『盟友』的幫助，偽造了自己的死亡，才得以脫身，輾轉回來到台灣。」</p><p class="mb-6 leading-loose tracking-wide">老K：「偽造死亡？這也太狠了吧！ 那個『神秘盟友』是誰？是不是也跟這件事有關？」</p><p class="mb-6 leading-loose tracking-wide">💬 偵探柯南： 神秘盟友！這絕對是個關鍵人物！
-💬 猜測黨： 會不會是RR本人？還是另一個超強夢協者？</p><p class="mb-6 leading-loose tracking-wide">老度（輕輕搖頭，眼神中閃過一絲深思）：
-「信中沒有提。RR只說：『O之所以選擇蟻居，是為了「隱身」，躲避來自大洋彼岸那股龐大勢力的追蹤。』」</p><p class="mb-6 leading-loose tracking-wide">老K：「所以台灣是他的『避風港』？」</p><p class="mb-6 leading-loose tracking-wide">老度：「『O提到畢竟台灣其實夢創協同的相關研究跟實驗能力也是算亞洲前面的，前些年的豬哥亮大哥明明還活著這件事情，很明顯就是跟曼德拉效應是一樣的，代表也有一群水平到進階的夢協者在台灣活動，O想在台灣好好培養一群值得信賴的夥伴，畢竟他在得知未來會有很大一場夢境資訊戰開打。』」</p><p class="mb-6 leading-loose tracking-wide">老K（猛地彈起，表情震驚）：「什麼？！豬哥亮大哥？！ 這也跟夢協者有關 ？我的天哪，曼德拉效應果然是陰謀 ！我們記憶裡那些錯位的東西，真的是被『改寫』了？」</p><p class="mb-6 leading-loose tracking-wide">💬 台灣觀眾： 豬哥亮大哥！我的童年記憶！這也太猛了！
-💬 曼德拉效應受害者： 我就說皮卡丘尾巴沒有黑點！我沒記錯！
-💬 歷史學家： 難道歷史書都要重寫了嗎？</p><p class="mb-6 leading-loose tracking-wide">老度（看向鏡頭，語氣深邃，螢幕上出現曼德拉效應的常見案例圖片，背景音樂轉為詭異）：「你仔細想想 …… 我們之前在第二集裡就提過，RR在第二封信裡就提到，曼德拉效應可能是『集體托夢』的副作用 。現在，他把這跟台灣的『特定人物』連結起來，你說這是不是細思極恐？這代表了，『夢境資訊戰』的影響，可能早已滲透到我們日常認知的每一個角落 。」</p><p class="mb-6 leading-loose tracking-wide">（畫面切換：一個地球儀的動畫，代表各國的點亮起，然後彼此之間拉出錯綜複雜的線條，暗示著夢境勢力的角力。）</p><p class="mb-6 leading-loose tracking-wide">老度：「RR接著給了我們一個『真實案例』，他說：『前一陣子中國的 大語言模型"D1PS1K" 平空出世，震驚全球，其中的蒸餾法學習，其實不完全，因為時間上是來不及做到他的成果的。實際上這就是中國政府的夢協會運用夢協者在夢境用AI研究AI，所以造成超越時間的研究成果，因為夢境本身就加速了，因此才會直接橫空出世。』」
-老K：「哇，這下子連AI都是夢境黑科技的產物了！ 這個世界觀也擴張得太快了吧？所以那些我們看不懂的科技進步，都可能是夢裡搞出來的？」</p><p class="mb-6 leading-loose tracking-wide">💬 AI工程師： D1PS1K的論文我看了好幾遍，確實有些地方時間線對不上，原來是這樣！
-💬 科技迷： 夢裡寫程式，夢裡跑訓練！這效率太逆天了！
-💬 陰謀論者2號： 所以那些AI覺醒的謠言，該不會也是夢裡來的吧？</p><p class="mb-6 leading-loose tracking-wide">老度（點頭）：
-「這是一個非常大膽的假設，但仔細一想，卻又合情合理 。如果夢境時間能加速，那麼在夢裡進行科研，效率將會是現實的千百倍。
-    這讓很多看似不可能的『技術奇點』，變得有了『合理』的解釋。RR說：
-    『我知道這聽起來像天方夜譚，但接下來，你將會親眼見證這些預言如何在現實中發酵，這也是為什麼我需要你的原因。』」</p><p class="mb-6 leading-loose tracking-wide">老K：「他又要預言了！ 來吧，上次的『腦區動用密度』已經夠玄了，這次又要丟什麼炸彈？我感覺我現在看新聞，都會不自覺地往『夢創協同』的方向去想了。」</p><p class="mb-6 leading-loose tracking-wide">💬 預言粉： 坐等RR大神預言！上次的『托夢』已經夠準了！
-💬 質疑派2號： 預言？這不就是玩弄觀眾嗎？</p><p class="mb-6 leading-loose tracking-wide">老度（表情嚴肅，語速放緩，螢幕上浮現「預言」字樣，背景音樂更加緊張。）：
-「RR在信中特別點出，要我們密切關注接下來幾週的國際新聞。他給出了三個預言</p><p class="mb-6 leading-loose tracking-wide">（畫面切換：螢幕上逐一浮現預言的內容，字體逐漸放大，充滿壓迫感）</p><p class="mb-6 leading-loose tracking-wide">第一個，他預言：『某個東方大國將會突發大規模的「基礎設施故障」，導致部分關鍵城市陷入癱瘓。
-    這表面上是技術性問題，但其背後卻是「進階夢協者」透過「連夢」所進行的「夢境干預」，意圖在現實中製造混亂，
-    測試其對全球供應鏈和社會穩定的影響力。這將引發全球經濟的短暫震盪。』」</p><p class="mb-6 leading-loose tracking-wide">老K（咽了口唾沫，眼神發直）：
-「大規模故障？！ 這要是真的，那整個世界不都亂套了嗎？ 我們這些平民老百姓，會不會連自己的想法，其實都是別人『托夢』進來的？」</p><p class="mb-6 leading-loose tracking-wide">💬 末日預言家： 天啊！這就是啟示錄的開端嗎？！
-💬 工程師： 基礎設施故障？這太容易驗證了！我等著看！</p><p class="mb-6 leading-loose tracking-wide">老度：「第二個是南韓將會發布一次臨時戒嚴命令、最後美國股市，在短短數天內出現崩盤式下跌....」</p><p class="mb-6 leading-loose tracking-wide">老K：「這...這...越來越誇張了吧」</p><p class="mb-6 leading-loose tracking-wide">老度（望向鏡頭，語氣沉重而堅定）：「各位觀眾，RR在信中最後表達了一些非常敏感、甚至可能涉及O個人安危的訊息。這些訊息目前還不方便完全公開，但大家要知道，情況可能比我們想像的更複雜，甚至更危險。老度我現在已經感覺到，我們這個節目，已經不僅僅是說故事這麼簡單了。這單元不是讓我們編故事，是讓他們——那些真的遇過無法解釋事件的人，有個可以說出來的地方 。」</p><p class="mb-6 leading-loose tracking-wide">老K：「他把我們綁上他的戰車了啊！ 我們現在怎麼辦？ 我們真的只能照著他們的劇本演下去嗎？」</p><p class="mb-6 leading-loose tracking-wide">老度：「不。RR在信中提到，O最近消失了。這也是他選擇在這個時間點，找到我的原因。他需要我們的關注度，需要我們幫忙。他希望我們能建立一個社群或是群組，把所有對這些奇人異事、對『夢創協同』感興趣的朋友們集合在一起。因為他說，之後很有可能，非常需要這股力量。」</p><p class="mb-6 leading-loose tracking-wide">老K（長嘆一口氣，撓了撓頭）：「所以我們從找奇聞，變成要組建幫助夢協著『觀察者聯盟』了？這聽起來很中二欸！不過……如果這是真的，那我們可能真的需要更多人一起來搞清楚這一切了。」</p><p class="mb-6 leading-loose tracking-wide">【導入「觀察者聯盟」具體雛形】</p><p class="mb-6 leading-loose tracking-wide">老度（輕輕推了推眼鏡，眼神堅定，嘴角露出一絲複雜的微笑）：「各位觀眾，你仔細想想 …… 如果這些預言，真的在接下來幾週內發生了呢？這個世界，可能真的正在經歷一場我們看不見的『夢境戰爭』。RR最後的信，也暗示著更巨大的風暴即將來臨。他說：『請做好準備，因為接下來的發展，將會徹底顛覆你對現實的認知。』」</p><p class="mb-6 leading-loose tracking-wide">老K：「我感覺我的認知已經被顛覆得差不多了啦！ 大家有沒有發現啊—— 這集訊息量真的太大了！如果你們對『夢創協同』、對這些奇特的預言、對未來的『夢境資訊戰』有任何想法，或者你曾經有過什麼不可思議的『靈光乍現』或『奇特夢境』，都歡迎在下面留言分享！還有，如果你也想成為我們這個『奇人異事』社群的一份子，請點擊下方資訊欄的連結，加入我們的秘密群組，一起來探索這個未知的世界！我們需要你們的眼睛和耳朵，去記錄那些『不尋常』的巧合，去分享那些『無法解釋』的夢境。也許，你的一個夢境，就是解開謎團的關鍵線索。不要錯過下一集，我感覺……我們會遇到更大的麻煩！」</p><p class="mb-6 leading-loose tracking-wide">老度（語氣沉穩，補充道）：「是的，這個群組，我們稱之為【夢境觀察者聯盟】。它不是什麼邪教組織，也不是什麼陰謀團體。它是一個開放的平台，讓所有對此感到好奇、甚至親身經歷過類似現象的朋友，能夠分享資訊，共同探討。我們會將收集到的情報進行紀錄、分析，甚至嘗試一些小型的『夢境實驗』，比如老K之前嘗試的『夢境加速學習』，雖然他失敗了，但我們需要更多人的嘗試與數據。我們也會回頭檢視歷史上的【黑資料庫】事件，看看能否從『夢創協同』的角度，找到新的解釋。這是一場對未知的探索，也是一場為了釐清真相的行動。我們需要更多像你們一樣，保持好奇心和獨立思考的人。」</p><p class="mb-6 leading-loose tracking-wide">老K：「今天就先到這裡。觀眾朋友們，晚安，掰掰～」</p><p class="mb-6 leading-loose tracking-wide">（老度向鏡頭揮手，老K也跟著揮手。畫面逐漸淡出，留下懸而未決的空白。）</p><p class="mb-6 leading-loose tracking-wide">【影片上傳後第12小時・深夜・老度的工作室】</p><p class="mb-6 leading-loose tracking-wide">（整個工作室靜得只剩下電腦主機運轉的輕微嗡鳴聲。影片上傳後，老度疲憊地靠在紅黑電競椅上，雙眼緊盯著螢幕，刷新著後台的數據。留言數像雪崩一樣湧入，數字瘋狂跳動。）</p><p class="mb-6 leading-loose tracking-wide">老度（輕聲自語）：「比我想像的還要快……」</p><p class="mb-6 leading-loose tracking-wide">老K（癱在沙發上，手機藍光映著他蒼白的臉，語氣沙啞得像被砂紙磨過）：「老度，你看看留言區……簡直是瘋了！『預言者RR』、『夢境黑科技』，都上熱搜了！」</p><p class="mb-6 leading-loose tracking-wide">**【留言縮影】**
-🟢</p><p class="mb-6 leading-loose tracking-wide">信眾：「我信了！老度你這次真的捅破天了！坐等預言應驗！我感覺我最近的夢也開始有邏輯了！」</p><p class="mb-6 leading-loose tracking-wide">🌀 科學狂：「D1PS1K的誕生真的太蹊蹺了，我之前就覺得不對勁！原來是『夢境加班』搞出來的！這解釋了所有邏輯不通的地方！我的天啊，細思極恐！」</p><p class="mb-6 leading-loose tracking-wide">📌 吃瓜群眾：「所以那些什麼貿易戰、科技突破，都是夢裡寫好的劇本？我們都是NPC？乾！這世界太可怕了！」</p><p class="mb-6 leading-loose tracking-wide">🤔 質疑派：「老度你真的想紅想瘋了！這預言也太扯了吧？把所有國際大事都推給什麼『夢協者』？是不是想建立邪教啊？」</p><p class="mb-6 leading-loose tracking-wide">🕵️‍♂️ 陰謀論者：「曼德拉效應果然是真相！豬哥亮大哥的回憶、皮卡丘的尾巴，全都是被操控的證據！這是一場全球性的洗腦！」</p><p class="mb-6 leading-loose tracking-wide">🔥 蹭流量仔：「小哥哥達吻吸：我早就說過，人類的命運是被『高維力量』操控的！這就是我一直暗示的！老度根本是抄襲我的概念！」</p><p class="mb-6 leading-loose tracking-wide">📢 「爸，我回來了」：「【緊急揭穿】老度又在瞎掰了！這次的預言，我賭十個雞腿，絕對一個都不會中！坐等打臉！」</p><p class="mb-6 leading-loose tracking-wide">老K（搖了搖頭，聲音中帶著一絲顫抖）：「你看那個『爸，我回來了』，反應比上次更快了。他還說要賭十個雞腿……他怎麼敢這麼篤定啊？」</p><p class="mb-6 leading-loose tracking-wide">老度（眼神掃過留言，輕聲自語）：「不。不是篤定，是『預設』。RR說過，那些看似隨機的嘲諷，很可能就是某些進階夢協者在『連夢』中模擬過的情境 。他們正在維護舊秩序，試圖逆向操控輿論 。」</p><p class="mb-6 leading-loose tracking-wide">老K：「所以連『爸，我回來了』都在他們的劇本裡？」</p><p class="mb-6 leading-loose tracking-wide">老度：「很可能。就像『猴哥懶人爆』，他的懶人包也更新了，表面上中立客觀，實際上卻把我們的內容推到了更高的討論熱度。這也是一種『引導』。」</p><p class="mb-6 leading-loose tracking-wide">（就在兩人討論之際，老度手機突然發出一聲簡短的新聞推送提示音。他拿起手機一看，臉色瞬間蒼白。）</p><p class="mb-6 leading-loose tracking-wide">（老度拿起手機，臉色瞬間蒼白。他顫抖著將手機遞給老K。）</p><p class="mb-6 leading-loose tracking-wide">老度：「老K，你看這個…」</p><p class="mb-6 leading-loose tracking-wide">（鏡頭特寫：手機螢幕的推送通知。標題簡潔有力，沒有任何電子干擾的扭曲，但字裡行間的衝擊力卻比任何雜訊都來得駭人。）</p><p class="mb-6 leading-loose tracking-wide">【速報】美股開盤後大跌，道瓊指數狂瀉，觸發熔斷機制，原因不明。</p><p class="mb-6 leading-loose tracking-wide">老K（湊近一看，雙眼瞪得像銅鈴，嘴巴緩緩張大，語氣難以置信）：「這…這不是 RR 說的第三個預言嗎？崩盤式下跌…這…這怎麼可能？！」</p><p class="mb-6 leading-loose tracking-wide">老度（雙手顫抖著打開電腦，語氣冰冷而沉穩，彷彿在壓抑著內心巨大的恐懼）：「不只。美股崩盤，這只是開端。」他迅速敲擊鍵盤，打開了數個新聞網站和數據監控圖。「你看，就在美股熔斷的同一時間，全球網路的金融交易系統出現了長達數分鐘的『異常靜默』。這不是故障，這是一種…被刻意製造的『癱瘓』。」</p><p class="mb-6 leading-loose tracking-wide">（畫面切換：螢幕被分割成數個視窗。左邊是金融市場的紅色暴跌曲線圖；右邊是幾張來自中國香港的黑夜照片，燈火全無；中間則是老度快速切換的網路監控數據，上面顯示著一個被加密的複雜網路攻擊曲線圖。）</p><p class="mb-6 leading-loose tracking-wide">老度：「這是 RR 在信中提到的第二個預言。『某個東方大國將會突發大規模的「基礎設施故障」』。我們之前以為會是大停電，但現在看來，攻擊目標更為精準…他們攻擊的是金融交易的後台系統，這引發了連鎖反應，導致美股崩盤。而這個攻擊的模式…我見過。」</p><p class="mb-6 leading-loose tracking-wide">老K（聲音發顫，臉色慘白）：「你見過？這是什麼意思？」</p><p class="mb-6 leading-loose tracking-wide">老度（輕輕推了推眼鏡，眼神銳利得像一把刀，但臉上的汗珠卻出賣了他內心的恐懼）：「這是一種結合了 DDOS 攻擊、零日漏洞，以及多重供應鏈攻擊的複雜模式。我在還在科技圈時，曾聽說過有國家級情報機構在研究這種『無痕跡攻擊』。這根本不是黑客能辦到的，這需要極為精準的時間、極為龐大的運算能力，以及…對目標系統的極度熟悉。」</p><p class="mb-6 leading-loose tracking-wide">老K（猛地從沙發上彈起，雙手抱頭，在狹小的空間裡來回踱步，聲音充滿恐慌）：「所以…所以 RR 說的那些『在夢中模擬演算』、那些『連夢』進行『協同作戰』…全部都是真的？他們真的在夢裡設計了這場攻擊？」</p><p class="mb-6 leading-loose tracking-wide">老度（語氣冰冷，彷彿在對自己進行催眠）：「我不知道。我只知道，這場攻擊的精準度和協同性，在現實中幾乎是不可能達成的。」他指著螢幕上一個被加密的攻擊代碼：「你看這個，這個代碼有一部分是用一種極其複雜的『遞歸邏輯』寫成的，它會自我優化、自我進化。如果不是在一個時間流逝速度極快的環境中，根本不可能在這麼短的時間內寫出來。」</p><p class="mb-6 leading-loose tracking-wide">老K（突然停下腳步，眼神從恐懼轉為一種狂熱的興奮，臉色也開始恢復血色，他直勾勾地盯著老度）：「老度！這代表什麼？！這代表我們是對的！RR 的信，全部都是真的！我們發現了一個巨大的秘密，一個足以顛覆世界的秘密！我們不是瘋子，我們…我們是先知啊！」他激動地揮舞著雙手，彷彿在慶祝一個偉大的勝利。</p><p class="mb-6 leading-loose tracking-wide">老度（望著老K，臉上的恐懼沒有消退，反而變得更加複雜）：「先知？還是…棋子？」他拿起手機，指尖劃過螢幕，停留在 RR 信中描述O逃亡的段落：「RR 說，O 曾是美國D.I.R.E.組織的『實驗品』，親眼目睹許多同類因無法承受精神壓力而崩潰。他們用這項能力進行『輿論操控、思想植入』，甚至想『培養超級士兵』。我現在在想…我們所做的這一切，是不是也只是 RR 的一場『實驗』？他將我們當成擴音器，讓我們吸引火力，好讓他與 O…在暗處完成他們的計畫？」</p><p class="mb-6 leading-loose tracking-wide">老K（不以為然地搖頭，眼神中充滿了光芒）：「那又怎麼樣？這有什麼關係？這比我們之前拍的所有影片都更真實、更刺激啊！你想想，我們現在手握著一個足以讓世界驚訝的秘密！這是我們的機會！我們要做大事了！」</p><p class="mb-6 leading-loose tracking-wide">（就在兩人爭論之際，網路的輿論風暴已經全面爆發。老度工作室的電腦螢幕，再次被分割成數個畫面，一場針對老度的「夢境資訊戰」已正式打響。）</p><p class="mb-6 leading-loose tracking-wide">【YouTube 頻道攻訐片段】</p><p class="mb-6 leading-loose tracking-wide">畫面一：
-頻道：「爸，我回來了」
-標題：《【緊急揭穿】老度又在瞎掰了！股市崩盤是全球經濟衰退！跟什麼『夢協者』有雞毛關係？我賭十個雞腿，他就是個神棍！》
-（頻道主一臉憤怒，但眼神卻充滿了不確定與焦慮。）</p><p class="mb-6 leading-loose tracking-wide">畫面二：
-頻道：「小哥哥達吻吸」
-標題：《我早就說過，人類的命運是被『高維力量』操控的！這就是我一直暗示的！老度根本是抄襲我的概念！》
-（頻道主語氣激昂，但額頭卻滲出冷汗，彷彿在努力說服自己。）</p><p class="mb-6 leading-loose tracking-wide">畫面三：
-頻道：「猴哥懶人爆」
-標題：《老度最新影片懶人包：股市崩盤與夢境，一個巧合？還是有預謀的資訊戰？》
-（頻道主語氣平穩，但他的影片背景，卻出現了許多與 RR 信中提到的「螺旋式結構圖」相似的圖形，暗示他已經在不知不覺中，被「託夢」植入了資訊。）</p><p class="mb-6 leading-loose tracking-wide">【留言縮影】</p><p class="mb-6 leading-loose tracking-wide">🟢 信眾：「我信了！老度你這次真的捅破天了！坐等預言應驗！我感覺我最近的夢也開始有邏輯了！」
-🌀 科學狂：「D1PS1K 的誕生真的太蹊蹺了，我之前就覺得不對勁！原來是『夢境加班』搞出來的！這解釋了所有邏輯不通的地方！我的天啊，細思極恐！」
-📌 吃瓜群眾：「所以那些什麼貿易戰、科技突破，都是夢裡寫好的劇本？我們都是NPC？乾！這世界太可怕了！」
-🤔 質疑派：「老度你真的想紅想瘋了！這預言也太扯了吧？把所有國際大事都推給什麼『夢協者』？是不是想建立邪教啊？」</p><p class="mb-6 leading-loose tracking-wide">（老度望著螢幕上混亂的畫面與爭論，臉上的複雜神情更加濃重。他將身體蜷縮在電競椅上，彷彿回到了嬰兒時期的胎兒姿態，雙手抱著頭，眼底深處充滿了對未來的巨大恐懼與自我懷疑。）</p><p class="mb-6 leading-loose tracking-wide">老K（拍了拍老度的肩膀，語氣興奮而堅定）：「老度，振作一點！你看，我們成功了！越來越多人相信我們了！我們要讓更多人知道真相！我們要…去尋找 RR 和 O！」</p><p class="mb-6 leading-loose tracking-wide">（老K 的臉上充滿了光芒，他看著窗外漆黑的夜色，彷彿能從中看見一個充滿奇蹟與冒險的新世界。而老度，卻只感覺到無盡的黑暗與寒冷。鏡頭推近，特寫老度緊握的拳頭，拳頭上，一個細小的傷口，因為過於用力而滲出鮮血。）</p><p class="mb-6 leading-loose tracking-wide">《第四章 預言者的回聲 結束》</p>
-                    <div class="flex justify-between mt-12 pt-6 border-t border-[var(--border-main)]"><a href="chapter_chapter03.html" class="nav-btn">← 上一章</a><a href="chapter_chapter05.html" class="nav-btn">下一章 →</a></div>
+                    <h1 class="text-3xl md:text-4xl font-bold mb-2 !text-[var(--text-main)] text-center">📖第四章：《預言者的回聲，與瘋狂的啟動！》</h1>
+                    <p class="text-lg italic text-[var(--text-main)] opacity-75 mt-2 mb-10 text-center font-serif"># 我的理性崩潰了，你的冒險卻開始了。</p>
+                    <p class="mb-6 leading-loose tracking-wide">---</p>
+                    <div class="flex justify-between mt-12 pt-6 border-t border-[var(--border-main)]"><a href="chapter_chapter03-4.html" id="prev-page-link" class="nav-btn">← 上一節</a><a href="chapter_chapter04-1.html" id="next-page-link" class="nav-btn">下一節 →</a></div>
                 </article>
             </div>
         </main>
@@ -206,17 +267,17 @@
         </button>
     </div>
     <style>.fab-btn { background-color: var(--active-bg-main); color: var(--icon-fill); width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1); transition: all 0.3s ease; } .fab-btn:hover { transform: scale(1.1); box-shadow: 0 6px 16px rgba(0,0,0,0.15); }</style>
+    
+    <!-- 上次閱讀位置提示 -->
+    <div id="last-read-toast" class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 bg-[var(--bg-main)] text-[var(--text-main)] px-6 py-3 rounded-lg shadow-xl border border-[var(--border-main)] z-30 flex items-center gap-4">
+        <p class="text-sm">要跳轉至上次閱讀的位置嗎？</p>
+        <a id="last-read-link" href="#" class="font-bold text-blue-500 text-sm hover:underline">跳轉</a>
+        <button id="last-read-close" class="text-[var(--icon-fill)] hover:text-[var(--text-main)]">&times;</button>
+    </div>
 
     <script>
-        function setTheme(theme) {
-            document.body.className = `theme-${theme}`;
-            localStorage.setItem('novelTheme', theme);
-            document.querySelectorAll('.theme-switcher-btn').forEach(btn => {
-                btn.classList.toggle('active', btn.getAttribute('onclick') === `setTheme('${theme}')`);
-            });
-        }
-        
         document.addEventListener('DOMContentLoaded', () => {
+            const NOVEL_ID = document.body.dataset.novelId;
             const appContainer = document.getElementById('app-container');
             const contentContainer = document.getElementById('content-container');
             const menuToggle = document.getElementById('menu-toggle');
@@ -226,20 +287,57 @@
             const sidebarToggleIcon = document.getElementById('sidebar-toggle-icon');
             const scrollToTopBtn = document.getElementById('scroll-to-top');
             const scrollToBottomBtn = document.getElementById('scroll-to-bottom');
+            const progressBar = document.getElementById('progress-bar');
+            const progressPercent = document.getElementById('progress-percent');
+            const settingToggleBtn = document.getElementById('setting-toggle-btn');
+            const settingPanel = document.getElementById('setting-panel');
+            const lastReadToast = document.getElementById('last-read-toast');
+            const lastReadLink = document.getElementById('last-read-link');
+            const lastReadClose = document.getElementById('last-read-close');
 
-            // --- 主題初始化 ---
-            const currentTheme = localStorage.getItem('novelTheme') || 'paper';
+            // --- 主題設定 ---
+            const setTheme = (theme) => {
+                document.body.classList.remove('theme-paper', 'theme-sepia', 'theme-night');
+                document.body.classList.add(`theme-${theme}`);
+                localStorage.setItem('readingTheme', theme);
+                document.querySelectorAll('.theme-switcher-btn').forEach(btn => {
+                    btn.classList.toggle('active', btn.getAttribute('onclick') === `setTheme('${theme}')`);
+                });
+            };
+
+            // --- 閱讀設定 (字體) ---
+            const applyReadingSettings = () => {
+                const settings = JSON.parse(localStorage.getItem('readingSettings')) || { size: 'md', family: 'serif' };
+                
+                document.body.classList.remove('font-size-sm', 'font-size-md', 'font-size-lg');
+                document.body.classList.add(`font-size-${settings.size}`);
+                
+                document.body.classList.remove('font-family-serif', 'font-family-sans');
+                document.body.classList.add(`font-family-${settings.family}`);
+
+                // 更新設定面板按鈕狀態
+                document.querySelectorAll('[data-action="set-font-size"]').forEach(btn => btn.classList.toggle('active', btn.dataset.value === settings.size));
+                document.querySelectorAll('[data-action="set-font-family"]').forEach(btn => btn.classList.toggle('active', btn.dataset.value === settings.family));
+            };
+
+            const saveReadingSetting = (key, value) => {
+                const settings = JSON.parse(localStorage.getItem('readingSettings')) || { size: 'md', family: 'serif' };
+                settings[key] = value;
+                localStorage.setItem('readingSettings', JSON.stringify(settings));
+                applyReadingSettings();
+            };
+
+            // --- 初始化 ---
+            const currentTheme = localStorage.getItem('readingTheme') || 'paper';
             setTheme(currentTheme);
+            applyReadingSettings();
 
-            // --- 側邊欄收合邏輯 ---
+            // --- 側邊欄收合 ---
             const updateSidebarIcon = (isCollapsed) => {
                 sidebarToggleIcon.style.transform = isCollapsed ? 'rotate(180deg)' : 'rotate(0deg)';
             };
-
             const isSidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
-            if (isSidebarCollapsed) {
-                appContainer.classList.add('sidebar-collapsed');
-            }
+            if (isSidebarCollapsed) appContainer.classList.add('sidebar-collapsed');
             updateSidebarIcon(isSidebarCollapsed);
 
             sidebarToggleBtn.addEventListener('click', () => {
@@ -248,41 +346,122 @@
                 updateSidebarIcon(collapsed);
             });
 
-            // --- 手機版選單邏輯 (修正版) ---
+            // --- 手機選單 ---
             menuToggle.addEventListener('change', function() {
-                // 當 checkbox 狀態改變時，控制遮罩的顯示
-                if (this.checked) {
-                    overlay.classList.remove('opacity-0', 'pointer-events-none');
-                } else {
-                    overlay.classList.add('opacity-0', 'pointer-events-none');
-                }
+                overlay.classList.toggle('opacity-0', !this.checked);
+                overlay.classList.toggle('pointer-events-none', !this.checked);
             });
-            
             overlay.addEventListener('click', () => {
                 menuToggle.checked = false;
-                // 手動觸發 change 事件以更新遮罩狀態
                 menuToggle.dispatchEvent(new Event('change'));
             });
-
             mobileMenu.addEventListener('click', (e) => {
                 if (e.target.closest('a')) {
                     menuToggle.checked = false;
                     menuToggle.dispatchEvent(new Event('change'));
                 }
             });
+            
+            // --- 目錄收合 ---
+            const setupChapterToggles = (containerSelector) => {
+                document.querySelector(containerSelector)?.addEventListener('click', (e) => {
+                    const toggleBtn = e.target.closest('.chapter-toggle-btn');
+                    if (toggleBtn) {
+                        e.preventDefault();
+                        const targetElement = document.getElementById(toggleBtn.dataset.toggleTarget);
+                        targetElement?.classList.toggle('hidden');
+                        toggleBtn.querySelector('.chevron-icon')?.classList.toggle('rotate-90');
+                    }
+                });
+            };
+            setupChapterToggles('#chapter-list');
+            setupChapterToggles('#mobile-chapter-list');
 
-            // --- 捲動功能按鈕邏輯 ---
+            // --- 閱讀進度 & 記憶位置 ---
+            let scrollTimeout;
+            const lastReadStorageKey = `lastRead_${NOVEL_ID}`;
+
             contentContainer.addEventListener('scroll', () => {
-                scrollToTopBtn.classList.toggle('hidden', contentContainer.scrollTop <= 200);
+                const scrollableHeight = contentContainer.scrollHeight - contentContainer.clientHeight;
+                const scrollTop = contentContainer.scrollTop;
+                const percent = scrollableHeight > 0 ? (scrollTop / scrollableHeight) * 100 : 0;
+                
+                progressBar.style.width = `${percent}%`;
+                progressPercent.textContent = `${Math.round(percent)}%`;
+
+                scrollToTopBtn.classList.toggle('hidden', scrollTop <= 200);
+
+                // 儲存閱讀位置 (延遲執行以避免效能問題)
+                clearTimeout(scrollTimeout);
+                scrollTimeout = setTimeout(() => {
+                    const data = {
+                        href: window.location.href,
+                        scrollTop: scrollTop,
+                        title: document.querySelector('h1').textContent
+                    };
+                    localStorage.setItem(lastReadStorageKey, JSON.stringify(data));
+                }, 500);
             });
 
-            scrollToTopBtn.addEventListener('click', () => {
-                contentContainer.scrollTo({ top: 0, behavior: 'smooth' });
+            // --- 頁面載入時檢查上次閱讀位置 ---
+            const lastReadData = JSON.parse(localStorage.getItem(lastReadStorageKey));
+            if (lastReadData) {
+                if (lastReadData.href === window.location.href) {
+                    // 如果是同一頁，直接滾動
+                    setTimeout(() => contentContainer.scrollTo({ top: lastReadData.scrollTop, behavior: 'smooth' }), 100);
+                } else {
+                    // 如果是不同頁，顯示提示
+                    lastReadLink.href = lastReadData.href;
+                    lastReadToast.classList.remove('hidden');
+                }
+            }
+            lastReadClose.addEventListener('click', () => lastReadToast.classList.add('hidden'));
+
+            // --- 浮動按鈕 ---
+            scrollToTopBtn.addEventListener('click', () => contentContainer.scrollTo({ top: 0, behavior: 'smooth' }));
+            scrollToBottomBtn.addEventListener('click', () => contentContainer.scrollTo({ top: contentContainer.scrollHeight, behavior: 'smooth' }));
+            
+            // --- 鍵盤導覽 ---
+            document.addEventListener('keydown', (e) => {
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+                if (e.key === 'ArrowLeft') document.querySelector('link[rel="prev"]')?.href && (window.location.href = document.querySelector('link[rel="prev"]').href);
+                if (e.key === 'ArrowRight') document.querySelector('link[rel="next"]')?.href && (window.location.href = document.querySelector('link[rel="next"]').href);
             });
 
-            scrollToBottomBtn.addEventListener('click', () => {
-                contentContainer.scrollTo({ top: contentContainer.scrollHeight, behavior: 'smooth' });
+            // --- 設定面板 ---
+            settingToggleBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                settingPanel.classList.toggle('hidden');
             });
+            document.addEventListener('click', (e) => {
+                if (!settingPanel.contains(e.target) && !settingToggleBtn.contains(e.target)) {
+                    settingPanel.classList.add('hidden');
+                }
+            });
+            settingPanel.addEventListener('click', (e) => {
+                const btn = e.target.closest('[data-action]');
+                if (btn) {
+                    const { action, value } = btn.dataset;
+                    if (action === 'set-font-size') saveReadingSetting('size', value);
+                    if (action === 'set-font-family') saveReadingSetting('family', value);
+                }
+            });
+
+            // --- PWA Service Worker Registration ---
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                    navigator.serviceWorker.register('./service-worker.js')
+                        .then(registration => {
+                            console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                        })
+                        .catch(err => {
+                            console.log('ServiceWorker registration failed: ', err);
+                        });
+                });
+            }
+
+            // 為 window 綁定全域事件
+            window.setTheme = setTheme;
         });
     </script>
 </body>
