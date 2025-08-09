@@ -67,6 +67,7 @@ const videosData = [
     { type: 'youtube', category: 'design', src: 'ZVRhgtBONg8', title: '深山X古廟X和尚X書卷', description: '傳說深山裡有個廟，廟裡有個老和尚，老和尚手上有本書，書上說著傳說深山裡有個廟，廟裡有...' },
     { type: 'local', category: 'design', src: 'data/videos/The Last Ballot.mp4', title: '電影預告:最後一投，每一票都是未來', description: '一個快速展示AI製作影片的能力:選材、視角、音效...' },
     { type: 'youtube', category: 'design', src: 'uNC50TRFUk0', title: '戰爭電影拍攝', description: '一個快速展示AI製作影片的能力:選材、視角、音效...' },
+    { type: 'youtube', category: 'design', src: 'UOlZPRojndg', title: '男友視角:你的女朋友剛醒來，懶洋洋地說早安…', description: '更特別的用ai產出邊界圖片影片' },
     { type: 'local', category: 'design', src: 'data/videos/Eagle Flight.mp4', title: '自由自在地飛翔', description: '感受金雕翱翔的絕美，它像徵著無拘無束的自由，翱翔於充滿活力的紅色峽谷。這首超現實的循環樂曲將帶你進入一個擁有無邊無際天空和輕鬆優雅姿態的世界！調高音量，聆聽令人心曠神怡的自然聲音。' }
 ];
 
