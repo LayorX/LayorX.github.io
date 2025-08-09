@@ -38,13 +38,6 @@ const portfolioData = [
         externalLink: 'https://www.kadokado.com.tw/book/54331'
     },
     { 
-        title: '個人品牌 Logo 設計', 
-        category: 'design', 
-        images: ['data/images/RR頭像.jpg','data/images/RR黑暗.png'],
-        desc: '為個人小說品牌 RR(亞爾)設計的視覺識別。',
-        details: `<h3>設計理念</h3><p>標誌以陰陽圖為基礎，左半邊是代表科技與理性的電路板，右半邊是代表文學與感性的書頁。</p>`
-    },
-    { 
         title: 'Kai Cenat Meets Ray In Japan不同風格', 
         category: 'design', 
         images: ['data/images/KaiRay01.png','data/images/KaiRay02.png','data/images/KaiRay03.png','data/images/KaiRay04.png','data/images/KaiRay05.png'],
@@ -53,6 +46,27 @@ const portfolioData = [
         externalLink: 'https://www.youtube.com/shorts/OqpmYnVaDeY'
     },
     { 
+    title: '沉浸式小說閱讀器', 
+    category: 'web', 
+    images: [
+        'data/images/reader_showcase_03.jpg', 
+        'data/images/reader_showcase_01.jpg',
+        'data/images/reader_showcase_02.jpg'
+    ],
+    desc: '一個專注於提供純粹、無干擾且可完全客製化的線上閱讀體驗的平台。從介面佈局到互動設計，每一個細節都為了「純粹的閱讀」而服務。',
+    details: `<h3>設計理念</h3>
+             <p>閱讀本身應該是一種享受。此專案的目標是掃除一切數位閱讀的障礙，創造一個讓讀者能完全沉浸在故事世界中的環境。</p>
+             <h3>使用者體驗亮點</h3>
+             <ul>
+                <li><b>無縫導覽：</b> 透過進度條、快速跳轉按鈕與章節搜尋功能且有閱讀位置記憶功能自動返回上次的進度，讓閱讀無縫接軌，在長篇故事中也能輕鬆遨遊。</li>
+                <br>
+                <li><b>前端精雕、後端自動化：</b> 堅持使用 Vanilla JS親手打造，不引進任何框架，確保了程式碼的輕量與高效能，使用 Python 撰寫腳本，自動化處理文本解析、HTML 生成與 PWA 檔案配置，實現高效的內容管理流程。</li>
+                
+
+             </ul>`,
+    externalLink: 'novel_site/index.html' 
+},
+    { 
         title: 'PuffPaleCloudy角色設計YunBao', 
         category: 'design', 
         images: ['data/images/PuffPaleCloudy.png','data/images/YunBaoLogo.png', 'data/images/YunBao.png','data/images/YunBao2.png'],
@@ -60,6 +74,14 @@ const portfolioData = [
         details: `<h3>角色故事</h3><p>雲寶 (YunBao) 是一隻害羞但充滿好奇心的小雲龍，他能吐出各種形狀的雲朵來表達自己的心情。</p>`,
         externalLink: 'https://www.youtube.com/@PuffPalsCloudy' 
     },
+    { 
+        title: '個人品牌 Logo 設計', 
+        category: 'design', 
+        images: ['data/images/RR頭像.jpg','data/images/RR黑暗.png'],
+        desc: '為個人小說品牌 RR(亞爾)設計的視覺識別。',
+        details: `<h3>設計理念</h3><p>標誌以陰陽圖為基礎，左半邊是代表科技與理性的電路板，右半邊是代表文學與感性的書頁。</p>`
+    }
+
 ];
 
 const videosData = [
