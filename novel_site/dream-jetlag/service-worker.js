@@ -1,5 +1,5 @@
 
-const CACHE_NAME = '夢境時差：七封謎信-v1';
+const CACHE_NAME = '《夢境時差：七封謎信》-v1';
 const urlsToCache = [
     "./index.html",
     "chapter_chapter00.html",

@@ -44,6 +44,7 @@ def generate_pwa_files(output_path, novel_title, files_to_cache):
     cache_version = 'v1'
     files_js_array = ',\n'.join([f'    "{f}"' for f in files_to_cache])
     
+    # 【修正】修正了多行字串的結束引號位置
     sw_content = f"""
 const CACHE_NAME = '{novel_title}-{cache_version}';
 const urlsToCache = [
@@ -140,15 +141,12 @@ def main():
         os.makedirs(novel_output_path, exist_ok=True)
 
         # --- 增量建置檢查 ---
-        # 將小說資料夾內所有檔案及主模板檔案視為此小說的依賴項
         novel_dependencies = [TEMPLATE_PATH]
         for item in os.listdir(novel_src_path):
             novel_dependencies.append(os.path.join(novel_src_path, item))
         
-        # 使用小說的 index.html 作為時間戳記的標記
         novel_output_index_path = os.path.join(novel_output_path, 'index.html')
 
-        # 讀取小說基本資訊 (這部分總是要執行，為主頁做準備)
         novel_title = novel_id.replace('-', ' ').title()
         novel_synopsis = ''
         info_file_path = os.path.join(novel_src_path, 'info.txt')
@@ -172,7 +170,6 @@ def main():
             print(f"\n--- ✅ 跳過: {novel_title} (無變更) ---")
             continue
 
-        # --- 如果需要，執行完整建置 ---
         print(f"\n--- 🔄 正在更新: {novel_title} (偵測到變更) ---")
         any_novel_rebuilt = True
 
@@ -270,13 +267,10 @@ def main():
             files_to_cache = ['./index.html'] + html_files_to_cache + static_files_to_cache + ['icon-192x192.png', 'icon-512x512.png']
             generate_pwa_files(novel_output_path, novel_title, files_to_cache)
 
-    # --- 生成主書庫頁面 ---
     main_index_path = os.path.join(BASE_OUTPUT_DIR, 'index.html')
-    # 檢查主頁是否需要更新
     main_index_deps = [os.path.join(NOVELS_ROOT_DIR, novel['id'], 'info.txt') for novel in all_novels_info if os.path.exists(os.path.join(NOVELS_ROOT_DIR, novel['id'], 'info.txt'))]
     main_index_deps += [os.path.join(NOVELS_ROOT_DIR, novel['id'], novel['cover']) for novel in all_novels_info if novel.get('cover') and os.path.exists(os.path.join(NOVELS_ROOT_DIR, novel['id'], novel['cover']))]
     
-    # 如果有任何小說被重建，或者小說列表本身發生變化，也應重建主頁
     if any_novel_rebuilt or needs_update(main_index_path, main_index_deps):
         print("\n🏠 正在更新網站主入口 index.html...")
         main_index_content = f"""<!DOCTYPE html><html lang="zh-Hant"><head><meta charset="UTF-8"><title>小說書庫</title><script src="https://cdn.tailwindcss.com?plugins=typography,aspect-ratio,line-clamp"></script><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Noto+Serif+TC:wght@700&display=swap" rel="stylesheet"><style>body {{ font-family: 'Inter', sans-serif; }} h2 {{ font-family: 'Noto Serif TC', serif; }}</style></head><body class="bg-slate-100"><div class="container mx-auto p-8 max-w-7xl"><h1 class="text-4xl font-bold text-center text-slate-800 mb-12" style="font-family: 'Noto Serif TC', serif;">小說書庫</h1><div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">"""

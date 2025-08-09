@@ -1,11 +1,11 @@
 {
-  "name": "夢境時差：七封謎信",
-  "short_name": "夢境時差：七封謎信",
+  "name": "《夢境時差：七封謎信》",
+  "short_name": "《夢境時差：七封謎信》",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f8fafc",
   "theme_color": "#f8fafc",
-  "description": "閱讀 夢境時差：七封謎信",
+  "description": "閱讀 《夢境時差：七封謎信》",
   "icons": [
     {
       "src": "icon-192x192.png",
