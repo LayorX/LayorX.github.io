@@ -7,6 +7,7 @@
     let currentNovelContentIndex = -1;
 
     // --- 元素快取 ---
+    const body = document.body;
     const header = document.getElementById('main-header');
     const mobileMenu = document.getElementById('mobile-menu');
     const novelModal = document.getElementById('novel-modal');
@@ -18,10 +19,8 @@
 
     // --- 核心功能 ---
 
-    // ✨ [FINAL FIX] 修正 marked.js 渲染器，簡化並穩定化
     const renderer = new marked.Renderer();
     
-    // 自訂標題樣式
     renderer.heading = function(token) {
         const level = token.depth;
         const text = this.parser.parseInline(token.tokens);
@@ -34,22 +33,18 @@
         return `<h${level} class="font-serif">${text}</h${level}>`;
     };
 
-    // 自訂連結樣式
     renderer.link = function(token) {
         return `<a href="${token.href}" target="_blank" rel="noopener noreferrer" class="text-amber-400 hover:underline" title="${token.title || ''}">${this.parser.parseInline(token.tokens)}</a>`;
     };
 
-    // 自訂圖片樣式
     renderer.image = function(token) {
-        return `<img src="${token.href}" alt="${token.text}" title="${token.title || ''}" class="rounded-lg my-4 mx-auto max-w-full h-auto">`;
+        return `<img src="${token.href}" alt="${token.text}" title="${token.title || ''}" class="rounded-lg my-4 mx-auto max-w-full h-auto" loading="lazy">`;
     };
 
-    // 自訂段落樣式
     renderer.paragraph = function(token) {
         return `<p class="mb-4">${this.parser.parseInline(token.tokens)}</p>`;
     };
     
-    // 自訂引用區塊樣式 (支援 info 和 success 提示)
     renderer.blockquote = function(token) {
         const text = this.parser.parse(token.tokens);
         const innerText = text.replace(/<p>|<\/p>\n/g, '').trim();
@@ -67,22 +62,19 @@
         return `<blockquote class="p-4 my-4 border-l-4 border-gray-500 bg-gray-800">${text}</blockquote>`;
     };
 
-    // 自訂程式碼區塊樣式
     renderer.code = function(token) {
         const code = token.text;
         const lang = token.lang || 'plaintext';
-        // 使用 Prism.js 等高亮庫時，可以在此處添加對應的 class
         return `<pre class="bg-gray-900 text-white p-4 my-4 rounded-md overflow-x-auto"><code class="language-${lang}">${code}</code></pre>`;
     };
     
-    // 移除所有對 list 和 listitem 的自訂渲染，使用 marked.js 的預設穩定行為
     delete renderer.list;
     delete renderer.listitem;
 
     marked.setOptions({
       renderer: renderer,
-      gfm: true, // 啟用 GitHub Flavored Markdown
-      breaks: true, // 將單一換行符轉換為 <br>
+      gfm: true,
+      breaks: true,
     });
 
     function revealOnScroll() {
@@ -107,7 +99,7 @@
             stopTypingAnimation();
         }
 
-        if (isPushState) {
+        if (isPushState && window.location.hash !== targetId) {
             history.pushState({ path: targetId }, '', targetId);
         }
         revealOnScroll();
@@ -162,11 +154,13 @@
     function openModal(modalElement) {
         modalElement.classList.remove('hidden');
         setTimeout(() => modalElement.classList.remove('opacity-0'), 10);
+        body.classList.add('overflow-hidden');
     }
 
     function closeModal(modalElement) {
         modalElement.classList.add('opacity-0');
         setTimeout(() => modalElement.classList.add('hidden'), 300);
+        body.classList.remove('overflow-hidden');
         if (modalElement.id === 'portfolio-modal' && galleryInterval) {
             clearInterval(galleryInterval);
             galleryInterval = null;
@@ -207,7 +201,7 @@
         const nextBtn = document.getElementById('gallery-next');
         let currentImageIndex = 0;
 
-        imageContainer.innerHTML = item.images.map((imgSrc, index) => `<img src="${imgSrc}" class="portfolio-gallery-image absolute top-0 left-0 w-full h-full object-contain ${index === 0 ? 'active' : ''}" />`).join('');
+        imageContainer.innerHTML = item.images.map((imgSrc, index) => `<img src="${imgSrc}" class="portfolio-gallery-image absolute top-0 left-0 w-full h-full object-contain ${index === 0 ? 'active' : ''}" loading="lazy" />`).join('');
         dotsContainer.innerHTML = item.images.map((_, index) => `<button class="gallery-dot h-3 w-3 rounded-full ${index === 0 ? 'bg-amber-500' : 'bg-gray-600'}" data-index="${index}"></button>`).join('');
         
         let detailsHTML = `<h3 class="text-3xl font-bold text-amber-400 mb-4 font-serif">${item.title}</h3><div class="text-gray-300 space-y-4">${item.details}</div>`;
@@ -304,6 +298,42 @@
             });
     }
 
+    function lazyLoadVideos() {
+        const videoPlaceholders = document.querySelectorAll('.video-placeholder');
+        
+        const videoObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const placeholder = entry.target;
+                    const { type, src } = placeholder.dataset;
+                    
+                    if (type === 'youtube') {
+                        const iframe = document.createElement('iframe');
+                        iframe.className = 'w-full h-full';
+                        iframe.src = `https://www.youtube.com/embed/${src}`;
+                        iframe.title = "YouTube video player";
+                        iframe.frameborder = "0";
+                        iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture";
+                        iframe.allowfullscreen = true;
+                        placeholder.replaceWith(iframe);
+                    } else if (type === 'local') {
+                        const video = document.createElement('video');
+                        video.className = 'w-full h-full';
+                        video.controls = true;
+                        video.src = src;
+                        placeholder.replaceWith(video);
+                    }
+
+                    observer.unobserve(placeholder);
+                }
+            });
+        }, { rootMargin: "100px" });
+
+        videoPlaceholders.forEach(placeholder => {
+            videoObserver.observe(placeholder);
+        });
+    }
+
     // --- 渲染函式 ---
     function renderNav() {
         const navItems = [
@@ -325,7 +355,7 @@
     function renderAboutMe() {
         const container = document.getElementById('about');
         if (!container || typeof aboutMeData === 'undefined') return;
-        container.innerHTML = `<div><h2 class="text-4xl font-bold text-center text-white mb-12 reveal">關於我</h2><div class="flex flex-col md:flex-row items-center gap-12 reveal"><div class="md:w-1/3"><img id="profile-img-about" src="${profileImage}" alt="LayorX 的照片" class="rounded-full shadow-lg shadow-black/30 mx-auto border-4 border-gray-700"></div><div id="about-me-text-container" class="md:w-2/3 text-lg space-y-4"><p>${aboutMeData.p1}</p><p>${aboutMeData.p2}</p><p>${aboutMeData.p3}</p><p>${aboutMeData.p4}</p></div></div></div><div id="skills-section" class="mt-16 reveal"><h3 class="text-3xl font-bold text-center text-white mb-8">我的技能</h3><div class="max-w-4xl mx-auto space-y-6">${skillsData.map(skill => `<div><div class="flex justify-between mb-1"><span class="text-base font-medium text-amber-400">${skill.name}</span><span class="text-sm font-medium text-amber-400">${skill.percentage}%</span></div><div class="w-full bg-gray-700 rounded-full h-2.5"><div class="skill-bar-progress bg-amber-500 h-2.5 rounded-full" data-percentage="${skill.percentage}"></div></div></div>`).join('')}</div></div>`;
+        container.innerHTML = `<div><h2 class="text-4xl font-bold text-center text-white mb-12 reveal">關於我</h2><div class="flex flex-col md:flex-row items-center gap-12 reveal"><div class="md:w-1/3"><img id="profile-img-about" src="${profileImage}" alt="LayorX 的照片" class="rounded-full shadow-lg shadow-black/30 mx-auto border-4 border-gray-700" loading="lazy"></div><div id="about-me-text-container" class="md:w-2/3 text-lg space-y-4"><p>${aboutMeData.p1}</p><p>${aboutMeData.p2}</p><p>${aboutMeData.p3}</p><p>${aboutMeData.p4}</p></div></div></div><div id="skills-section" class="mt-16 reveal"><h3 class="text-3xl font-bold text-center text-white mb-8">我的技能</h3><div class="max-w-4xl mx-auto space-y-6">${skillsData.map(skill => `<div><div class="flex justify-between mb-1"><span class="text-base font-medium text-amber-400">${skill.name}</span><span class="text-sm font-medium text-amber-400">${skill.percentage}%</span></div><div class="w-full bg-gray-700 rounded-full h-2.5"><div class="skill-bar-progress bg-amber-500 h-2.5 rounded-full" data-percentage="${skill.percentage}"></div></div></div>`).join('')}</div></div>`;
     }
 
     function renderPortfolio() {
@@ -337,7 +367,7 @@
         const categories = ['all', ...new Set(portfolioData.map(item => item.category))];
         filtersContainer.innerHTML = categories.map(cat => `<button class="filter-btn px-4 py-2 bg-gray-800 text-white rounded-md capitalize ${cat === 'all' ? 'active' : ''}" data-filter="${cat}">${cat === 'all' ? '全部' : cat === 'web' ? '網頁開發' : cat === 'writing' ? '寫作' : '設計'}</button>`).join('');
         const renderItems = (filter) => {
-            grid.innerHTML = portfolioData.map((item, index) => ({...item, originalIndex: index})).filter(item => filter === 'all' || item.category === filter).map(item => `<div class="bg-gray-800 rounded-lg overflow-hidden shadow-lg transform hover:-translate-y-2 transition-transform duration-300 reveal border border-gray-700 hover:border-gray-600 transition-colors"><img src="${item.images[0]}" alt="${item.title}" class="w-full h-48 object-cover cursor-pointer portfolio-item" data-index="${item.originalIndex}" onerror="this.onerror=null;this.src='https://placehold.co/600x400/1f2937/f59e0b?text=Image+Error';"><div class="p-6"><h3 class="text-2xl font-bold text-amber-400 mb-2">${item.title}</h3><p class="text-gray-400 mb-4">${item.desc}</p><button class="text-white font-semibold hover:text-amber-400 transition-colors portfolio-item" data-index="${item.originalIndex}">查看詳情 <i class="fas fa-arrow-right ml-1"></i></button></div></div>`).join('');
+            grid.innerHTML = portfolioData.map((item, index) => ({...item, originalIndex: index})).filter(item => filter === 'all' || item.category === filter).map(item => `<div class="bg-gray-800 rounded-lg overflow-hidden shadow-lg transform hover:-translate-y-2 transition-transform duration-300 reveal border border-gray-700 hover:border-gray-600 transition-colors"><img src="${item.images[0]}" alt="${item.title}" class="w-full h-48 object-cover cursor-pointer portfolio-item" data-index="${item.originalIndex}" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/600x400/1f2937/f59e0b?text=Image+Error';"><div class="p-6"><h3 class="text-2xl font-bold text-amber-400 mb-2">${item.title}</h3><p class="text-gray-400 mb-4">${item.desc}</p><button class="text-white font-semibold hover:text-amber-400 transition-colors portfolio-item" data-index="${item.originalIndex}">查看詳情 <i class="fas fa-arrow-right ml-1"></i></button></div></div>`).join('');
             revealOnScroll();
         };
         filtersContainer.addEventListener('click', e => { if (e.target.matches('.filter-btn')) { filtersContainer.querySelector('.active').classList.remove('active'); e.target.classList.add('active'); renderItems(e.target.dataset.filter); } });
@@ -348,7 +378,23 @@
     function renderVideos() {
         const container = document.getElementById('videos');
         if (!container || typeof videosData === 'undefined') return;
-        container.innerHTML = `<h2 class="text-4xl font-bold text-center mb-4 text-white reveal">影片作品</h2><h3 class="text-center text-white mb-12">以下都是我獨立製作的影片</h3><div id="videos-grid" class="grid grid-cols-1 md:grid-cols-2 gap-8">${videosData.map(video => `<div class="bg-gray-800 rounded-lg shadow-lg overflow-hidden reveal border border-gray-700 hover:border-gray-600 transition-colors"><div class="aspect-video">${video.type === 'youtube' ? `<iframe class="w-full h-full" src="https://www.youtube.com/embed/${video.src}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>` : `<video class="w-full h-full" controls src="${video.src}"></video>`}</div><div class="p-6"><h3 class="text-2xl font-bold text-amber-400 mb-2">${video.title}</h3><p class="text-gray-400">${video.description}</p></div></div>`).join('')}</div>`;
+        const videoItemsHTML = videosData.map(video => `
+            <div class="bg-gray-800 rounded-lg shadow-lg overflow-hidden reveal border border-gray-700 hover:border-gray-600 transition-colors flex flex-col">
+                <div class="video-placeholder aspect-video bg-gray-900 flex items-center justify-center" data-type="${video.type}" data-src="${video.src}">
+                    <div class="text-gray-500">影片載入中...</div>
+                </div>
+                <div class="p-6 flex-grow">
+                    <h3 class="text-2xl font-bold text-amber-400 mb-2">${video.title}</h3>
+                    <p class="text-gray-400">${video.description}</p>
+                </div>
+            </div>`).join('');
+        
+        container.innerHTML = `
+            <h2 class="text-4xl font-bold text-center mb-4 text-white reveal">影片作品</h2>
+            <h3 class="text-center text-white mb-12">以下都是我獨立製作的影片</h3>
+            <div id="videos-grid" class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                ${videoItemsHTML}
+            </div>`;
     }
 
     function renderJourney() {
@@ -366,7 +412,7 @@
     function renderNovels() {
         const container = document.getElementById('novels');
         if (!container || typeof novelsData === 'undefined') return;
-        container.innerHTML = novelsData.map(novel => `<h2 class="text-4xl font-bold text-center text-white mb-4 reveal">${novel.title}</h2><p class="text-lg text-center text-gray-400 mb-6 max-w-3xl mx-auto reveal">${novel.description}</p><div class="text-center"><a href="${novel.link}" target="_blank" rel="noopener noreferrer" class="text-2xl font-bold text-center mb-4 bg-amber-500 text-gray-900 rounded-md hover:bg-amber-400 transition-colors inline-block ">前往小說閱讀器 <i class="fas fa-external-link-alt ml-2"></i></div></a><div class="bg-gray-800 p-6 rounded-lg shadow-lg flex flex-col md:flex-row gap-8 reveal border border-gray-700"><img src="${novel.coverImage}" alt="小說封面" class="w-full md:w-1/3 h-auto object-cover rounded shadow-md" onerror="this.onerror=null;this.src='https://placehold.co/400x600/1f2937/d1d5db?text=Cover';"><div class="md:w-2/3"><div class="mb-8"><h4 class="text-2xl font-bold text-amber-400 mb-4 border-b-2 border-amber-500/30 pb-2">章節列表</h4><div class="space-y-3">${novel.contentList.filter(c => c.type === 'chapter').map((chap) => `<button class="chapter-btn text-left w-full p-3 bg-gray-700/50 rounded-md hover:bg-amber-500/20 transition-colors" data-index="${novel.contentList.indexOf(chap)}"><span class="font-bold text-white">${chap.title}</span><span class="block text-sm text-gray-400">${chap.subtitle}</span></button>`).join('')}</div></div><div><h4 class="text-2xl font-bold text-amber-400 mb-4 border-b-2 border-amber-500/30 pb-2">相關附件</h4><div class="space-y-3">${novel.contentList.filter(c => c.type === 'letter').map((letter) => `<button class="chapter-btn text-left w-full p-3 bg-gray-700/50 rounded-md hover:bg-amber-500/20 transition-colors" data-index="${novel.contentList.indexOf(letter)}"><span class="font-bold text-white">${letter.title}</span></button>`).join('')}</div></div></div></div><br><hr><br>`).join('');
+        container.innerHTML = novelsData.map(novel => `<h2 class="text-4xl font-bold text-center text-white mb-4 reveal">${novel.title}</h2><p class="text-lg text-center text-gray-400 mb-6 max-w-3xl mx-auto reveal">${novel.description}</p><div class="text-center"><a href="${novel.link}" target="_blank" rel="noopener noreferrer" class="text-2xl font-bold text-center mb-4 bg-amber-500 text-gray-900 rounded-md hover:bg-amber-400 transition-colors inline-block ">前往小說閱讀器 <i class="fas fa-external-link-alt ml-2"></i></div></a><div class="bg-gray-800 p-6 rounded-lg shadow-lg flex flex-col md:flex-row gap-8 reveal border border-gray-700"><img src="${novel.coverImage}" alt="小說封面" class="w-full md:w-1/3 h-auto object-cover rounded shadow-md" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x600/1f2937/d1d5db?text=Cover';"><div class="md:w-2/3"><div class="mb-8"><h4 class="text-2xl font-bold text-amber-400 mb-4 border-b-2 border-amber-500/30 pb-2">章節列表(看更多請前往小說閱讀器)</h4><div class="space-y-3">${novel.contentList.filter(c => c.type === 'chapter').map((chap) => `<button class="chapter-btn text-left w-full p-3 bg-gray-700/50 rounded-md hover:bg-amber-500/20 transition-colors" data-index="${novel.contentList.indexOf(chap)}"><span class="font-bold text-white">${chap.title}</span><span class="block text-sm text-gray-400">${chap.subtitle}</span></button>`).join('')}</div></div><div><h4 class="text-2xl font-bold text-amber-400 mb-4 border-b-2 border-amber-500/30 pb-2">相關附件</h4><div class="space-y-3">${novel.contentList.filter(c => c.type === 'letter').map((letter) => `<button class="chapter-btn text-left w-full p-3 bg-gray-700/50 rounded-md hover:bg-amber-500/20 transition-colors" data-index="${novel.contentList.indexOf(letter)}"><span class="font-bold text-white">${letter.title}</span></button>`).join('')}</div></div></div></div><br><hr><br>`).join('');
     }
 
     function renderContact() {
@@ -377,7 +423,6 @@
 
     // --- 初始化 ---
     window.initializePage = function() {
-        // 1. Render all HTML content first
         renderNav();
         renderHome();
         renderAboutMe();
@@ -388,7 +433,8 @@
         renderNovels();
         renderContact();
         
-        // 2. Then, attach all event listeners
+        lazyLoadVideos();
+
         addNavTriggerListeners('.nav-trigger');
         document.getElementById('mobile-menu-button').addEventListener('click', () => document.getElementById('mobile-menu').classList.toggle('hidden'));
         document.querySelectorAll('.modal').forEach(modal => {
@@ -413,6 +459,8 @@
                     if (response.ok) {
                         status.innerHTML = "<p class='text-green-400'>感謝您的訊息，我會盡快回覆！</p>";
                         form.reset();
+                        // 【優化】5秒後自動清除成功訊息
+                        setTimeout(() => { status.innerHTML = ''; }, 5000);
                     } else {
                         const responseData = await response.json();
                         status.innerHTML = responseData.errors ? `<p class='text-red-400'>${responseData.errors.map(e => e.message).join(", ")}</p>` : "<p class='text-red-400'>糟糕！訊息發送失敗。</p>";
@@ -423,7 +471,6 @@
             });
         }
 
-        // 3. Setup observers and initial state
         const skillsObserver = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
@@ -440,6 +487,16 @@
         }
         
         window.addEventListener('scroll', revealOnScroll);
+        
+        // 【優化】監聽瀏覽器的上一頁/下一頁事件
+        window.addEventListener('popstate', (event) => {
+            if (event.state && event.state.path) {
+                showSection(event.state.path, false);
+            } else {
+                showSection('#home', false);
+            }
+        });
+
         showSection(window.location.hash || '#home', false);
     }
 })();
