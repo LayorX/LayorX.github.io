@@ -80,7 +80,14 @@ const portfolioData = [
         images: ['data/images/RR頭像.jpg','data/images/RR黑暗.png'],
         desc: '為個人小說品牌 RR(亞爾)設計的視覺識別。',
         details: `<h3>設計理念</h3><p>標誌以陰陽圖為基礎，左半邊是代表科技與理性的電路板，右半邊是代表文學與感性的書頁。</p>`
-    }
+    },    {
+        title: '德州撲克戰績追蹤器',
+        category: 'web',
+        images: ['data/images/poker_showcase_01.jpg','data/images/poker_showcase_02.jpg'],
+        desc: '一個為德州撲克玩家設計的本地化戰績追蹤與分析工具。',
+        details: `<h3>專案目標</h3><p>提供一個無需註冊、資料完全本地儲存的解決方案，幫助玩家記錄每一場牌局的詳細數據，並透過視覺化圖表與 AI 分析，找出個人打法的優勢與待改進之處。</p><h3>核心功能</h3><ul><li>- 多帳戶管理系統</li><li>- 即時牌局計時與數據輸入</li><li>- 累積盈虧、All-in EV、不抽水EV等多維度圖表分析</li><li>- AI 智慧教練提供客製化文字分析</li><li>- CSV 資料匯入與匯出</li></ul>`,
+        externalLink: './poker.html'
+    },
 
 ];
 
