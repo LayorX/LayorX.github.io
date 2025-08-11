@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 女神製造所 v8.0 (模組化版)</title>
+    
+    <!-- 外部資源 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- 連結我們自己的樣式檔案 -->
+    <link rel="stylesheet" href="gstyle.css">
+</head>
+<body>
+    <!-- 背景 Canvas -->
+    <canvas id="background-canvas"></canvas>
+
+    <!-- 載入畫面 -->
+    <div id="loading-overlay">
+        <canvas id="loading-canvas"></canvas>
+        <div id="loading-content">
+             <div class="silhouette-container">
+                <!-- Silhouettes will be injected here by JS -->
+             </div>
+            <h2 id="loading-text" class="text-2xl font-bold text-gray-300 mt-4">喚醒沉睡的繆斯...</h2>
+        </div>
+    </div>
+
+    <!-- 彈出視窗 (Modals) -->
+    <div id="image-modal" class="modal">
+        <div id="image-modal-content" class="modal-content"><img id="modal-image" src="" alt="放大預覽"></div>
+    </div>
+    <div id="story-modal" class="modal">
+        <div id="story-modal-content" class="modal-content">
+            <h2 class="text-2xl font-bold text-center mb-4 bg-clip-text text-transparent bg-gradient-to-r from-pink-500 to-violet-500">女神的篇章</h2>
+            <div id="story-text" class="text-lg leading-relaxed mb-6 min-h-[100px]"></div>
+            <div class="text-center"><button id="tts-btn" class="btn-base btn-primary text-white font-bold py-2 px-6 rounded-full">聆聽故事</button></div>
+        </div>
+    </div>
+    <div id="slideshow-modal" class="modal">
+        <div id="slideshow-container">
+            <div id="favorites-empty-state">
+                <p class="text-2xl mb-4">💔</p>
+                <p>殿堂還是空的</p>
+                <p class="text-sm text-gray-500">快去收藏您心儀的女神吧！</p>
+            </div>
+            <img id="slideshow-image" src="">
+            <button id="slideshow-prev" class="slideshow-nav">&lt;</button>
+            <button id="slideshow-next" class="slideshow-nav">&gt;</button>
+            <div id="slideshow-top-controls">
+                <button id="slideshow-unfavorite" class="slideshow-control-btn">💔</button>
+                <button id="slideshow-close" class="slideshow-control-btn">&times;</button>
+            </div>
+        </div>
+        <div id="thumbnail-bar"></div>
+    </div>
+    
+    <!-- TTS 播放器 -->
+    <audio id="tts-audio"></audio>
+
+    <!-- 主要內容容器 -->
+    <div class="main-container">
+        <!-- 音樂控制 -->
+        <button id="music-control">
+            <svg id="music-on-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+            <svg id="music-off-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;"><path d="M9 18V5l12-2v13M1 1l22 22"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+        </button>
+
+        <!-- 頂部固定標頭 -->
+        <header class="sticky-header">
+            <div class="container mx-auto px-4">
+                <div class="text-center">
+                    <h1 class="text-3xl md:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-pink-500 to-violet-500 mb-2">
+                        AI 女神製造所 8.0
+                    </h1>
+                </div>
+                <div class="flex flex-col md:flex-row justify-center items-center gap-4 my-4">
+                    <div class="flex items-center gap-2">
+                        <label for="model-select" class="text-md text-gray-300">AI 圖片模型:</label>
+                        <select id="model-select" class="model-selector">
+                            <option value="gemini-flash">Gemini Flash (推薦)</option>
+                            <option value="imagen-3">Imagen 3 (高品質)</option>
+                        </select>
+                    </div>
+                    <button id="generate-one-btn" class="btn-base btn-primary text-white font-bold py-2 px-6 rounded-full text-lg">遇見一位</button>
+                    <button id="generate-four-btn" class="btn-base btn-secondary text-white font-bold py-2 px-6 rounded-full text-lg">遇見四位</button>
+                    <button id="favorites-btn" class="btn-base btn-primary text-white font-bold py-2 px-6 rounded-full text-lg">女神殿堂 ❤️ <span id="favorites-count">0</span></button>
+                </div>
+                <nav id="tab-navigation" class="flex justify-center border-b border-gray-700"></nav>
+            </div>
+        </header>
+        
+        <!-- 風格內容區塊 -->
+        <main id="style-sections" class="container mx-auto px-4"></main>
+    </div>
+    
+    <!-- 訊息提示框 -->
+    <div id="message-box"></div>
+
+    <!-- 連結我們自己的功能檔案 -->
+    <script type="module" src="gscript.js"></script>
+</body>
+</html>
