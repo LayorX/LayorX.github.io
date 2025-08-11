@@ -1,7 +1,13 @@
+// --- Firebase SDKs ---
+// 從 Firebase 的 CDN 引入我們需要的功能模組
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getStorage, ref, uploadString, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+
+
 // --- Global Scope & Constants ---
-// WARNING: Do not expose your API key in client-side code in a real application.
-// This should be handled by a backend server to keep it secure.
-const apiKey = "AIzaSyBl2ysPjnepR6exiYgeTnjim3IBEagTY8w"; // 為了安全，請將您的 API 金鑰移至後端處理
+const apiKey = "AIzaSyAslSVvJtBt0VWgFgec0WLc7je9YatU1_k"//"AIzaSyCOFOoppNQRakvBcKyKmWHEHpMBPODi9s4"; 
 const styles = [
     { id: 'beach-silhouette', title: '🏖️ 沙灘剪影', description: '黃昏、唯美、充滿想像的浪漫詩篇', prompt: "A beautiful Asian model as a silhouette against a sunset on a deserted beach. She wears a light, semi-transparent white dress. The mood is romantic and beautiful." },
     { id: 'morning-lazy', title: '☀️ 晨光私房', description: '慵懶、私密、屬於你的女友感瞬間', prompt: "A sexy and curvy Asian model with a lazy aura on a messy bed. She wears an oversized men's shirt, unbuttoned, with black stockings. Morning sun streams through blinds, creating a soft, intimate, and seductive atmosphere." },
@@ -41,6 +47,7 @@ const thumbnailBar = document.getElementById('thumbnail-bar');
 const musicControl = document.getElementById('music-control');
 const musicOnIcon = document.getElementById('music-on-icon');
 const musicOffIcon = document.getElementById('music-off-icon');
+const userInfoEl = document.getElementById('user-info');
 
 // --- State Management ---
 let isGenerating = false;
@@ -51,7 +58,11 @@ let favorites = [];
 let currentSlideshowIndex = 0;
 let musicPlayer = null;
 let isMusicPlaying = false;
-let db; // IndexedDB database instance
+let db; // Firestore database instance
+let auth; // Firebase Auth instance
+let storage; // Firebase Storage instance
+let userId; // Current user's ID
+let unsubscribeFavorites; // Listener for real-time updates
 
 // --- Sound Engine ---
 const sounds = {
@@ -68,30 +79,46 @@ const sounds = {
     like: () => sounds.mainSynth.triggerAttackRelease("A5", "32n"),
 };
 
-// --- IndexedDB Database Logic ---
-function initDB() {
-    return new Promise((resolve, reject) => {
-        const request = indexedDB.open("GoddessFactoryDB", 1);
+// --- Firebase Initialization and Auth ---
+async function initFirebase() {
+    try {
+        const firebaseConfig = window.firebaseConfig;
+        if (!firebaseConfig) {
+            throw new Error("Firebase config not found.");
+        }
+        const app = initializeApp(firebaseConfig);
+        auth = getAuth(app);
+        db = getFirestore(app);
+        storage = getStorage(app); // 初始化 Storage
+        console.log("Firebase initialized successfully.");
+        await handleAuthentication();
+    } catch (error) {
+        console.error("Firebase initialization failed:", error);
+        showMessage("無法連接至雲端伺服器", true);
+    }
+}
 
-        request.onerror = (event) => {
-            console.error("IndexedDB error:", event.target.error);
-            reject("Database error");
-        };
-
-        request.onupgradeneeded = (event) => {
-            const db = event.target.result;
-            if (!db.objectStoreNames.contains('favorites')) {
-                db.createObjectStore('favorites', { keyPath: 'id' });
+function handleAuthentication() {
+    return new Promise((resolve) => {
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                userId = user.uid;
+                console.log("User is signed in with UID:", userId);
+                userInfoEl.textContent = `雲端使用者 ID: ${userId}`;
+                loadFavoritesFromFirestore(); 
+                resolve(user);
+            } else {
+                console.log("No user signed in, attempting anonymous sign in...");
+                signInAnonymously(auth).catch((error) => {
+                    console.error("Anonymous sign in failed:", error);
+                    showMessage("無法取得雲端身份", true);
+                    resolve(null);
+                });
             }
-        };
-
-        request.onsuccess = (event) => {
-            db = event.target.result;
-            console.log("Database opened successfully.");
-            resolve(db);
-        };
+        });
     });
 }
+
 
 // --- Core Functions ---
 function showMessage(text, isError = false) {
@@ -104,14 +131,6 @@ function showMessage(text, isError = false) {
 async function initializeUI() {
     generateOneBtn.disabled = true;
     generateFourBtn.disabled = true;
-    
-    try {
-        await initDB();
-        await loadFavorites();
-    } catch (error) {
-        console.error("Failed to initialize database or load favorites:", error);
-        showMessage("無法載入收藏資料庫", true);
-    }
 
     styles.forEach((style, index) => {
         const tabButton = document.createElement('button');
@@ -134,6 +153,7 @@ async function initializeUI() {
     });
     
     addEventListeners();
+    await initFirebase(); 
     startLoadingSequence();
 }
 
@@ -185,20 +205,12 @@ function addEventListeners() {
 }
 
 function startLoadingSequence() {
-    // 您可以在此處自由增加或減少圖片數量
     const silhouettes = [
-        'data/images/g/g1.jpg',
-        'data/images/g/g2.jpg',
-        'data/images/g/g3.jpg',
-        'data/images/g/g4.jpg',
-        'data/images/g/g5.jpg',
-        'data/images/g/g6.jpg',
-        'data/images/g/g7.png',
-        'data/images/g/g8.png',
-        'data/images/g/g9.png', 
+        'data/images/g/g1.jpg', 'data/images/g/g2.jpg', 'data/images/g/g3.jpg',
+        'data/images/g/g4.jpg', 'data/images/g/g5.jpg', 'data/images/g/g6.jpg',
+        'data/images/g/g7.png', 'data/images/g/g8.png', 'data/images/g/g9.png', 
     ];
 
-    // 動態生成 HTML
     silhouetteContainer.innerHTML = silhouettes.map(src => `<img src="${src}" class="loading-silhouette" alt="Loading Muse">`).join('');
     
     const silhouetteElements = document.querySelectorAll('.loading-silhouette');
@@ -207,52 +219,30 @@ function startLoadingSequence() {
         return;
     }
 
-    // --- 動態動畫邏輯 ---
-    const animationStep = 3;      // 每張圖片輪播的間隔時間
-    const overlapTime = 0.5;      // 新舊圖片重疊(交叉淡化)的時間
-    const fadeInTime = 0.5;       // 單張圖片淡入所需時間
-
-    const totalDuration = silhouetteElements.length * animationStep; // 計算總動畫時間
-
-    // 根據總時長和設定，計算動畫關鍵影格的百分比
+    const animationStep = 3;
+    const overlapTime = 0.5;
+    const fadeInTime = 0.5;
+    const totalDuration = silhouetteElements.length * animationStep;
     const fadeInEndPercent = (fadeInTime / totalDuration) * 100;
     const fadeOutStartPercent = (animationStep / totalDuration) * 100;
     const fadeOutEndPercent = ((animationStep + overlapTime) / totalDuration) * 100;
 
-    // 建立關鍵影格的 CSS 規則字串
     const keyframes = `
     @keyframes graceful-crossfade {
-        0% {
-            opacity: 0;
-            transform: scale(0.98);
-        }
-        ${fadeInEndPercent}% {
-            opacity: 1;
-            transform: scale(1);
-        }
-        ${fadeOutStartPercent}% {
-            opacity: 1;
-            transform: scale(1);
-        }
-        ${fadeOutEndPercent}% {
-            opacity: 0;
-            transform: scale(0.98);
-        }
-        100% {
-            opacity: 0;
-            transform: scale(0.98);
-        }
+        0% { opacity: 0; transform: scale(0.98); }
+        ${fadeInEndPercent}% { opacity: 1; transform: scale(1); }
+        ${fadeOutStartPercent}% { opacity: 1; transform: scale(1); }
+        ${fadeOutEndPercent}% { opacity: 0; transform: scale(0.98); }
+        100% { opacity: 0; transform: scale(0.98); }
     }`;
 
-    // 將動態生成的 CSS 規則注入到 <head> 中
     const styleSheet = document.createElement("style");
     styleSheet.type = "text/css";
     styleSheet.innerText = keyframes;
     document.head.appendChild(styleSheet);
 
-    // 將動畫屬性應用到每一個圖片元素上
     silhouetteElements.forEach((el, index) => {
-        el.style.animationName = 'graceful-crossfade'; // 使用我們新建立的動畫
+        el.style.animationName = 'graceful-crossfade';
         el.style.animationDelay = `${index * animationStep}s`;
         el.style.animationDuration = `${totalDuration}s`;
     });
@@ -266,8 +256,8 @@ async function generateInitialImages() {
         loadingText.textContent = `正在遇見第 ${i + 1} 位女神... (${style.title})`;
         try {
             const imageUrl = await generateImageWithRetry(style.prompt);
-            const gallery = document.getElementById(`${style.id}-gallery`);
             const imageCard = createImageCard({ src: imageUrl, style: style, id: generateUniqueId() });
+            const gallery = document.getElementById(`${style.id}-gallery`);
             gallery.appendChild(imageCard);
         } catch(error) {
             console.error(`初始化圖片失敗 (${style.title}):`, error);
@@ -288,7 +278,8 @@ async function generateInitialImages() {
 }
 
 function createImageCard(imageData) {
-    const { src, style, id } = imageData;
+    const { src, style, id, imageUrl } = imageData;
+    const displaySrc = imageUrl || src; // 優先使用雲端 URL
     const imageCard = document.createElement('div');
     imageCard.className = 'image-card';
     imageCard.dataset.id = id;
@@ -302,7 +293,7 @@ function createImageCard(imageData) {
             </div>
             <div class="card-face card-back">
                 <div class="image-card-img-wrapper">
-                    <img src="${src}" alt="${style.title} AI 生成圖片" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x600/ff0000/ffffff?text=Load+Error';">
+                    <img src="${displaySrc}" alt="${style.title} AI 生成圖片" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x600/ff0000/ffffff?text=Load+Error';">
                 </div>
                 <div class="card-footer">
                      <button class="story-btn">生成故事 ✨</button>
@@ -331,7 +322,7 @@ function createImageCard(imageData) {
             e.stopPropagation();
             toggleFavorite(imageData, e.target.closest('.like-btn'));
         } else if (e.target.closest('.image-card-img-wrapper')) {
-            modalImage.src = src;
+            modalImage.src = displaySrc;
             imageModal.classList.add('show');
         }
     });
@@ -429,67 +420,105 @@ async function handleTTSGeneration(text) {
     }
 }
 
-// --- Favorites & Slideshow Logic (UPGRADED to IndexedDB) ---
+// --- Favorites & Slideshow Logic (UPGRADED to Firestore + Storage) ---
 async function toggleFavorite(imageData, btn) {
+    if (!userId) {
+        showMessage("無法收藏，使用者未登入雲端", true);
+        return;
+    }
     sounds.like();
+    // [FIX] 新增安全檢查，確保 btn 存在才操作
+    if (btn) btn.disabled = true;
 
     const index = favorites.findIndex(fav => fav.id === imageData.id);
     
     if (index > -1) {
         // --- Remove from favorites ---
-        const idToRemove = favorites[index].id;
-        favorites.splice(index, 1); // Optimistically update UI
-        if(btn) btn.classList.remove('liked');
-        updateFavoritesCount();
-
-        const tx = db.transaction('favorites', 'readwrite');
-        const store = tx.objectStore('favorites');
-        store.delete(idToRemove);
-        await tx.done;
-        console.log(`已從 IndexedDB 移除收藏： ${idToRemove}`);
-
+        const favoriteToRemove = favorites[index];
+        try {
+            await removeFavoriteFromFirestore(favoriteToRemove);
+            console.log(`已從 Firestore 移除收藏： ${favoriteToRemove.id}`);
+        } catch (error) {
+            console.error("從 Firestore 移除收藏失敗:", error);
+            showMessage("取消收藏失敗", true);
+        }
     } else {
         // --- Add to favorites ---
-        favorites.push(imageData); // Optimistically update UI
-        if(btn) btn.classList.add('liked');
-        updateFavoritesCount();
+        try {
+            showMessage("正在上傳至雲端...");
+            const downloadURL = await uploadImageToStorage(imageData.src, imageData.id);
+            console.log('圖片上傳成功，URL:', downloadURL);
 
-        const tx = db.transaction('favorites', 'readwrite');
-        const store = tx.objectStore('favorites');
-        store.put(imageData);
-        await tx.done;
-        console.log(`已新增收藏至 IndexedDB： ${imageData.id}`);
+            const favoriteData = {
+                id: imageData.id,
+                style: imageData.style,
+                imageUrl: downloadURL 
+            };
+
+            await saveFavoriteToFirestore(favoriteData);
+            showMessage("收藏成功！");
+            console.log(`已新增收藏至 Firestore： ${imageData.id}`);
+        } catch (error) {
+            console.error("新增收藏至 Firestore 失敗:", error);
+            showMessage("收藏失敗", true);
+        }
     }
+    // [FIX] 新增安全檢查，確保 btn 存在才操作
+    if (btn) btn.disabled = false;
 }
 
-async function loadFavorites() {
-    return new Promise((resolve, reject) => {
-        if (!db) {
-            reject("Database not initialized.");
-            return;
-        }
-        const tx = db.transaction('favorites', 'readonly');
-        const store = tx.objectStore('favorites');
-        const request = store.getAll();
+function loadFavoritesFromFirestore() {
+    if (!userId) return;
 
-        request.onsuccess = () => {
-            favorites = request.result;
-            updateFavoritesCount();
-            resolve();
-        };
+    if (unsubscribeFavorites) unsubscribeFavorites();
 
-        request.onerror = (event) => {
-            console.error("Failed to load favorites from DB:", event.target.error);
-            favorites = [];
-            updateFavoritesCount();
-            reject(event.target.error);
-        };
+    const favoritesCol = collection(db, 'users', userId, 'favorites');
+    
+    unsubscribeFavorites = onSnapshot(favoritesCol, (snapshot) => {
+        const newFavorites = [];
+        snapshot.forEach((doc) => {
+            newFavorites.push(doc.data());
+        });
+        favorites = newFavorites;
+        console.log("從 Firestore 同步了收藏列表:", favorites);
+        updateFavoritesCount();
+        
+        document.querySelectorAll('.image-card').forEach(card => {
+            const cardId = card.dataset.id;
+            const likeBtn = card.querySelector('.like-btn');
+            if (likeBtn) {
+                const isLiked = favorites.some(fav => fav.id === cardId);
+                likeBtn.classList.toggle('liked', isLiked);
+            }
+        });
+
+    }, (error) => {
+        console.error("監聽收藏時發生錯誤:", error);
+        showMessage("無法同步雲端收藏", true);
     });
 }
 
+async function saveFavoriteToFirestore(favoriteData) {
+    const favoriteRef = doc(db, 'users', userId, 'favorites', favoriteData.id);
+    await setDoc(favoriteRef, favoriteData);
+}
+
+async function removeFavoriteFromFirestore(favoriteToRemove) {
+    const favoriteRef = doc(db, 'users', userId, 'favorites', favoriteToRemove.id);
+    await deleteDoc(favoriteRef);
+
+    const imageRef = ref(storage, `users/${userId}/images/${favoriteToRemove.id}.png`);
+    try {
+        await deleteObject(imageRef);
+        console.log("成功從 Storage 刪除圖片:", favoriteToRemove.id);
+    } catch (error) {
+        console.warn("從 Storage 刪除圖片時發生錯誤 (可能是檔案不存在):", error);
+    }
+}
+
+
 function updateFavoritesCount() {
     if(favoritesCountEl) {
-        console.log(`正在更新收藏計數，目前總數為：${favorites.length}`);
         favoritesCountEl.textContent = favorites.length;
     }
 }
@@ -521,7 +550,7 @@ function showSlide(index) {
         return;
     };
     currentSlideshowIndex = index;
-    slideshowImage.src = favorites[index].src;
+    slideshowImage.src = favorites[index].imageUrl;
     slideshowImage.onload = () => slideshowImage.classList.add('visible');
     
     document.querySelectorAll('.thumbnail').forEach((thumb, i) => {
@@ -542,7 +571,7 @@ function renderThumbnails() {
 
     favorites.forEach((fav, index) => {
         const thumb = document.createElement('img');
-        thumb.src = fav.src;
+        thumb.src = fav.imageUrl;
         thumb.className = 'thumbnail';
         thumb.dataset.index = index;
         thumb.onclick = () => {
@@ -557,6 +586,7 @@ async function unfavoriteCurrentSlide() {
     if (favorites.length === 0) return;
     const currentFavorite = favorites[currentSlideshowIndex];
     
+    // [FIX] 這裡傳入 null 是造成錯誤的原因，但我們已在 toggleFavorite 中修正
     await toggleFavorite(currentFavorite, null);
 
     const cardInGallery = document.querySelector(`.image-card[data-id='${currentFavorite.id}']`);
@@ -567,7 +597,6 @@ async function unfavoriteCurrentSlide() {
     if (favorites.length === 0) {
         slideshowModal.classList.remove('show');
     } else {
-        // Adjust index before re-rendering
         if (currentSlideshowIndex >= favorites.length) {
             currentSlideshowIndex = favorites.length - 1;
         }
@@ -725,6 +754,22 @@ function pcmToWav(pcmData, sampleRate) {
     }
     return new Blob([view], { type: 'audio/wav' });
 }
+
+// ✨ 新增：上傳圖片至 Firebase Storage 的輔助函式
+async function uploadImageToStorage(base64String, imageId) {
+    if (!userId) throw new Error("User not authenticated for upload.");
+    // 建立一個指向 Storage 的引用路徑，例如： 'users/USER_ID/images/IMAGE_ID.png'
+    const storageRef = ref(storage, `users/${userId}/images/${imageId}.png`);
+    
+    // 使用 uploadString 將 Base64 資料上傳
+    const snapshot = await uploadString(storageRef, base64String, 'data_url');
+    console.log('Uploaded a data_url string!', snapshot);
+
+    // 取得上傳後檔案的公開下載 URL
+    const downloadURL = await getDownloadURL(snapshot.ref);
+    return downloadURL;
+}
+
 
 const canvas = document.getElementById('background-canvas');
 const ctx = canvas.getContext('2d');

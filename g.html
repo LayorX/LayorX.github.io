@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI 女神製造所 v8.0 (模組化版)</title>
+    <title>AI 女神製造所 v10.0 (圖檔分離版)</title>
     
     <!-- 外部資源 -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -14,6 +14,33 @@
     
     <!-- 連結我們自己的樣式檔案 -->
     <link rel="stylesheet" href="gstyle.css">
+
+    <!-- 
+      🔥🔥🔥 Firebase SDKs 🔥🔥🔥
+      我們在此處加入 Firebase 的核心程式庫，讓專案具備與雲端溝通的能力。
+    -->
+    <script type="module">
+      // 確保這些 SDK 的版本與 gscript.js 中的 import 語句一致
+      // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDbWa8TWru1J048WK8msVBaC9JhhhtuhJw",
+            authDomain: "goddess-chance.firebaseapp.com",
+            projectId: "goddess-chance",
+            storageBucket: "goddess-chance.firebasestorage.app",
+            messagingSenderId: "440990936442",
+            appId: "1:440990936442:web:37d864cd13112f14913ac3",
+            measurementId: "G-3HCCT2PFXX"
+        };
+      // 我們將設定掛載到 window 物件上，方便 gscript.js 存取
+      window.firebaseConfig = firebaseConfig;
+    </script>
+    <script type="module" src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
+    <script type="module" src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"></script>
+    <script type="module" src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"></script>
+    <!-- ✨ 新增 Firebase Storage SDK ✨ -->
+    <script type="module" src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js"></script>
+
 </head>
 <body>
     <!-- 背景 Canvas -->
@@ -26,7 +53,7 @@
              <div class="silhouette-container">
                 <!-- Silhouettes will be injected here by JS -->
              </div>
-            <h2 id="loading-text" class="text-2xl font-bold text-gray-300 mt-4">喚醒沉睡的繆斯...</h2>
+            <h2 id="loading-text" class="text-2xl font-bold text-gray-300 mt-4">正在連接雲端...</h2>
         </div>
     </div>
 
@@ -75,7 +102,7 @@
             <div class="container mx-auto px-4">
                 <div class="text-center">
                     <h1 class="text-3xl md:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-pink-500 to-violet-500 mb-2">
-                        AI 女神製造所 8.0
+                        AI 女神製造所 10.0
                     </h1>
                 </div>
                 <div class="flex flex-col md:flex-row justify-center items-center gap-4 my-4">
@@ -91,6 +118,7 @@
                     <button id="favorites-btn" class="btn-base btn-primary text-white font-bold py-2 px-6 rounded-full text-lg">女神殿堂 ❤️ <span id="favorites-count">0</span></button>
                 </div>
                 <nav id="tab-navigation" class="flex justify-center border-b border-gray-700"></nav>
+                 <div id="user-info" class="text-center text-xs text-gray-500 py-1"></div>
             </div>
         </header>
         
