@@ -1,12 +1,12 @@
 // main.js - 專案總指揮
 
 // --- 模組引入 ---
-import { apiKey, styles, randomKeywords, gameSettings, apiSettings, uiSettings } from './gconfig.js';
+import { appInfo, firebaseSettings, apiKey, styles, randomKeywords_day, randomKeywords_night, gameSettings, apiSettings, uiSettings, soundSettings, uiMessages } from './gconfig.js';
 import { 
     initFirebase, handleAuthentication, getCurrentUserId,
     listenToFavorites, saveFavorite, removeFavorite, uploadImage,
     shareToPublic,
-    loadGachaStateFromDB, saveGachaStateToDB, getRandomGoddessFromDB,
+    loadGachaStateFromDB, saveGachaStateToDB, getRandomGoddessFromDB, getRandomGoddessesFromDB,
     saveTtsStateToDB, loadTtsStateFromDB
 } from './gfirebase.js';
 import {
@@ -15,6 +15,9 @@ import {
 } from './gui.js';
 
 // --- DOM Elements ---
+const headerTitleEl = document.getElementById('header-title');
+const storyModalTitleEl = document.getElementById('story-modal-title');
+const gachaModalTitleEl = document.getElementById('gacha-modal-title');
 const loadingOverlay = document.getElementById('loading-overlay');
 const loadingText = document.getElementById('loading-text');
 const silhouetteContainer = document.querySelector('.silhouette-container');
@@ -31,14 +34,21 @@ const ttsLimitInfo = document.getElementById('tts-limit-info');
 const generateOneBtn = document.getElementById('generate-one-btn');
 const generateFourBtn = document.getElementById('generate-four-btn');
 const favoritesBtn = document.getElementById('favorites-btn');
+const favoritesBtnTextEl = document.getElementById('favorites-btn-text');
 const slideshowModal = document.getElementById('slideshow-modal');
 const slideshowImage = document.getElementById('slideshow-image');
 const thumbnailBar = document.getElementById('thumbnail-bar');
-const musicControl = document.getElementById('music-control');
-const musicOnIcon = document.getElementById('music-on-icon');
-const musicOffIcon = document.getElementById('music-off-icon');
+const soundControl = document.getElementById('sound-control');
+const soundOnIcon = document.getElementById('sound-on-icon');
+const soundOffIcon = document.getElementById('sound-off-icon');
 const userInfoEl = document.getElementById('user-info');
 const modelSelect = document.getElementById('model-select');
+const themeSwitchBtn = document.getElementById('theme-switch-btn');
+const sunIcon = document.getElementById('sun-icon');
+const moonIcon = document.getElementById('moon-icon');
+const contactModal = document.getElementById('contact-modal');
+const contactModalContent = document.getElementById('contact-modal-content');
+const appFooter = document.getElementById('app-footer');
 // Gacha Elements
 const gachaBtn = document.getElementById('gacha-btn');
 const gachaModal = document.getElementById('gacha-modal');
@@ -58,17 +68,14 @@ let activeStyleId = styles[0].id;
 let isStoryGenerating = false;
 let isTtsGenerating = false;
 let favorites = [];
-let publicGoddesses = [];
-let currentSlideshowIndex = 0;
-let musicPlayer = null;
 let unsubscribeFavorites;
 let gachaState = { count: gameSettings.dailyGachaCount, lastDrawDate: null };
 let ttsState = { count: gameSettings.dailyTtsCount, lastListenDate: null };
 let ownGoddessStreak = 0;
-let needsRefreshAfterGacha = false;
-// ✨ NEW: 用於滑動操作的狀態變數
 let touchStartX = 0;
 let touchEndX = 0;
+let currentSlideshowIndex = 0;
+let currentTheme = 'night'; 
 
 // --- Sound Engine ---
 const sounds = {
@@ -89,23 +96,28 @@ const sounds = {
         synth.triggerAttackRelease(["C4", "E4", "G4", "C5"], "8n", now);
         synth.triggerAttackRelease(["F4", "A4", "C5", "E5"], "8n", now + 0.2);
         synth.triggerAttackRelease(["G4", "B4", "D5", "G5"], "4n", now + 0.4);
-    }
+    },
+    toDay: () => new Tone.AMSynth().toDestination().triggerAttackRelease("C4", "2n"),
+    toNight: () => new Tone.FMSynth().toDestination().triggerAttackRelease("G5", "8n")
 };
 
 // --- Main Initialization Flow ---
 window.onload = () => {
+    setupAppInfo();
+    window.firebaseConfig = firebaseSettings;
+
     initializeUI();
     startLoadingSequence();
     
     if (initFirebase()) {
         handleAuthentication(onUserSignedIn);
     } else {
-        showMessage("Firebase 初始化失敗，請檢查設定", true);
+        showMessage(uiMessages.errors.firebaseInit, true);
         loadingOverlay.classList.add('hidden');
         updateGenerateButtonsState(activeStyleId);
     }
     
-    initParticles();
+    initParticles(currentTheme);
     animateParticles();
     const loadingCanvas = document.getElementById('loading-canvas');
     resizeLoadingCanvas(loadingCanvas);
@@ -114,6 +126,14 @@ window.onload = () => {
         petals.push(new Petal(loadingCanvas)); 
     }
     animateLoading(loadingCanvas, petals, loadingOverlay);
+
+    setTimeout(() => {
+        loadingText.textContent = uiMessages.loading.starting;
+        setTimeout(() => {
+            loadingOverlay.classList.add('hidden');
+            updateGenerateButtonsState(activeStyleId);
+        }, 500);
+    }, uiSettings.loadingScreenDuration);
 };
 
 function onUserSignedIn(uid, error) {
@@ -123,7 +143,7 @@ function onUserSignedIn(uid, error) {
         loadGachaState();
         loadTtsState();
     } else {
-        showMessage("無法連接雲端，部分功能將受限", true);
+        showMessage(uiMessages.errors.cloudConnect, true);
         console.error("Authentication Error:", error);
         generateInitialImages();
     }
@@ -132,7 +152,7 @@ function onUserSignedIn(uid, error) {
 let hasInitialImagesGenerated = false; 
 function onFavoritesUpdate(newFavorites, err) {
     if (err) {
-        showMessage("無法同步雲端收藏", true);
+        showMessage(uiMessages.errors.syncFavorites, true);
         return;
     }
     favorites = newFavorites;
@@ -168,6 +188,9 @@ function onFavoritesUpdate(newFavorites, err) {
 function initializeUI() {
     generateOneBtn.disabled = true;
     generateFourBtn.disabled = true;
+
+    Tone.Master.volume.value = soundSettings.masterVolume;
+    setupUIText();
 
     styles.forEach((style, index) => {
         const tabButton = document.createElement('button');
@@ -213,10 +236,6 @@ function initializeUI() {
 function addEventListeners() {
     document.querySelectorAll('.tab-button').forEach(button => {
         button.addEventListener('click', () => {
-            if (needsRefreshAfterGacha) {
-                location.reload();
-                return;
-            }
             sounds.tab();
             activeStyleId = button.dataset.styleId;
             document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
@@ -238,7 +257,10 @@ function addEventListeners() {
     generateOneBtn.addEventListener('click', () => handleImageGeneration(1));
     generateFourBtn.addEventListener('click', () => handleImageGeneration(4));
     favoritesBtn.addEventListener('click', openSlideshow);
-    musicControl.addEventListener('click', toggleMusic);
+    soundControl.addEventListener('click', toggleMute);
+    themeSwitchBtn.addEventListener('click', toggleTheme);
+    
+    // ✨ FIX: 移除對 contactLink 的直接監聽，因為它是由 setupFooter 動態產生的
 
     slideshowModal.addEventListener('click', (e) => {
         if(e.target === slideshowModal) slideshowModal.classList.remove('show');
@@ -266,9 +288,6 @@ function addEventListeners() {
         try {
             await Tone.start();
             console.log("Audio context started by user gesture.");
-            if (!musicPlayer) {
-                toggleMusic();
-            }
             document.body.removeEventListener('click', startAudio);
             document.body.removeEventListener('touchend', startAudio);
         } catch (e) {
@@ -279,7 +298,6 @@ function addEventListeners() {
     document.body.addEventListener('click', startAudio);
     document.body.addEventListener('touchend', startAudio);
 
-    // ✨ NEW: 新增鍵盤與滑動事件監聽
     document.addEventListener('keydown', handleKeydown);
     slideshowContainer.addEventListener('touchstart', handleTouchStart, false);
     slideshowContainer.addEventListener('touchmove', handleTouchMove, false);
@@ -293,14 +311,14 @@ function updateGenerateButtonsState(styleId) {
 }
 
 function startLoadingSequence() {
-    const silhouettes = uiSettings.loadingSilhouettes;
+    const silhouettes = [...uiSettings.loadingSilhouettes].sort(() => Math.random() - 0.5);
 
     silhouetteContainer.innerHTML = silhouettes.map(src => `<img src="${src}" class="loading-silhouette" alt="Loading Muse">`).join('');
     
     const silhouetteElements = document.querySelectorAll('.loading-silhouette');
     if (silhouetteElements.length === 0) return;
 
-    const animationStep = 3;
+    const animationStep = uiSettings.loadingAnimationStep;
     const totalDuration = silhouetteElements.length * animationStep;
 
     silhouetteElements.forEach((el, index) => {
@@ -312,61 +330,44 @@ function startLoadingSequence() {
 
 // --- Core Logic Handlers ---
 async function generateInitialImages() {
-    if (favorites.length < 4) {
-       await generateNewUserImages();
-    }
-    
     for (const fav of favorites) {
-        if (!fav || !fav.style || !fav.style.id || !fav.imageUrl) {
-            console.warn("跳過無效的收藏項目:", fav);
-            continue;
-        }
+        if (!fav || !fav.style || !fav.style.id || !fav.imageUrl) continue;
         const gallery = document.getElementById(`${fav.style.id}-gallery`);
         if (gallery) {
-            const imageData = {
-                src: fav.imageUrl,
-                style: fav.style,
-                id: fav.id,
-                isLiked: true,
-                imageUrl: fav.imageUrl
-            };
+            const imageData = { ...fav, src: fav.imageUrl, isLiked: true };
             const imageCard = createImageCard(imageData, getCardHandlers());
             gallery.appendChild(imageCard);
         }
     }
-    
-    loadingText.textContent = '邂逅即將開始...';
-    setTimeout(() => {
-        loadingOverlay.classList.add('hidden');
-        updateGenerateButtonsState(activeStyleId);
-    }, 1000);
-}
 
-async function generateNewUserImages() {
-    const stylesToGenerate = styles.filter(s => s.id !== 'vip-exclusive');
-    for (const style of stylesToGenerate) {
-        loadingText.textContent = `正在遇見 ${style.title} 女神...`;
+    if (favorites.length < 4) {
+        loadingText.textContent = uiMessages.loading.summoning;
         try {
-            const base64Src = await generateImageWithRetry(style.prompt);
-            if (!base64Src) continue; 
-            const newId = generateUniqueId();
-            const imageData = { 
-                src: base64Src, 
-                style: style, 
-                id: newId,
-                isLiked: favorites.some(fav => fav.id === newId)
-            };
-            const imageCard = createImageCard(imageData, getCardHandlers());
-            document.getElementById(`${style.id}-gallery`).appendChild(imageCard);
-        } catch(error) {
-            console.error(`初始化圖片失敗 (${style.title}):`, error);
-            showMessage(`初始化 ${style.title} 風格失敗`, true);
-        } finally {
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            const randomGoddesses = await getRandomGoddessesFromDB(4);
+            if (randomGoddesses.length === 0 && favorites.length === 0) {
+                showMessage(uiMessages.gacha.poolEmpty, true);
+            }
+
+            for (const goddess of randomGoddesses) {
+                if (document.querySelector(`.image-card[data-id="${goddess.id}"]`)) continue;
+                
+                const gallery = document.getElementById(`${goddess.style.id}-gallery`);
+                if (gallery) {
+                    const imageData = {
+                        ...goddess,
+                        src: goddess.imageUrl,
+                        isLiked: favorites.some(fav => fav.id === goddess.id)
+                    };
+                    const imageCard = createImageCard(imageData, getCardHandlers());
+                    gallery.appendChild(imageCard);
+                }
+            }
+        } catch (error) {
+            console.error("Failed to fetch initial random goddesses:", error);
+            showMessage(error.message, true);
         }
     }
 }
-
 
 async function handleImageGeneration(count = 1) {
     if (isGenerating) return;
@@ -436,7 +437,7 @@ async function handleStoryGeneration(style) {
     updateTtsUi();
 
     try {
-        const storyPrompt = `以繁體中文，為一張風格為「${style.title}」的女性照片融合${style.description}，寫一段約150字的短篇故事或情境描述。請用充滿想像力且感性的筆觸，描述她的背景、心情或一個正在發生的瞬間。`;
+        const storyPrompt = apiSettings.prompts.story(style.title, style.description);
         const story = await callTextGenerationAPI(storyPrompt);
         storyTextEl.textContent = story;
         ttsBtn.onclick = () => {
@@ -444,7 +445,7 @@ async function handleStoryGeneration(style) {
         };
     } catch (error) {
         console.error('故事生成失敗:', error);
-        storyTextEl.textContent = '故事的靈感暫時枯竭了，請稍後再試。';
+        storyTextEl.textContent = uiMessages.errors.storyFailed;
         ttsBtn.disabled = true;
     } finally {
         isStoryGenerating = false;
@@ -458,7 +459,8 @@ async function handleTTSGeneration(text) {
     ttsBtn.disabled = true;
     
     try {
-        const { audioData, mimeType } = await callTTSAPI(`Say in a gentle and alluring female voice: ${text}`);
+        const ttsPrompt = apiSettings.prompts.tts(text);
+        const { audioData, mimeType } = await callTTSAPI(ttsPrompt);
         ttsState.count--;
         await saveTtsState();
         updateTtsUi();
@@ -476,7 +478,7 @@ async function handleTTSGeneration(text) {
 
     } catch (error) {
         console.error('TTS 生成失敗:', error);
-        showMessage('語音功能暫時無法使用', true);
+        showMessage(uiMessages.errors.ttsFailed, true);
         resetTtsButtons();
     } finally {
         isTtsGenerating = false;
@@ -498,16 +500,15 @@ async function toggleFavorite(imageData, btn) {
     if (index > -1) {
         try {
             await removeFavorite(favorites[index]);
-            needsRefreshAfterGacha = true;
         } catch (error) {
             console.error("Failed to remove favorite:", error);
-            showMessage("取消收藏失敗", true);
+            showMessage(uiMessages.favorites.removeFailure, true);
         }
     } else {
         try {
             let favoriteData;
             if (imageData.src && imageData.src.startsWith('data:image')) {
-                showMessage("正在上傳至雲端...");
+                showMessage(uiMessages.favorites.uploading);
                 const downloadURL = await uploadImage(imageData.src, imageData.id);
                 favoriteData = { id: imageData.id, style: imageData.style, imageUrl: downloadURL };
             } else {
@@ -519,12 +520,21 @@ async function toggleFavorite(imageData, btn) {
             }
             
             await saveFavorite(favoriteData);
-            needsRefreshAfterGacha = true;
-            showMessage("收藏成功！");
+            showMessage(uiMessages.favorites.addSuccess);
+
+            const cardExists = document.querySelector(`.image-card[data-id="${imageData.id}"]`);
+            if (!cardExists && imageData.style && imageData.style.id) {
+                const gallery = document.getElementById(`${imageData.style.id}-gallery`);
+                if (gallery) {
+                    const newCardData = { ...imageData, isLiked: true };
+                    const newCard = createImageCard(newCardData, getCardHandlers());
+                    gallery.appendChild(newCard);
+                }
+            }
 
         } catch (error) {
             console.error("Failed to save favorite:", error);
-            showMessage(`收藏失敗: ${error.message}`, true);
+            showMessage(`${uiMessages.favorites.addFailure}: ${error.message}`, true);
         }
     }
     if (btn) btn.disabled = false;
@@ -534,7 +544,7 @@ async function shareFavoriteToPublicHandler(imageData, btn) {
     const favoriteData = favorites.find(fav => fav.id === imageData.id);
 
     if (!favoriteData || !favoriteData.imageUrl) {
-        showMessage("請先收藏此女神才能分享！", true);
+        showMessage(uiMessages.favorites.shareFirst, true);
         return;
     }
 
@@ -542,12 +552,12 @@ async function shareFavoriteToPublicHandler(imageData, btn) {
     try {
         const result = await shareToPublic(favoriteData);
         if (result.alreadyExists) {
-            showMessage("這位女神已經在公開殿堂中了！");
+            showMessage(uiMessages.gacha.alreadyShared);
         } else {
             gachaState.count++;
             await saveGachaStateToDB(gachaState);
             updateGachaUI();
-            showMessage("分享成功！獲得一次額外召喚機會！", false);
+            showMessage(uiMessages.gacha.shareSuccess);
         }
         btn.classList.add('shared');
     } catch (error) {
@@ -560,7 +570,7 @@ async function shareFavoriteToPublicHandler(imageData, btn) {
 
 function openSlideshow() {
     if (favorites.length === 0) {
-        showMessage('您的女神殿堂還是空的喔！');
+        showMessage(uiMessages.favorites.empty);
         favoritesEmptyState.style.display = 'flex';
         slideshowContainer.style.display = 'none'; 
         slideshowModal.classList.add('show');
@@ -583,7 +593,7 @@ function navigateSlideshow(direction) {
     setTimeout(() => {
         currentSlideshowIndex = (currentSlideshowIndex + direction + favorites.length) % favorites.length;
         showSlide(currentSlideshowIndex);
-    }, 250);
+    }, uiSettings.slideshowTransitionSpeed);
 }
 
 function showSlide(index) {
@@ -594,7 +604,7 @@ function showSlide(index) {
 
     const slideData = favorites[index];
     if (!slideData || !slideData.imageUrl) {
-        showMessage('這張圖片的資料似乎遺失了', true);
+        showMessage(uiMessages.errors.imageLoad, true);
         navigateSlideshow(1); 
         return;
     }
@@ -643,10 +653,10 @@ async function unfavoriteCurrentSlide() {
     
     try {
         await removeFavorite(currentFavorite);
-        showMessage("已從殿堂移除。");
+        showMessage(uiMessages.favorites.removeSuccess);
     } catch (error) {
         console.error("Failed to remove favorite from DB:", error);
-        showMessage("從雲端取消收藏失敗，請稍後重試", true);
+        showMessage(uiMessages.favorites.removeFailure, true);
     }
 }
 
@@ -674,9 +684,8 @@ function updateGachaUI() {
         gachaDrawBtn.textContent = "明日再來";
         gachaUnlockInfo.style.display = 'block';
     } else {
+        gachaDrawBtn.textContent = `${uiMessages.buttons.gachaDraw} (剩餘 ${gachaState.count} 次)`;
         gachaDrawBtn.disabled = false;
-        gachaDrawBtn.textContent = `召喚 (剩餘 ${gachaState.count} 次)`;
-        gachaUnlockInfo.style.display = 'none';
     }
 }
 
@@ -705,8 +714,6 @@ async function drawGacha() {
             } else {
                 showMessage(`抽到自己的女神！再來 ${REQUIRED_STREAK - ownGoddessStreak} 次可獲獎勵！`);
             }
-        } else {
-            ownGoddessStreak = 0;
         }
 
         const imageData = {
@@ -726,8 +733,8 @@ async function drawGacha() {
         updateGachaUI();
     } catch (error) {
         console.error("Gacha draw failed:", error);
-        showMessage(`召喚失敗: ${error.message}`, true);
-        gachaResultContainer.innerHTML = `<div class="gacha-placeholder"><p>召喚失敗...</p><p class="text-xs text-gray-400 mt-2">${error.message}</p></div>`;
+        showMessage(`${uiMessages.gacha.drawFailed}: ${error.message}`, true);
+        gachaResultContainer.innerHTML = `<div class="gacha-placeholder"><p>${uiMessages.gacha.drawFailed}...</p><p class="text-xs text-gray-400 mt-2">${error.message}</p></div>`;
     } finally {
         if (gachaState.count > 0) gachaDrawBtn.disabled = false;
     }
@@ -774,11 +781,11 @@ async function checkTtsCount() {
 function updateTtsUi() {
     if (ttsState.count <= 0) {
         ttsBtn.disabled = true;
-        ttsBtn.textContent = "明日再來";
+        ttsBtn.textContent = uiMessages.buttons.ttsLimit;
         ttsLimitInfo.style.display = 'block';
     } else {
         ttsBtn.disabled = false;
-        ttsBtn.textContent = "聆聽故事";
+        ttsBtn.textContent = uiMessages.buttons.ttsPlay;
         ttsLimitInfo.style.display = 'none';
     }
 }
@@ -804,8 +811,10 @@ async function generateImageWithRetry(prompt) {
     const retries = apiSettings.imageGenerationRetries;
     const delay = apiSettings.imageGenerationDelay;
     
-    const enhancedPrompt = `${prompt}, ${getRandomItems(randomKeywords.hair, 1)}, ${getRandomItems(randomKeywords.outfit, 2).join(', ')}, ${getRandomItems(randomKeywords.setting, 1)}, ${getRandomItems(randomKeywords.artStyle, 1)}, ${getRandomItems(randomKeywords.bodyDetails, 2).join(', ')}, ${getRandomItems(randomKeywords.expression, 1)}, ${getRandomItems(randomKeywords.mood, 1)}.`;
-    const fullPrompt = `masterpiece, best quality, ultra-detailed, photorealistic, 8k, sharp focus, detailed beautiful face. ${enhancedPrompt} aspect ratio 2:3, raw style. Negative prompt: ugly, blurry, bad anatomy, disfigured, poorly drawn face, mutation, mutated, extra limb, dull eyes, bad hands, missing fingers, low quality, jpeg artifacts, text, watermark, signature, cartoon, 3d, deformed.`;
+    const keywords = currentTheme === 'day' ? randomKeywords_day : randomKeywords_night;
+    
+    const enhancedPrompt = `${prompt}, ${getRandomItems(keywords.hair, 1)}, ${getRandomItems(keywords.outfit, 2).join(', ')}, ${getRandomItems(keywords.setting, 1)}, ${getRandomItems(keywords.artStyle, 1)}, ${getRandomItems(keywords.bodyDetails, 2).join(', ')}, ${getRandomItems(keywords.expression, 1)}, ${getRandomItems(keywords.mood, 1)}.`;
+    const fullPrompt = `${apiSettings.prompts.imagePrefix} ${enhancedPrompt} ${apiSettings.prompts.imageSuffix} Negative prompt: ${apiSettings.prompts.negativePrompt}`;
 
     for (let i = 0; i < retries; i++) {
         try {
@@ -944,7 +953,7 @@ async function callTTSAPI(text) {
 }
 
 
-// --- Utility & Music Player ---
+// --- Utility Functions ---
 function base64ToArrayBuffer(base64) {
     const binaryString = window.atob(base64);
     const len = binaryString.length;
@@ -957,18 +966,16 @@ function base64ToArrayBuffer(base64) {
 
 function pcmToWav(pcmData, sampleRate) {
     const numChannels = 1;
-    const bytesPerSample = 2; // 16-bit PCM
+    const bytesPerSample = 2;
     const blockAlign = numChannels * bytesPerSample;
     const byteRate = sampleRate * blockAlign;
     const dataSize = pcmData.length * bytesPerSample;
     const buffer = new ArrayBuffer(44 + dataSize);
     const view = new DataView(buffer);
 
-    // RIFF header
     view.setUint32(0, 0x52494646, false); // "RIFF"
     view.setUint32(4, 36 + dataSize, true);
     view.setUint32(8, 0x57415645, false); // "WAVE"
-    // "fmt " sub-chunk
     view.setUint32(12, 0x666d7420, false); // "fmt "
     view.setUint32(16, 16, true);
     view.setUint16(20, 1, true);
@@ -977,7 +984,6 @@ function pcmToWav(pcmData, sampleRate) {
     view.setUint32(28, byteRate, true);
     view.setUint16(32, blockAlign, true);
     view.setUint16(34, bytesPerSample * 8, true);
-    // "data" sub-chunk
     view.setUint32(36, 0x64617461, false); // "data"
     view.setUint32(40, dataSize, true);
 
@@ -989,27 +995,94 @@ function pcmToWav(pcmData, sampleRate) {
     return new Blob([view], { type: 'audio/wav' });
 }
 
-function toggleMusic() {
-    if (!musicPlayer) {
-        musicPlayer = new Tone.Player({
-            url: gameSettings.musicPath,
-            loop: true,
-            volume: -12,
-        }).toDestination();
-    }
+function setupAppInfo() {
+    document.title = `${appInfo.title} v${appInfo.version}`;
+    headerTitleEl.textContent = `${appInfo.title} v${appInfo.version}`;
+    setupIcons();
+    setupFooter();
+}
+
+function setupIcons() {
+    const head = document.head;
+    const icons = appInfo.icons;
     
-    if (musicPlayer.state === 'started') {
-        musicPlayer.stop();
-        musicOnIcon.style.display = 'none';
-        musicOffIcon.style.display = 'block';
+    const createLink = (rel, href, sizes, type) => {
+        const link = document.createElement('link');
+        link.rel = rel;
+        link.href = href;
+        if (sizes) link.sizes = sizes;
+        if (type) link.type = type;
+        head.appendChild(link);
+    };
+
+    createLink('apple-touch-icon', icons.appleTouchIcon, '180x180');
+    createLink('icon', icons.favicon32, '32x32', 'image/png');
+    createLink('icon', icons.favicon16, '16x16', 'image/png');
+    createLink('manifest', icons.manifest);
+    createLink('shortcut icon', icons.shortcutIcon);
+}
+
+function setupUIText() {
+    loadingText.textContent = uiMessages.loading.connecting;
+    gachaModalTitleEl.textContent = uiMessages.gachaModalTitle;
+    storyModalTitleEl.textContent = uiMessages.storyModalTitle;
+    generateOneBtn.textContent = uiMessages.buttons.generateOne;
+    generateFourBtn.textContent = uiMessages.buttons.generateFour;
+    if (favoritesBtnTextEl) {
+        favoritesBtnTextEl.textContent = uiMessages.buttons.favorites;
+    }
+    gachaBtn.textContent = uiMessages.buttons.gacha;
+    ttsBtn.textContent = uiMessages.buttons.ttsPlay;
+    ttsStopBtn.textContent = uiMessages.buttons.ttsStop;
+    gachaDrawBtn.textContent = uiMessages.buttons.gachaDraw;
+    favoritesEmptyState.querySelector('p:nth-child(2)').textContent = uiMessages.favorites.emptyTitle;
+    favoritesEmptyState.querySelector('p:nth-child(3)').textContent = uiMessages.favorites.emptySubtitle;
+    gachaResultContainer.querySelector('.gacha-placeholder p:nth-child(2)').textContent = uiMessages.gacha.placeholder;
+}
+
+// ✨ FIX: 修正頁尾設定函數
+function setupFooter() {
+    const { copyrightYear, authorName, authorLink } = appInfo.footer;
+    appFooter.innerHTML = `
+        © ${copyrightYear} <a href="${authorLink}" target="_blank" class="hover:underline">${authorName}</a>. All Rights Reserved.
+        <span class="mx-2">|</span>
+        <a href="#" id="contact-link" class="hover:underline">聯絡我們</a>
+    `;
+    document.getElementById('contact-link').addEventListener('click', openContactModal);
+}
+
+
+function toggleMute() {
+    Tone.Master.mute = !Tone.Master.mute;
+    if (Tone.Master.mute) {
+        soundOnIcon.style.display = 'none';
+        soundOffIcon.style.display = 'block';
     } else {
-        musicPlayer.start();
-        musicOnIcon.style.display = 'block';
-        musicOffIcon.style.display = 'none';
+        soundOnIcon.style.display = 'block';
+        soundOffIcon.style.display = 'none';
     }
 }
 
-// ✨ NEW: 新增處理鍵盤與滑動操作的函數
+function toggleTheme() {
+    if (currentTheme === 'night') {
+        sounds.toDay();
+        document.body.classList.remove('theme-night');
+        document.body.classList.add('theme-day');
+        sunIcon.style.display = 'block';
+        moonIcon.style.display = 'none';
+        currentTheme = 'day';
+    } else {
+        sounds.toNight();
+        document.body.classList.remove('theme-day');
+        document.body.classList.add('theme-night');
+        sunIcon.style.display = 'none';
+        moonIcon.style.display = 'block';
+        currentTheme = 'night';
+    }
+    initParticles(currentTheme);
+}
+
+
 function handleKeydown(e) {
     if (!slideshowModal.classList.contains('show')) return;
 
@@ -1035,19 +1108,75 @@ function handleTouchMove(e) {
 }
 
 function handleTouchEnd() {
-    const swipeThreshold = 50; // 判定為滑動的最小距離
-    if (touchEndX === 0) return; // 避免單純點擊觸發
+    const swipeThreshold = uiSettings.swipeThreshold; 
+    if (touchEndX === 0) return;
 
     if (touchEndX < touchStartX - swipeThreshold) {
-        // 向左滑
         navigateSlideshow(1);
     }
 
     if (touchEndX > touchStartX + swipeThreshold) {
-        // 向右滑
         navigateSlideshow(-1);
     }
-    // 重置座標
     touchStartX = 0;
     touchEndX = 0;
+}
+
+function openContactModal(e) {
+    e.preventDefault();
+    contactModalContent.innerHTML = `
+        <button id="contact-close-btn" class="contact-close-btn">&times;</button>
+        <h2 class="text-4xl font-bold text-center mb-4">聯繫我</h2>
+        <p class="text-lg text-center mb-8 max-w-2xl mx-auto">如果您對我的作品感興趣，或是有任何合作想法，歡迎隨時與我聯繫！</p>
+        <form id="contact-form" action="https://formspree.io/f/xnnzgpdn" method="POST" class="max-w-xl mx-auto space-y-4 text-left">
+            <div class="flex flex-col md:flex-row gap-4">
+                <input type="text" name="name" placeholder="您的名字" required class="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500">
+                <input type="email" name="email" placeholder="您的電子郵件" required class="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500">
+            </div>
+            <textarea name="message" placeholder="您的訊息..." rows="5" required class="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"></textarea>
+            <button type="submit" class="w-full p-3 font-bold rounded-md hover:opacity-90 transition-opacity">發送訊息</button>
+        </form>
+        <div id="form-status" class="mt-4 text-center"></div>
+        <div class="mt-12 flex justify-center items-center space-x-8 text-4xl">
+            <a href="mailto:yor31117@gmail.com" class="transition-colors" aria-label="Email"><i class="fas fa-envelope"></i></a>
+            <a href="https://github.com/LayorX" target="_blank" rel="noopener noreferrer" class="transition-colors" aria-label="GitHub"><i class="fab fa-github"></i></a>
+        </div>
+    `;
+    contactModal.classList.add('show');
+    document.getElementById('contact-close-btn').addEventListener('click', () => contactModal.classList.remove('show'));
+    document.getElementById('contact-form').addEventListener('submit', handleContactFormSubmit);
+}
+
+async function handleContactFormSubmit(e) {
+    e.preventDefault();
+    const form = e.target;
+    const data = new FormData(form);
+    const status = document.getElementById('form-status');
+    
+    try {
+        const response = await fetch(form.action, {
+            method: form.method,
+            body: data,
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+
+        if (response.ok) {
+            status.textContent = "感謝您的訊息，我會盡快回覆！";
+            status.style.color = 'green';
+            form.reset();
+        } else {
+            const responseData = await response.json();
+            if (Object.hasOwn(responseData, 'errors')) {
+                status.textContent = responseData["errors"].map(error => error["message"]).join(", ");
+            } else {
+                status.textContent = "哎呀！發送失敗，請稍後再試。";
+            }
+            status.style.color = 'red';
+        }
+    } catch (error) {
+        status.textContent = "哎呀！發送失敗，請稍後再試。";
+        status.style.color = 'red';
+    }
 }

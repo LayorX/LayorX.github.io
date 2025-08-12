@@ -1,8 +1,25 @@
+:root {
+    --bg-color-night: #0c0a18;
+    --particle-color-night: rgba(139, 92, 246, 0.3);
+    --header-bg-night: rgba(12, 10, 24, 0.8);
+
+    --bg-color-day: #fde6e6;
+    --particle-color-day: rgba(255, 159, 159, 0.4);
+    --header-bg-day: rgba(255, 240, 240, 0.8);
+}
+
 body {
     font-family: 'Noto Sans TC', sans-serif;
-    background-color: #0c0a18;
+    background-color: var(--bg-color-night);
     color: #F3F4F6;
     overflow-x: hidden;
+    transition: background-color 2s ease-in-out;
+}
+
+body.theme-day {
+    background-color: var(--bg-color-day);
+    color: #4B5563;
+    transition: background-color 3s ease-in-out;
 }
 
 #background-canvas {
@@ -75,7 +92,6 @@ body {
     animation-fill-mode: both;
 }
 
-/* ✨ FIX: Added keyframes for loading animation */
 @keyframes silhouette-fade {
     0%, 100% { opacity: 0; transform: scale(0.8); }
     15% { opacity: 1; transform: scale(1); }
@@ -92,11 +108,17 @@ body {
     position: sticky;
     top: 0;
     z-index: 100;
-    background-color: rgba(12, 10, 24, 0.8);
+    background-color: var(--header-bg-night);
     backdrop-filter: blur(12px);
     padding-top: 1rem;
     padding-bottom: 0.5rem;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    transition: background-color 0.5s ease;
+}
+
+body.theme-day .sticky-header {
+    background-color: var(--header-bg-day);
+    border-bottom-color: rgba(0,0,0,0.1);
 }
 
 .card-container {
@@ -116,7 +138,7 @@ body {
     aspect-ratio: 2 / 3;
     display: flex;
     flex-direction: column;
-    perspective: 1000px; /* For 3D flip effect */
+    perspective: 1000px;
     opacity: 0;
     animation: fadeIn 0.8s ease-out forwards;
 }
@@ -146,7 +168,6 @@ body {
 }
 
 .card-front {
-    /* Front face styles (loader) */
     transform: rotateY(0deg);
 }
 
@@ -228,7 +249,7 @@ body {
 }
 
 .share-btn.shared {
-    color: #34d399; /* A green color for shared status */
+    color: #34d399;
     transform: scale(1.1);
 }
 
@@ -302,6 +323,10 @@ body {
     border-bottom: 3px solid transparent;
 }
 
+body.theme-day .tab-button {
+    color: #6B7280;
+}
+
 .tab-button.active { color: #EC4899; border-bottom-color: #EC4899; }
 
 .tab-content { display: none; }
@@ -315,6 +340,12 @@ body {
     border-radius: 0.5rem;
     padding: 0.5rem 1rem;
     color: #F3F4F6;
+}
+
+body.theme-day .model-selector {
+    background-color: rgba(255, 255, 255, 0.5);
+    border-color: rgba(0,0,0,0.1);
+    color: #1F2937;
 }
 
 .model-selector:focus {
@@ -355,9 +386,12 @@ body {
     transform: scale(1);
 }
 
-#image-modal-content img {
+#modal-image {
     border-radius: 0.5rem;
     box-shadow: 0 0 40px rgba(255, 255, 255, 0.2);
+    max-width: 80vw;
+    max-height: 80vh;
+    object-fit: contain;
 }
 
 #story-modal-content {
@@ -418,7 +452,6 @@ body {
 #slideshow-prev { left: 1rem; }
 #slideshow-next { right: 1rem; }
 
-/* ✨ FIX: Moved controls to the left and reordered */
 #slideshow-top-controls {
     position: absolute;
     top: 1rem;
@@ -478,7 +511,7 @@ body {
 }
 
 #favorites-empty-state {
-    display: none; /* Initially hidden */
+    display: none;
     flex-direction: column;
     align-items: center;
     justify-content: center;
@@ -488,7 +521,7 @@ body {
     position: absolute;
 }
 
-#music-control {
+#sound-control {
     position: fixed;
     top: 20px;
     left: 20px;
@@ -504,6 +537,12 @@ body {
     justify-content: center;
     align-items: center;
     cursor: pointer;
+}
+
+body.theme-day #sound-control {
+    background-color: rgba(255, 255, 255, 0.5);
+    border-color: rgba(0,0,0,0.1);
+    color: #1F2937;
 }
 
 /* --- Gacha Modal Styles --- */
@@ -560,31 +599,135 @@ body {
     text-align: center;
 }
 
+.theme-switch {
+    background-color: rgba(31, 41, 55, 0.5);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #f5d0fe;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+.theme-switch:hover {
+    transform: scale(1.1) rotate(15deg);
+    color: #f0abfc;
+}
+body.theme-day .theme-switch {
+    background-color: rgba(255, 255, 255, 0.5);
+    border-color: rgba(0,0,0,0.1);
+    color: #f59e0b;
+}
+body.theme-day .theme-switch:hover {
+    color: #fbbf24;
+}
+
+#app-footer {
+    position: relative;
+    z-index: 10;
+    text-align: center;
+    padding: 2rem 1rem;
+    font-size: 0.875rem;
+    color: #6B7280;
+}
+body.theme-day #app-footer {
+    color: #9CA3AF;
+}
+
+/* ✨ NEW: 聯絡表單 Modal 樣式 */
+#contact-modal-content {
+    background-color: var(--bg-color-night);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.75rem;
+    padding: 2rem;
+    width: 90vw;
+    max-width: 600px;
+    color: #E5E7EB;
+    position: relative;
+    transition: background-color 0.5s ease;
+}
+
+body.theme-day #contact-modal-content {
+    background-color: var(--bg-color-day);
+    border-color: rgba(0,0,0,0.1);
+    color: #1F2937;
+}
+
+#contact-modal-content input,
+#contact-modal-content textarea {
+    background-color: rgba(55, 65, 81, 0.5);
+    border-color: rgba(107, 114, 128, 0.5);
+    color: #F3F4F6;
+}
+
+body.theme-day #contact-modal-content input,
+body.theme-day #contact-modal-content textarea {
+    background-color: rgba(255, 255, 255, 0.8);
+    border-color: rgba(0,0,0,0.1);
+    color: #1F2937;
+}
+
+#contact-modal-content button[type="submit"] {
+     background: linear-gradient(45deg, #f59e0b, #fbbf24);
+     color: #1F2937;
+}
+
+#contact-modal-content a {
+    color: #9CA3AF;
+}
+
+body.theme-day #contact-modal-content a {
+    color: #6B7280;
+}
+
+#contact-modal-content a:hover {
+    color: #fbbf24;
+}
+
+body.theme-day #contact-modal-content a:hover {
+     color: #f59e0b;
+}
+
+.contact-close-btn {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: none;
+    border: none;
+    font-size: 2rem;
+    cursor: pointer;
+    color: #9CA3AF;
+}
+body.theme-day .contact-close-btn {
+    color: #6B7280;
+}
+
 
 /* --- Responsive Design for Mobile Devices --- */
 @media (max-width: 768px) {
     .card-container {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
         gap: 1rem;
     }
-
-    .card-footer {
-        padding: 1rem;
-    }
-
-    .story-btn {
-        padding: 0.75rem 1.25rem;
-    }
-
-    .like-btn, .share-btn {
-        padding: 0.5rem;
-    }
-
     .sticky-header .btn-base {
         padding: 0.5rem 1rem;
         font-size: 0.9rem;
     }
     .sticky-header .flex-wrap {
         gap: 0.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .card-container {
+        grid-template-columns: 1fr;
+    }
+    .image-card {
+        aspect-ratio: unset;
+        min-height: 450px;
     }
 }

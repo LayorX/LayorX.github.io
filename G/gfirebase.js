@@ -122,7 +122,26 @@ export async function getRandomGoddessFromDB() {
     return allDocs[randomIndex].data();
 }
 
-// ✨ FIX: 將 TTS 狀態管理函數移至此處，統一管理 Firebase 操作
+// ✨ NEW: 新增一個可以一次抓取多張隨機女神的函數
+export async function getRandomGoddessesFromDB(count) {
+    const publicRef = collection(db, 'public-goddesses');
+    // 抓取比需求數量更多的文件，以增加隨機性
+    const q = query(publicRef, limit(50));
+    const querySnapshot = await getDocs(q);
+    if (querySnapshot.empty) {
+        return []; // 如果獎池是空的，返回空陣列
+    }
+    const allDocs = querySnapshot.docs.map(doc => doc.data());
+    
+    // 將抓取到的文件隨機排序
+    const shuffled = allDocs.sort(() => 0.5 - Math.random());
+    
+    // 回傳指定數量的文件
+    return shuffled.slice(0, count);
+}
+
+
+// --- TTS State Management ---
 export async function saveTtsStateToDB(ttsState) {
     if (!currentUserId) throw new Error("User not signed in.");
     const ttsRef = doc(db, 'users', currentUserId, 'status', 'tts');

@@ -1,40 +1,132 @@
 // config.js - 專門存放靜態設定資料
 
-// AI 金鑰
+// 應用程式資訊
+export const appInfo = {
+    title: "AI 女神製造所",
+    version: "1.2.0",
+    icons: {
+        appleTouchIcon: "gimages/icon/apple-touch-icon.png",
+        favicon32: "gimages/icon/favicon-32x32.png",
+        favicon16: "gimages/icon/favicon-16x16.png",
+        manifest: "gimages/icon/site.webmanifest",
+        shortcutIcon: "gimages/icon/favicon.ico"
+    },
+    // ✨ NEW: 頁尾版權資訊
+    footer: {
+        copyrightYear: "2025",
+        authorName: "LayorX",
+        authorLink: "https://layorx.github.io"
+    }
+};
+
+// Firebase 設定
+export const firebaseSettings = {
+    apiKey: "AIzaSyDbWa8TWru1J048WK8msVBaC9JhhhtuhJw",
+    authDomain: "goddess-chance.firebaseapp.com",
+    projectId: "goddess-chance",
+    storageBucket: "goddess-chance.firebasestorage.app", 
+    messagingSenderId: "440990936442",
+    appId: "1:440990936442:web:37d864cd13112f14913ac3",
+    measurementId: "G-3HCCT2PFXX"
+};
+
+// 這是 Google AI 的金鑰，獨立出來
 export const apiKey = "AIzaSyAZUc69ryBPqw0Ss2ZV-f4Jg5kP3VjDd0c"; 
 
 // 遊戲與應用的核心設定
 export const gameSettings = {
-    musicPath: "gmusic/gm1.mp3",
     dailyGachaCount: 5,
     dailyTtsCount: 3,
     gachaStreakGoal: 2,
 };
 
-// ✨ NEW: API 相關設定
+// API 相關設定
 export const apiSettings = {
-    imageGenerationRetries: 3,      // 圖片生成失敗時的重試次數
-    imageGenerationDelay: 1000,     // 每次重試的延遲時間 (毫秒)
-    ttsVoice: "Zubenelgenubi",      // TTS 語音合成的聲音模型
+    imageGenerationRetries: 3,
+    imageGenerationDelay: 1000,
+    ttsVoice: "Zubenelgenubi",
+    prompts: {
+        imagePrefix: "masterpiece, best quality, ultra-detailed, photorealistic, 8k, sharp focus, detailed beautiful face.",
+        imageSuffix: "aspect ratio 2:3, raw style.",
+        negativePrompt: "ugly, blurry, bad anatomy, disfigured, poorly drawn face, mutation, mutated, extra limb, dull eyes, bad hands, missing fingers, low quality, jpeg artifacts, text, watermark, signature, cartoon, 3d, deformed.",
+        story: (title, description) => `以繁體中文，為一張風格為「${title}」的女性照片融合${description}，寫一段約150字的短篇故事或情境描述。請用充滿想像力且感性的筆觸，描述她的背景、心情或一個正在發生的瞬間。`,
+        tts: (text) => `Say in a gentle and alluring female voice: ${text}`
+    }
 };
 
-// ✨ NEW: UI 介面與動畫相關設定
+// UI 介面與動畫相關設定
 export const uiSettings = {
-    // VIP 卡片的預覽圖庫，會從中隨機挑選一張
+    loadingScreenDuration: 5000, 
     previewImages: [
         'gimages/g/g1.jpg', 'gimages/g/g2.jpg', 'gimages/g/g3.jpg',
         'gimages/g/g4.jpg', 'gimages/g/g5.jpg', 'gimages/g/g6.jpg',
         'gimages/g/g7.png', 'gimages/g/g8.png', 'gimages/g/g9.png'
     ],
-    // 載入畫面時輪播的剪影圖片
     loadingSilhouettes: [
         'gimages/g/g1.jpg', 'gimages/g/g2.jpg', 'gimages/g/g3.jpg',
         'gimages/g/g4.jpg', 'gimages/g/g5.jpg', 'gimages/g/g6.jpg',
         'gimages/g/g7.png', 'gimages/g/g8.png', 'gimages/g/g9.png'
     ],
-    loadingPetalCount: 50, // 載入畫面時的花瓣數量
+    loadingPetalCount: 60,
+    cardRevealDelay: 1,
+    loadingAnimationStep: 1,
+    slideshowTransitionSpeed: 250,
+    swipeThreshold: 50,
+    messageBoxTimeout: 3000,
 };
 
+// UI 介面文字
+export const uiMessages = {
+    loading: {
+        connecting: "正在連接雲端...",
+        summoning: "正在從雲端神殿召喚女神...",
+        starting: "邂逅即將開始..."
+    },
+    gachaModalTitle: "命運的邂逅",
+    storyModalTitle: "女神的篇章",
+    buttons: {
+        generateOne: "遇見一位",
+        generateFour: "遇見四位",
+        favorites: "女神殿堂",
+        gacha: "女神扭蛋 🎰",
+        gachaDraw: "召喚",
+        ttsPlay: "聆聽故事",
+        ttsStop: "停止播放",
+        ttsLimit: "明日再來"
+    },
+    favorites: {
+        emptyTitle: "殿堂還是空的",
+        emptySubtitle: "快去收藏您心儀的女神吧！",
+        empty: "您的女神殿堂還是空的喔！",
+        addSuccess: "收藏成功！",
+        addFailure: "收藏失敗",
+        removeSuccess: "已從殿堂移除。",
+        removeFailure: "取消收藏失敗",
+        uploading: "正在上傳至雲端...",
+        shareFirst: "請先收藏此女神才能分享！"
+    },
+    gacha: {
+        placeholder: "點擊下方按鈕，遇見一位來自他人宇宙的女神",
+        drawFailed: "召喚失敗",
+        poolEmpty: "獎池是空的！快去分享一些女神吧！",
+        alreadyShared: "這位女神已經在公開殿堂中了！",
+        shareSuccess: "分享成功！獲得一次額外召喚機會！"
+    },
+    errors: {
+        firebaseInit: "Firebase 初始化失敗，請檢查設定",
+        cloudConnect: "無法連接雲端，部分功能將受限",
+        syncFavorites: "無法同步雲端收藏",
+        imageLoad: "這張圖片的資料似乎遺失了",
+        ttsFailed: "語音功能暫時無法使用",
+        storyFailed: "故事的靈感暫時枯竭了，請稍後再試。"
+    }
+};
+
+
+// 音效相關設定
+export const soundSettings = {
+    masterVolume: -10,
+};
 
 // 女神風格設定
 export const styles = [
@@ -44,6 +136,41 @@ export const styles = [
     { id: 'neon-noir', title: '💦 濕身惡女', description: '霓虹、慾望、無法抗拒的危險魅力', prompt: "A tall, wild, and seductive Asian model in a white shirt caught in a city alley downpour, against a backdrop of blurry neon lights. Her eyes are defiant and confident." },
     { id: 'cyberpunk-warrior', title: '🤖 賽博龐克戰姬', description: '未來、科技、堅毅眼神中的致命吸引力', prompt: "Cyberpunk style. A female Asian warrior in glowing mechanical armor, holding an energy sword. The background is a futuristic city with flying vehicles and towering skyscrapers." }
 ];
+
+// ✨ NEW: AI 算圖用的隨機關鍵字 (區分日夜)
+export const randomKeywords_day = {
+    hair: [
+        'long wavy brown hair', 'silver bob cut', 'messy bun', 'sleek ponytail','long flowing hair', 'braided hair', 'casual ponytail', 'a few loose strands of hair'
+    ],
+    outfit: [
+        'in a light, semi-transparent white dress', 'wearing a simple t-shirt and jeans', 'in a summer dress','in a fitted white t-shirt', 'wearing a light sundress', 'in a crop top and shorts', 'wearing a flowy maxi skirt', 'a casual oversized hoodie', 'a delicate lace camisole', 'a denim jacket'
+    ],
+    setting: [
+        'on a deserted beach', 'in a sun-drenched bedroom', 'inside a cozy cafe', 'in a lush green forest','at a bustling farmer\'s market', 'on a scenic hiking trail', 'in a cozy library', 'by a quiet lakeside', 'in a vintage bookstore'
+    ],
+    artStyle: [
+        'cinematic lighting', 'soft focus', 'lens flare', 'sun-kissed and radiant','vibrant and colorful', 'natural daylight', 'golden hour'
+    ],
+    bodyDetails: [
+        'glistening skin', 'dewy skin', 'long legs','toned arms', 'slender shoulders', 'defined collarbones', 'a curvy waistline', 'soft and delicate hands', 'a subtle tattoo', 'a hint of cleavage', 'bare feet'
+    ],
+    expression: [
+        'a mysterious smile', 'a playful wink', 'a shy glance', 'blushing shyly','a confident smile', 'a thoughtful gaze', 'a radiant laugh', 'a peaceful expression'
+    ],
+    mood: [
+        'romantic and beautiful', 'lazy aura', 'innocent but tempting', 'charming','carefree and happy', 'vibrant and energetic', 'calm and composed', 'playful'
+    ]
+};
+
+export const randomKeywords_night = {
+    hair: ['platinum blonde hair', 'short pink hair', 'fiery red braids'],
+    outfit: ['in a leather jacket', 'wearing a silk gown', 'in a futuristic jumpsuit', 'wearing sheer lingerie', 'in a lace thong', 'wearing thigh-high stockings', 'in a wet see-through shirt'],
+    setting: ['in a neon-lit tokyo street', 'in a baroque-style room', 'on a rooftop overlooking the city', 'in the pouring rain'],
+    artStyle: ['dramatic lighting', 'vaporwave aesthetic', 'fantasy art style'],
+    bodyDetails: ['plump lips', 'wet and glossy lips', 'curvaceous body', 'slender waist'],
+    expression: ['seductive gaze', 'a look of longing', 'defiant and confident eyes'],
+    mood: ['alluring', 'enchanting', 'sultry', 'captivating men\'s gaze']
+};
 
 // AI 算圖用的隨機關鍵字
 export const randomKeywords_normal = {
