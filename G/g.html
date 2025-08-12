@@ -78,9 +78,13 @@
         </div>
     </div>
     <div id="contact-modal" class="modal">
-        <div id="contact-modal-content" class="modal-content">
-            <!-- 內容將由 JS 動態注入 -->
-        </div>
+        <div id="contact-modal-content" class="modal-content"></div>
+    </div>
+    <div id="apikey-modal" class="modal">
+        <div id="apikey-modal-content" class="modal-content"></div>
+    </div>
+     <div id="coming-soon-modal" class="modal">
+        <div id="coming-soon-modal-content" class="modal-content"></div>
     </div>
     
     <!-- TTS 播放器 -->
@@ -88,11 +92,12 @@
 
     <!-- 主要內容容器 -->
     <div class="main-container">
-        <!-- 音效控制 -->
-        <button id="sound-control">
-            <svg id="sound-on-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
-            <svg id="sound-off-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;"><path d="M11 5L6 9H2v6h4l5 5V5z"></path><path d="M23 9l-6 6M17 9l6 6"></path></svg>
-        </button>
+        <div class="top-right-controls">
+            <button id="sound-control">
+                <svg id="sound-on-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+                <svg id="sound-off-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;"><path d="M11 5L6 9H2v6h4l5 5V5z"></path><path d="M23 9l-6 6M17 9l6 6"></path></svg>
+            </button>
+        </div>
 
         <!-- 頂部固定標頭 -->
         <header class="sticky-header">
@@ -105,18 +110,27 @@
                     <h1 id="header-title" class="text-3xl md:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-pink-500 to-violet-500 mb-2">
                     </h1>
                 </div>
+                <!-- 按鈕容器 -->
                 <div class="flex flex-wrap justify-center items-center gap-2 md:gap-4 my-4">
-                    <div class="flex items-center gap-2">
-                        <label for="model-select" class="text-md text-gray-300">AI 模型:</label>
-                        <select id="model-select" class="model-selector">
-                            <option value="gemini-flash">Gemini Flash</option>
-                            <option value="imagen-3">Imagen 3</option>
-                        </select>
-                    </div>
                     <button id="generate-one-btn" class="btn-base btn-primary text-white font-bold py-2 px-6 rounded-full text-lg"></button>
                     <button id="generate-four-btn" class="btn-base btn-secondary text-white font-bold py-2 px-6 rounded-full text-lg"></button>
                     <button id="favorites-btn" class="btn-base btn-primary text-white font-bold py-2 px-6 rounded-full text-lg"><span id="favorites-btn-text"></span> ❤️ <span id="favorites-count">0</span></button>
                     <button id="gacha-btn" class="btn-base btn-secondary text-white font-bold py-2 px-6 rounded-full text-lg"></button>
+                    
+                    <!-- ✨ FIX: 更多選項按鈕 (移到扭蛋按鈕右邊) -->
+                    <div class="relative" id="more-options-container">
+                        <button id="more-options-btn" class="btn-base btn-secondary text-white font-bold py-2 px-4 rounded-full text-lg flex items-center">
+                            更多選項 <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div id="more-options-menu" class="absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-gray-800 ring-1 ring-black ring-opacity-5 z-50 hidden">
+                            <div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="options-menu">
+                                <a href="#" id="about-btn" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700" role="menuitem">關於作品</a>
+                                <a href="#" id="contact-btn" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700" role="menuitem">聯絡我 (報錯、建議)</a>
+                                <a href="#" id="apikey-btn" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700" role="menuitem">匯入 Gemini API Key</a>
+                                <a href="#" id="extra-gacha-btn" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700" role="menuitem">額外扭蛋次數 +3</a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <nav id="tab-navigation" class="flex justify-center border-b border-gray-700"></nav>
                  <div id="user-info" class="text-center text-xs text-gray-500 py-1"></div>
@@ -130,7 +144,6 @@
     <!-- 訊息提示框 -->
     <div id="message-box"></div>
 
-    <!-- ✨ FIX: 頁尾內容將由 JS 動態生成 -->
     <footer id="app-footer"></footer>
 
     <script type="module" src="gmain.js"></script>

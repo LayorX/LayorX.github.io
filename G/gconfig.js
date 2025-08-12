@@ -2,8 +2,8 @@
 
 // 應用程式資訊
 export const appInfo = {
-    title: "AI 女神製造所",
-    version: "1.2.0",
+    title: "女神慾見GoddeSpark",
+    version: "1.3.0", // 版本更新
     icons: {
         appleTouchIcon: "gimages/icon/apple-touch-icon.png",
         favicon32: "gimages/icon/favicon-32x32.png",
@@ -11,7 +11,6 @@ export const appInfo = {
         manifest: "gimages/icon/site.webmanifest",
         shortcutIcon: "gimages/icon/favicon.ico"
     },
-    // ✨ NEW: 頁尾版權資訊
     footer: {
         copyrightYear: "2025",
         authorName: "LayorX",
@@ -32,11 +31,17 @@ export const firebaseSettings = {
 
 // 這是 Google AI 的金鑰，獨立出來
 export const apiKey = "AIzaSyAZUc69ryBPqw0Ss2ZV-f4Jg5kP3VjDd0c"; 
+export const userApiKey= "AIzaSyAZUc69ryBPqw0Ss2ZV-f4Jg5kP3VjDd0c"; 
 
 // 遊戲與應用的核心設定
 export const gameSettings = {
-    dailyGachaCount: 5,
-    dailyTtsCount: 3,
+    // ✨ NEW: 每日次數限制統一管理
+    dailyLimits: {
+        generateOne: 20,
+        generateFour: 2,
+        gacha: 5,
+        tts: 3,
+    },
     gachaStreakGoal: 2,
 };
 
@@ -94,6 +99,11 @@ export const uiMessages = {
         ttsStop: "停止播放",
         ttsLimit: "明日再來"
     },
+    // ✨ NEW: 新增次數用盡的提示訊息
+    generateLimit: {
+        title: "今日靈感已耗盡",
+        message: "免費生成次數已用完。您可以點擊「更多選項」匯入自己的 Gemini API Key 來繼續無限暢遊！"
+    },
     favorites: {
         emptyTitle: "殿堂還是空的",
         emptySubtitle: "快去收藏您心儀的女神吧！",
@@ -110,7 +120,8 @@ export const uiMessages = {
         drawFailed: "召喚失敗",
         poolEmpty: "獎池是空的！快去分享一些女神吧！",
         alreadyShared: "這位女神已經在公開殿堂中了！",
-        shareSuccess: "分享成功！獲得一次額外召喚機會！"
+        shareSuccess: "分享成功！獲得一次額外召喚機會！",
+        comingSoon: "此功能還在「濕」工中...\n 敬請期待！"
     },
     errors: {
         firebaseInit: "Firebase 初始化失敗，請檢查設定",
@@ -121,7 +132,6 @@ export const uiMessages = {
         storyFailed: "故事的靈感暫時枯竭了，請稍後再試。"
     }
 };
-
 
 // 音效相關設定
 export const soundSettings = {

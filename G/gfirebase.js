@@ -46,6 +46,11 @@ export function getCurrentUserId() {
     return currentUserId;
 }
 
+// ✨ NEW: 導出 db 實例供其他模組使用
+export function getDbInstance() {
+    return db;
+}
+
 // --- Firestore & Storage Operations ---
 export function listenToFavorites(callback) {
     if (!currentUserId) return () => {};
@@ -97,19 +102,6 @@ export async function shareToPublic(publicData) {
 }
 
 // --- Gacha Operations ---
-export async function loadGachaStateFromDB() {
-    if (!currentUserId) throw new Error("User not signed in.");
-    const gachaRef = doc(db, 'users', currentUserId, 'status', 'gacha');
-    const docSnap = await getDoc(gachaRef);
-    return docSnap.exists() ? docSnap.data() : null;
-}
-
-export async function saveGachaStateToDB(gachaState) {
-    if (!currentUserId) throw new Error("User not signed in.");
-    const gachaRef = doc(db, 'users', currentUserId, 'status', 'gacha');
-    await setDoc(gachaRef, gachaState);
-}
-
 export async function getRandomGoddessFromDB() {
     const publicRef = collection(db, 'public-goddesses');
     const q = query(publicRef, limit(50));
@@ -122,35 +114,14 @@ export async function getRandomGoddessFromDB() {
     return allDocs[randomIndex].data();
 }
 
-// ✨ NEW: 新增一個可以一次抓取多張隨機女神的函數
 export async function getRandomGoddessesFromDB(count) {
     const publicRef = collection(db, 'public-goddesses');
-    // 抓取比需求數量更多的文件，以增加隨機性
     const q = query(publicRef, limit(50));
     const querySnapshot = await getDocs(q);
     if (querySnapshot.empty) {
-        return []; // 如果獎池是空的，返回空陣列
+        return [];
     }
     const allDocs = querySnapshot.docs.map(doc => doc.data());
-    
-    // 將抓取到的文件隨機排序
     const shuffled = allDocs.sort(() => 0.5 - Math.random());
-    
-    // 回傳指定數量的文件
     return shuffled.slice(0, count);
-}
-
-
-// --- TTS State Management ---
-export async function saveTtsStateToDB(ttsState) {
-    if (!currentUserId) throw new Error("User not signed in.");
-    const ttsRef = doc(db, 'users', currentUserId, 'status', 'tts');
-    await setDoc(ttsRef, ttsState);
-}
-
-export async function loadTtsStateFromDB() {
-    if (!currentUserId) throw new Error("User not signed in.");
-    const ttsRef = doc(db, 'users', currentUserId, 'status', 'tts');
-    const docSnap = await getDoc(ttsRef);
-    return docSnap.exists() ? docSnap.data() : null;
 }

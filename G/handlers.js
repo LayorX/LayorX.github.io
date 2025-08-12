@@ -1,0 +1,393 @@
+// handlers.js - 包含所有核心的事件處理函式
+
+import { getState, setState } from './state.js';
+import { uiMessages, gameSettings, apiSettings, styles } from './gconfig.js';
+import { showMessage, createImageCard } from './gui.js';
+import { updateGenerateButtonsState, updateAllTaskUIs, updateTtsUi, resetTtsButtons } from './uiManager.js';
+import { generateImageWithRetry, callTextGenerationAPI, callTTSAPI } from './api.js';
+import { useTask, getTaskCount, addTaskCount } from './dailyTaskManager.js';
+import { saveFavorite, removeFavorite, uploadImage, shareToPublic, getRandomGoddessFromDB, getCurrentUserId } from './gfirebase.js';
+import { sounds } from './soundManager.js';
+
+// --- Utility Functions ---
+function generateUniqueId() {
+    return Date.now().toString(36) + Math.random().toString(36).substring(2);
+}
+
+function base64ToArrayBuffer(base64) {
+    const binaryString = window.atob(base64);
+    const len = binaryString.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+    }
+    return bytes.buffer;
+}
+
+function pcmToWav(pcmData, sampleRate) {
+    const numChannels = 1;
+    const bytesPerSample = 2;
+    const blockAlign = numChannels * bytesPerSample;
+    const byteRate = sampleRate * blockAlign;
+    const dataSize = pcmData.length * bytesPerSample;
+    const buffer = new ArrayBuffer(44 + dataSize);
+    const view = new DataView(buffer);
+
+    view.setUint32(0, 0x52494646, false); // "RIFF"
+    view.setUint32(4, 36 + dataSize, true);
+    view.setUint32(8, 0x57415645, false); // "WAVE"
+    view.setUint32(12, 0x666d7420, false); // "fmt "
+    view.setUint32(16, 16, true);
+    view.setUint16(20, 1, true);
+    view.setUint16(22, numChannels, true);
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(28, byteRate, true);
+    view.setUint16(32, blockAlign, true);
+    view.setUint16(34, bytesPerSample * 8, true);
+    view.setUint32(36, 0x64617461, false); // "data"
+    view.setUint32(40, dataSize, true);
+
+    const pcm16 = new Int16Array(pcmData.buffer);
+    for (let i = 0; i < pcmData.length; i++) {
+        view.setInt16(44 + i * 2, pcmData[i], true);
+    }
+
+    return new Blob([view], { type: 'audio/wav' });
+}
+
+
+// --- Core Logic Handlers ---
+export async function handleImageGeneration(count = 1) {
+    if (getState('isGenerating')) return;
+
+    const taskName = count === 1 ? 'generateOne' : 'generateFour';
+    const { hasUserApiKey } = getState('hasUserApiKey');
+    
+    if (!hasUserApiKey) {
+        const remaining = await getTaskCount(taskName);
+        if (remaining <= 0) {
+            showMessage(uiMessages.generateLimit.message, true);
+            return;
+        }
+        const used = await useTask(taskName);
+        if (!used) {
+             showMessage(uiMessages.generateLimit.message, true);
+            return;
+        }
+    }
+
+    sounds.start();
+    setState({ isGenerating: true });
+    updateGenerateButtonsState();
+    
+    const { activeStyleId, favorites } = getState('activeStyleId', 'favorites');
+    const style = styles.find(s => s.id === activeStyleId);
+    const gallery = document.getElementById(`${style.id}-gallery`);
+    
+    const loadingCards = Array.from({ length: count }, () => {
+        const card = document.createElement('div');
+        card.className = 'image-card !cursor-default flex justify-center items-center';
+        card.style.opacity = '1';
+        card.innerHTML = `<div class="loader"></div>`;
+        gallery.prepend(card);
+        return card;
+    });
+
+    for(let i = 0; i < count; i++) {
+        try {
+            const base64Src = await generateImageWithRetry(style.prompt);
+            if (!base64Src) {
+                 throw new Error("API did not return an image.");
+            }
+            const newId = generateUniqueId();
+            const imageData = { 
+                src: base64Src, 
+                style: style, 
+                id: newId,
+                isLiked: Array.isArray(favorites) && favorites.some(fav => fav.id === newId) // ✨ FIX: Add safety check
+            };
+            const imageCard = createImageCard(imageData, getCardHandlers());
+            loadingCards[i].replaceWith(imageCard);
+            sounds.success();
+        } catch (error) {
+            console.error('圖片生成失敗:', error);
+            loadingCards[i].innerHTML = `<p class="text-red-400 text-center p-4">哎呀，女神走丟了...<br>${error.message}</p>`;
+        }
+    }
+    
+    showMessage(`完成了 ${count} 次新的邂逅！`);
+    setState({ isGenerating: false });
+    updateGenerateButtonsState();
+}
+
+export function getCardHandlers() {
+    return {
+        onStory: handleStoryGeneration,
+        onLike: (imageData, btn) => toggleFavorite(imageData, btn),
+        onShare: shareFavoriteToPublicHandler,
+        onImageClick: (displaySrc) => {
+            const modalImage = document.getElementById('modal-image');
+            const imageModal = document.getElementById('image-modal');
+            modalImage.src = displaySrc;
+            imageModal.classList.add('show');
+        }
+    };
+}
+
+export async function handleStoryGeneration(style) {
+    if (getState('isStoryGenerating')) return;
+    
+    const { hasUserApiKey } = getState('hasUserApiKey');
+    if (!hasUserApiKey) {
+        const remaining = await getTaskCount('tts');
+        if (remaining <= 0) {
+            showMessage(uiMessages.buttons.ttsLimit, true);
+            return;
+        }
+    }
+    
+    setState({ isStoryGenerating: true });
+    const storyTextEl = document.getElementById('story-text');
+    const storyModal = document.getElementById('story-modal');
+    const ttsBtn = document.getElementById('tts-btn');
+
+    storyTextEl.innerHTML = '<div class="loader mx-auto"></div>';
+    storyModal.classList.add('show');
+    updateTtsUi();
+
+    try {
+        const storyPrompt = apiSettings.prompts.story(style.title, style.description);
+        const story = await callTextGenerationAPI(storyPrompt);
+        storyTextEl.textContent = story;
+        ttsBtn.onclick = () => {
+            if(storyTextEl.textContent) handleTTSGeneration(storyTextEl.textContent);
+        };
+    } catch (error) {
+        console.error('故事生成失敗:', error);
+        storyTextEl.textContent = uiMessages.errors.storyFailed;
+        ttsBtn.disabled = true;
+    } finally {
+        setState({ isStoryGenerating: false });
+    }
+}
+
+export async function handleTTSGeneration(text) {
+    if (getState('isTtsGenerating')) return;
+    
+    const { hasUserApiKey } = getState('hasUserApiKey');
+     if (!hasUserApiKey) {
+        const canUse = await useTask('tts');
+        if (!canUse) {
+            showMessage(uiMessages.buttons.ttsLimit, true);
+            updateTtsUi();
+            return;
+        }
+    }
+
+    setState({ isTtsGenerating: true });
+    const ttsBtn = document.getElementById('tts-btn');
+    const ttsStopBtn = document.getElementById('tts-stop-btn');
+    const ttsAudio = document.getElementById('tts-audio');
+
+    ttsBtn.textContent = '聲音合成中...';
+    ttsBtn.disabled = true;
+    
+    try {
+        const ttsPrompt = apiSettings.prompts.tts(text);
+        const { audioData, mimeType } = await callTTSAPI(ttsPrompt);
+        updateTtsUi();
+
+        const sampleRate = parseInt(mimeType.match(/rate=(\d+)/)[1], 10);
+        const pcmData = base64ToArrayBuffer(audioData);
+        const pcm16 = new Int16Array(pcmData);
+        const wavBlob = pcmToWav(pcm16, sampleRate);
+        const audioUrl = URL.createObjectURL(wavBlob);
+        ttsAudio.src = audioUrl;
+        ttsAudio.play();
+
+        ttsBtn.style.display = 'none';
+        ttsStopBtn.style.display = 'inline-block';
+
+    } catch (error) {
+        console.error('TTS 生成失敗:', error);
+        showMessage(uiMessages.errors.ttsFailed, true);
+        resetTtsButtons();
+    } finally {
+        setState({ isTtsGenerating: false });
+    }
+}
+
+// --- Favorites & Slideshow Logic ---
+export async function toggleFavorite(imageData, btn) {
+    if (imageData.id === 'vip-placeholder') {
+        showMessage('此為預覽卡片，無法收藏喔！');
+        return;
+    }
+    
+    const { favorites } = getState('favorites');
+    
+    // ✨ FIX: 徹底修復 race condition 問題
+    if (!Array.isArray(favorites)) {
+        showMessage("雲端資料同步中，請稍候再試...", true);
+        return; // 直接退出，不鎖定按鈕
+    }
+
+    sounds.like();
+    if (btn) btn.disabled = true;
+
+    const index = favorites.findIndex(fav => fav && fav.id === imageData.id);
+    
+    if (index > -1) {
+        try {
+            await removeFavorite(favorites[index]);
+        } catch (error) {
+            console.error("Failed to remove favorite:", error);
+            showMessage(uiMessages.favorites.removeFailure, true);
+        }
+    } else {
+        try {
+            let favoriteData;
+            if (imageData.src && imageData.src.startsWith('data:image')) {
+                showMessage(uiMessages.favorites.uploading);
+                const downloadURL = await uploadImage(imageData.src, imageData.id);
+                favoriteData = { id: imageData.id, style: imageData.style, imageUrl: downloadURL };
+            } else {
+                favoriteData = { 
+                    id: imageData.id, 
+                    style: imageData.style, 
+                    imageUrl: imageData.imageUrl
+                };
+            }
+            
+            await saveFavorite(favoriteData);
+            showMessage(uiMessages.favorites.addSuccess);
+
+            const cardExists = document.querySelector(`.image-card[data-id="${imageData.id}"]`);
+            if (!cardExists && imageData.style && imageData.style.id) {
+                const gallery = document.getElementById(`${imageData.style.id}-gallery`);
+                if (gallery) {
+                    const newCardData = { ...imageData, isLiked: true };
+                    const newCard = createImageCard(newCardData, getCardHandlers());
+                    gallery.appendChild(newCard);
+                }
+            }
+
+        } catch (error) {
+            console.error("Failed to save favorite:", error);
+            showMessage(`${uiMessages.favorites.addFailure}: ${error.message}`, true);
+        }
+    }
+    if (btn) btn.disabled = false;
+}
+
+export async function shareFavoriteToPublicHandler(imageData, btn) {
+    const { favorites } = getState('favorites');
+
+    // ✨ FIX: 徹底修復 race condition 問題
+    if (!Array.isArray(favorites)) {
+        showMessage("雲端資料同步中，請稍候再試...", true);
+        return; // 直接退出
+    }
+
+    const favoriteData = favorites.find(fav => fav.id === imageData.id);
+
+    if (!favoriteData || !favoriteData.imageUrl) {
+        showMessage(uiMessages.favorites.shareFirst, true);
+        return;
+    }
+
+    btn.disabled = true;
+    try {
+        const result = await shareToPublic(favoriteData);
+        if (result.alreadyExists) {
+            showMessage(uiMessages.gacha.alreadyShared);
+        } else {
+            await addTaskCount('gacha', 1);
+            updateAllTaskUIs();
+            showMessage(uiMessages.gacha.shareSuccess);
+        }
+        btn.classList.add('shared');
+    } catch (error) {
+        console.error("Sharing failed:", error);
+        showMessage("分享失敗，請稍後再試。", true);
+    } finally {
+        btn.disabled = false;
+    }
+}
+
+export async function unfavoriteCurrentSlide() {
+    const { favorites, currentSlideshowIndex } = getState('favorites', 'currentSlideshowIndex');
+    if (!Array.isArray(favorites) || favorites.length === 0) return;
+    const currentFavorite = favorites[currentSlideshowIndex];
+    if (!currentFavorite) return;
+    
+    try {
+        await removeFavorite(currentFavorite);
+        showMessage(uiMessages.favorites.removeSuccess);
+    } catch (error) {
+        console.error("Failed to remove favorite from DB:", error);
+        showMessage(uiMessages.favorites.removeFailure, true);
+    }
+}
+
+
+// --- Gacha System ---
+export async function drawGacha() {
+    const { hasUserApiKey } = getState('hasUserApiKey');
+    if (!hasUserApiKey) {
+        const canUse = await useTask('gacha');
+        if (!canUse) {
+            showMessage("今日次數已用完！", true);
+            updateAllTaskUIs();
+            return;
+        }
+    }
+
+    const gachaDrawBtn = document.getElementById('gacha-draw-btn');
+    const gachaResultContainer = document.getElementById('gacha-result-container');
+    gachaDrawBtn.disabled = true;
+    gachaResultContainer.innerHTML = '<div class="loader"></div>';
+    sounds.gacha();
+
+    try {
+        const randomGoddess = await getRandomGoddessFromDB();
+        
+        const currentUid = getCurrentUserId();
+        let { ownGoddessStreak, favorites } = getState('ownGoddessStreak', 'favorites');
+
+        if (randomGoddess.sharedBy && randomGoddess.sharedBy === currentUid) {
+            ownGoddessStreak++;
+            const REQUIRED_STREAK = gameSettings.gachaStreakGoal;
+            if (ownGoddessStreak >= REQUIRED_STREAK) {
+                await addTaskCount('gacha', 1);
+                showMessage(`幸運！連續抽到自己的女神 ${ownGoddessStreak} 次，額外獲得一次召喚！`);
+                ownGoddessStreak = 0;
+            } else {
+                showMessage(`抽到自己的女神！再來 ${REQUIRED_STREAK - ownGoddessStreak} 次可獲獎勵！`);
+            }
+        } else {
+            ownGoddessStreak = 0;
+        }
+        setState({ ownGoddessStreak });
+
+        const imageData = {
+            src: randomGoddess.imageUrl,
+            imageUrl: randomGoddess.imageUrl,
+            style: randomGoddess.style,
+            id: randomGoddess.id,
+            isLiked: Array.isArray(favorites) && favorites.some(fav => fav.id === randomGoddess.id) // ✨ FIX: Add safety check
+        };
+        
+        const gachaCard = createImageCard(imageData, getCardHandlers(), { withAnimation: false, withButtons: true });
+        gachaResultContainer.innerHTML = '';
+        gachaResultContainer.appendChild(gachaCard);
+
+        updateAllTaskUIs();
+    } catch (error) {
+        console.error("Gacha draw failed:", error);
+        showMessage(`${uiMessages.gacha.drawFailed}: ${error.message}`, true);
+        gachaResultContainer.innerHTML = `<div class="gacha-placeholder"><p>${uiMessages.gacha.drawFailed}...</p><p class="text-xs text-gray-400 mt-2">${error.message}</p></div>`;
+    } finally {
+        updateAllTaskUIs();
+    }
+}

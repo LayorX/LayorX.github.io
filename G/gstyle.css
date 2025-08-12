@@ -128,6 +128,7 @@ body.theme-day .sticky-header {
     padding-top: 1.5rem;
 }
 
+/* ✨ FIX: 修正行動裝置顯示問題 */
 .image-card {
     background-color: rgba(31, 41, 55, 0.5);
     backdrop-filter: blur(10px);
@@ -136,8 +137,9 @@ body.theme-day .sticky-header {
     overflow: hidden;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     aspect-ratio: 2 / 3;
-    display: flex;
+    display: flex; /* 改為 flex 以確保內部元素能正確填充 */
     flex-direction: column;
+    position: relative; /* 確保 footer 定位正確 */
     perspective: 1000px;
     opacity: 0;
     animation: fadeIn 0.8s ease-out forwards;
@@ -180,6 +182,9 @@ body.theme-day .sticky-header {
     height: 100%;
     cursor: pointer;
     overflow: hidden;
+    position: absolute; /* 確保 wrapper 填滿 card-back */
+    top: 0;
+    left: 0;
 }
 
 .image-card-img-wrapper img {
@@ -204,6 +209,7 @@ body.theme-day .sticky-header {
     justify-content: space-between;
     align-items: center;
     gap: 0.5rem;
+    z-index: 5; /* 確保在圖片之上 */
 }
 
 .story-btn {
@@ -283,6 +289,7 @@ body.theme-day .sticky-header {
     transform: scale(1);
     box-shadow: none;
     animation: none;
+    opacity: 0.6;
 }
 
 .loader {
@@ -521,11 +528,14 @@ body.theme-day .model-selector {
     position: absolute;
 }
 
-#sound-control {
+.top-right-controls {
     position: fixed;
     top: 20px;
-    left: 20px;
+    right: 20px;
     z-index: 101;
+}
+
+#sound-control {
     background-color: rgba(31, 41, 55, 0.5);
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -547,7 +557,7 @@ body.theme-day #sound-control {
 
 /* --- Gacha Modal Styles --- */
 .gacha-content {
-    background-color: rgba(12, 10, 24, 0.95);
+    background-color: var(--bg-color-night);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 0.75rem;
     padding: 2rem;
@@ -557,6 +567,12 @@ body.theme-day #sound-control {
     flex-direction: column;
     align-items: center;
     position: relative;
+    transition: background-color 0.5s ease;
+}
+
+body.theme-day .gacha-content {
+    background-color: var(--bg-color-day);
+    border-color: rgba(0,0,0,0.1);
 }
 
 .gacha-close-btn {
@@ -589,10 +605,11 @@ body.theme-day #sound-control {
     color: #9ca3af;
 }
 
-.gacha-result-container img {
+.gacha-result-container .image-card {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    border-radius: 0;
+    border: none;
 }
 
 .gacha-controls {
@@ -638,8 +655,7 @@ body.theme-day #app-footer {
     color: #9CA3AF;
 }
 
-/* ✨ NEW: 聯絡表單 Modal 樣式 */
-#contact-modal-content {
+#contact-modal-content, #apikey-modal-content, #coming-soon-modal-content {
     background-color: var(--bg-color-night);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 0.75rem;
@@ -651,27 +667,32 @@ body.theme-day #app-footer {
     transition: background-color 0.5s ease;
 }
 
-body.theme-day #contact-modal-content {
+body.theme-day #contact-modal-content, 
+body.theme-day #apikey-modal-content,
+body.theme-day #coming-soon-modal-content {
     background-color: var(--bg-color-day);
     border-color: rgba(0,0,0,0.1);
     color: #1F2937;
 }
 
 #contact-modal-content input,
-#contact-modal-content textarea {
+#contact-modal-content textarea,
+#apikey-modal-content input {
     background-color: rgba(55, 65, 81, 0.5);
     border-color: rgba(107, 114, 128, 0.5);
     color: #F3F4F6;
 }
 
 body.theme-day #contact-modal-content input,
-body.theme-day #contact-modal-content textarea {
+body.theme-day #contact-modal-content textarea,
+body.theme-day #apikey-modal-content input {
     background-color: rgba(255, 255, 255, 0.8);
     border-color: rgba(0,0,0,0.1);
     color: #1F2937;
 }
 
-#contact-modal-content button[type="submit"] {
+#contact-modal-content button[type="submit"],
+#apikey-modal-content button {
      background: linear-gradient(45deg, #f59e0b, #fbbf24);
      color: #1F2937;
 }
@@ -692,7 +713,7 @@ body.theme-day #contact-modal-content a:hover {
      color: #f59e0b;
 }
 
-.contact-close-btn {
+.modal-close-btn {
     position: absolute;
     top: 1rem;
     right: 1rem;
@@ -702,7 +723,7 @@ body.theme-day #contact-modal-content a:hover {
     cursor: pointer;
     color: #9CA3AF;
 }
-body.theme-day .contact-close-btn {
+body.theme-day .modal-close-btn {
     color: #6B7280;
 }
 
@@ -713,12 +734,15 @@ body.theme-day .contact-close-btn {
         grid-template-columns: repeat(2, 1fr);
         gap: 1rem;
     }
-    .sticky-header .btn-base {
-        padding: 0.5rem 1rem;
-        font-size: 0.9rem;
-    }
     .sticky-header .flex-wrap {
         gap: 0.5rem;
+    }
+    .sticky-header .btn-base {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.8rem;
+    }
+    #more-options-container {
+        margin-left: 0; /* 在小螢幕上取消 margin-left: auto */
     }
 }
 
@@ -727,7 +751,6 @@ body.theme-day .contact-close-btn {
         grid-template-columns: 1fr;
     }
     .image-card {
-        aspect-ratio: unset;
-        min-height: 450px;
+        aspect-ratio: 2 / 3; /* 在手機上依然保持比例 */
     }
 }
