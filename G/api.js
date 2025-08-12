@@ -12,7 +12,8 @@ export async function generateImageWithRetry(prompt) {
     const retries = apiSettings.imageGenerationRetries;
     const delay = apiSettings.imageGenerationDelay;
     
-    const { currentTheme } = getState('currentTheme');
+    // ✨ FIX: 修正了 getState 的用法，直接接收回傳值
+    const currentTheme = getState('currentTheme');
     const keywords = currentTheme === 'day' ? randomKeywords_day : randomKeywords_night;
     
     const enhancedPrompt = `${prompt}, ${getRandomItems(keywords.hair, 1)}, ${getRandomItems(keywords.outfit, 2).join(', ')}, ${getRandomItems(keywords.setting, 1)}, ${getRandomItems(keywords.artStyle, 1)}, ${getRandomItems(keywords.bodyDetails, 2).join(', ')}, ${getRandomItems(keywords.expression, 1)}, ${getRandomItems(keywords.mood, 1)}.`;
@@ -32,13 +33,14 @@ export async function generateImageWithRetry(prompt) {
 }
 
 async function callImageGenerationAPI(userPrompt, model) {
-    const { userApiKey } = getState('userApiKey');
+    // ✨ FIX: 修正了 getState 的用法
+    const userApiKey = getState('userApiKey');
     const modelName = model === 'imagen-3' ? 'imagen-3.0-generate-002' : 'gemini-2.0-flash-preview-image-generation';
     const isImagen = model === 'imagen-3';
     const apiUrl = isImagen 
         ? `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:predict?key=${userApiKey}`
         : `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${userApiKey}`;
-    console.error('API Error apiUrl Response: ', apiUrl);
+
     const payload = isImagen
         ? { instances: [{ prompt: userPrompt }], parameters: { "sampleCount": 1 } }
         : {
@@ -93,7 +95,8 @@ async function callImageGenerationAPI(userPrompt, model) {
 
 
 export async function callTextGenerationAPI(prompt) {
-    const { userApiKey } = getState('userApiKey');
+    // ✨ FIX: 修正了 getState 的用法
+    const userApiKey = getState('userApiKey');
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${userApiKey}`;
     const payload = {
         contents: [{ role: "user", parts: [{ text: prompt }] }]
@@ -120,7 +123,8 @@ export async function callTextGenerationAPI(prompt) {
 }
 
 export async function callTTSAPI(text) {
-    const { userApiKey } = getState('userApiKey');
+    // ✨ FIX: 修正了 getState 的用法
+    const userApiKey = getState('userApiKey');
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${userApiKey}`;
     const payload = {
         contents: [{ parts: [{ text: text }] }],
