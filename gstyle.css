@@ -70,18 +70,12 @@ body {
     object-fit: contain;
     filter: drop-shadow(0 0 15px rgba(236, 72, 153, 0.5));
     opacity: 0;
-    /* 動畫名稱、延遲、總時長等屬性將由 JS 動態設定 */
-    animation-timing-function: ease-in-out; /* 使用平滑過渡效果 */
+    animation-timing-function: ease-in-out;
     animation-iteration-count: infinite;
-    animation-fill-mode: both; /* 確保動畫在非播放時間保持其計算的狀態 */
+    animation-fill-mode: both;
 }
 
-/* 舊的 @keyframes graceful-appear 已被移除。
-  新的 @keyframes graceful-crossfade 將由 JavaScript 動態生成並注入。
-*/
-
-/* --- End of Dynamic Loading Animation --- */
-
+/* --- Main Content --- */
 .main-container {
     position: relative;
     z-index: 10;
@@ -176,6 +170,7 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 0.5rem;
 }
 
 .story-btn {
@@ -188,13 +183,19 @@ body {
     cursor: pointer;
     transition: background-color 0.3s ease;
     font-size: 0.875rem;
+    flex-shrink: 0;
 }
 
 .story-btn:hover {
     background-color: rgba(255, 255, 255, 0.4);
 }
 
-.like-btn {
+.card-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.like-btn, .share-btn {
     background: none;
     border: none;
     font-size: 1.75rem;
@@ -202,9 +203,10 @@ body {
     color: rgba(255, 255, 255, 0.7);
     transition: transform 0.2s ease, color 0.2s ease;
     text-shadow: 0 0 5px black;
+    padding: 0.25rem;
 }
 
-.like-btn:hover {
+.like-btn:hover, .share-btn:hover {
     transform: scale(1.2);
 }
 
@@ -212,6 +214,12 @@ body {
     color: #ef4444;
     transform: scale(1.1);
 }
+
+.share-btn.shared {
+    color: #34d399; /* A green color for shared status */
+    transform: scale(1.1);
+}
+
 
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(20px); }
@@ -450,7 +458,7 @@ body {
 }
 
 #favorites-empty-state {
-    display: none; /* Hidden by default */
+    display: none;
     flex-direction: column;
     align-items: center;
     justify-content: center;
@@ -476,25 +484,69 @@ body {
     cursor: pointer;
 }
 
+/* --- Gacha Modal Styles --- */
+.gacha-content {
+    background-color: rgba(12, 10, 24, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.75rem;
+    padding: 2rem;
+    width: 90vw;
+    max-width: 400px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+}
+
+.gacha-close-btn {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background: none;
+    border: none;
+    color: #9ca3af;
+    font-size: 2rem;
+    cursor: pointer;
+}
+
+.gacha-result-container {
+    width: 100%;
+    aspect-ratio: 2 / 3;
+    background-color: rgba(0,0,0,0.3);
+    border-radius: 0.5rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border: 1px dashed rgba(255,255,255,0.2);
+}
+
+.gacha-placeholder {
+    text-align: center;
+    padding: 1rem;
+    color: #9ca3af;
+}
+
+.gacha-result-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.gacha-controls {
+    text-align: center;
+}
+
 
 /* --- Responsive Design for Mobile Devices --- */
-/* 針對寬度小於 768px 的螢幕 (平板和手機) */
 @media (max-width: 768px) {
     .card-container {
-        /* 將卡片佈局改為單欄 */
         grid-template-columns: 1fr;
-        gap: 1rem; /* 縮小卡片間距 */
+        gap: 1rem;
     }
-
-    /* [FIX] 移除此處錯誤的 aspect-ratio: unset; 規則 */
-    /*
-    .image-card {
-        aspect-ratio: unset;
-    }
-    */
 
     .card-footer {
-        /* 增加底部按鈕的內邊距，方便觸控 */
         padding: 1rem;
     }
 
@@ -502,16 +554,15 @@ body {
         padding: 0.75rem 1.25rem;
     }
 
-    .like-btn {
-        padding: 0.5rem; /* 增加愛心按鈕的觸控範圍 */
+    .like-btn, .share-btn {
+        padding: 0.5rem;
     }
 
-    /* 調整標頭按鈕的大小和間距，節省垂直空間 */
     .sticky-header .btn-base {
         padding: 0.5rem 1rem;
-        font-size: 1rem;
+        font-size: 0.9rem;
     }
-    .sticky-header .flex-col.md\:flex-row {
+    .sticky-header .flex-wrap {
         gap: 0.5rem;
     }
 }

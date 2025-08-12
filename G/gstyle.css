@@ -1,0 +1,590 @@
+body {
+    font-family: 'Noto Sans TC', sans-serif;
+    background-color: #0c0a18;
+    color: #F3F4F6;
+    overflow-x: hidden;
+}
+
+#background-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+}
+
+/* --- Loading Overlay --- */
+#loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, rgba(2,0,36,1) 0%, rgba(12,10,24,1) 35%, rgba(46,16,49,1) 100%);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    transition: opacity 1s ease-out;
+    opacity: 1;
+}
+
+#loading-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+#loading-canvas {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+}
+
+#loading-content {
+    z-index: 10;
+    text-align: center;
+    color: white;
+    text-shadow: 0 0 15px rgba(236, 72, 153, 0.7);
+}
+
+/* --- Dynamic Loading Silhouette Animation --- */
+.silhouette-container {
+    height: 40vh;
+    max-height: 400px;
+    margin-bottom: 2rem;
+    position: relative;
+    width: 300px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.loading-silhouette {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    filter: drop-shadow(0 0 15px rgba(236, 72, 153, 0.5));
+    opacity: 0;
+    animation-timing-function: ease-in-out;
+    animation-iteration-count: infinite;
+    animation-fill-mode: both;
+}
+
+/* ✨ FIX: Added keyframes for loading animation */
+@keyframes silhouette-fade {
+    0%, 100% { opacity: 0; transform: scale(0.8); }
+    15% { opacity: 1; transform: scale(1); }
+}
+
+
+/* --- Main Content --- */
+.main-container {
+    position: relative;
+    z-index: 10;
+}
+
+.sticky-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background-color: rgba(12, 10, 24, 0.8);
+    backdrop-filter: blur(12px);
+    padding-top: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.card-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+    padding-top: 1.5rem;
+}
+
+.image-card {
+    background-color: rgba(31, 41, 55, 0.5);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.75rem;
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    aspect-ratio: 2 / 3;
+    display: flex;
+    flex-direction: column;
+    perspective: 1000px; /* For 3D flip effect */
+    opacity: 0;
+    animation: fadeIn 0.8s ease-out forwards;
+}
+
+
+.image-card .flipper {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+    transform-style: preserve-3d;
+}
+
+.image-card .flipper.reveal {
+    transform: rotateY(180deg);
+}
+
+.card-face {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.card-front {
+    /* Front face styles (loader) */
+    transform: rotateY(0deg);
+}
+
+.card-back {
+    transform: rotateY(180deg);
+}
+
+.image-card-img-wrapper {
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.image-card-img-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.image-card:hover .image-card-img-wrapper img {
+    transform: scale(1.05);
+}
+
+.card-footer {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 0.75rem;
+    background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.story-btn {
+    background-color: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 9999px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    font-size: 0.875rem;
+    flex-shrink: 0;
+}
+
+.story-btn:hover {
+    background-color: rgba(255, 255, 255, 0.4);
+}
+
+.card-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.like-btn, .share-btn {
+    background: none;
+    border: none;
+    font-size: 1.75rem;
+    cursor: pointer;
+    color: rgba(255, 255, 255, 0.7);
+    transition: transform 0.2s ease, color 0.2s ease;
+    text-shadow: 0 0 5px black;
+    padding: 0.25rem;
+}
+
+.like-btn:hover, .share-btn:hover {
+    transform: scale(1.2);
+}
+
+.like-btn.liked {
+    color: #ef4444;
+    transform: scale(1.1);
+}
+
+.share-btn.shared {
+    color: #34d399; /* A green color for shared status */
+    transform: scale(1.1);
+}
+
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.btn-base {
+    transition: all 0.3s ease;
+    box-shadow: 0 0 15px rgba(236, 72, 153, 0.4);
+    animation: pulse-glow 2s infinite alternate;
+}
+
+.btn-primary {
+     background: linear-gradient(45deg, #EC4899, #8B5CF6);
+}
+
+.btn-secondary {
+    background: linear-gradient(45deg, #4f46e5, #8b5cf6);
+}
+
+.btn-base:hover {
+    transform: scale(1.05);
+}
+
+.btn-base:disabled {
+    background: #4B5563;
+    cursor: not-allowed;
+    transform: scale(1);
+    box-shadow: none;
+    animation: none;
+}
+
+.loader {
+    width: 60px;
+    height: 60px;
+    border: 5px solid #4B5563;
+    border-bottom-color: #EC4899;
+    border-radius: 50%;
+    display: inline-block;
+    box-sizing: border-box;
+    animation: rotation 1s linear infinite;
+}
+
+@keyframes rotation {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+#message-box {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background-color: #EC4899;
+    color: white;
+    padding: 1rem 1.5rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    z-index: 3100;
+    opacity: 0;
+    transform: translateY(-20px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+#message-box.show { opacity: 1; transform: translateY(0); }
+
+.tab-button {
+    transition: all 0.3s ease;
+    border-bottom: 3px solid transparent;
+}
+
+.tab-button.active { color: #EC4899; border-bottom-color: #EC4899; }
+
+.tab-content { display: none; }
+
+.tab-content.active { display: block; animation: fadeIn 0.5s ease; }
+
+.model-selector {
+    background-color: rgba(31, 41, 55, 0.5);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.5rem;
+    padding: 0.5rem 1rem;
+    color: #F3F4F6;
+}
+
+.model-selector:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px #8B5CF6;
+}
+
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.modal.show {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.modal-content {
+    transform: scale(0.8);
+    transition: transform 0.3s ease;
+    max-width: 90vw;
+    max-height: 90vh;
+}
+
+.modal.show .modal-content {
+    transform: scale(1);
+}
+
+#image-modal-content img {
+    border-radius: 0.5rem;
+    box-shadow: 0 0 40px rgba(255, 255, 255, 0.2);
+}
+
+#story-modal-content {
+    background-color: rgba(12, 10, 24, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.75rem;
+    padding: 2rem;
+    width: 90vw;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+    color: #E5E7EB;
+}
+
+/* Slideshow Modal */
+#slideshow-modal {
+    z-index: 3000;
+    background-color: #000;
+    flex-direction: column;
+}
+
+#slideshow-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    flex-grow: 1;
+}
+
+#slideshow-image {
+    max-width: 100vw;
+    max-height: calc(100vh - 120px);
+    object-fit: contain;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.slideshow-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: none;
+    font-size: 2rem;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    border-radius: 0.5rem;
+    z-index: 10;
+}
+
+.slideshow-nav:hover {
+    background-color: rgba(255, 255, 255, 0.4);
+}
+
+#slideshow-prev { left: 1rem; }
+#slideshow-next { right: 1rem; }
+
+/* ✨ FIX: Moved controls to the left and reordered */
+#slideshow-top-controls {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: flex-start;
+    gap: 1rem;
+    z-index: 10;
+}
+
+.slideshow-control-btn {
+    background-color: rgba(255, 255, 255, 0.2);
+    font-size: 1.5rem;
+    padding: 0.5rem;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+.slideshow-control-btn:hover {
+    background-color: rgba(255, 255, 255, 0.4);
+}
+
+
+#thumbnail-bar {
+    width: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    padding: 0.5rem;
+    text-align: center;
+    overflow-x: auto;
+    white-space: nowrap;
+    flex-shrink: 0;
+    height: 100px;
+    display: flex;
+    align-items: center;
+}
+
+.thumbnail {
+    width: 60px;
+    height: 90px;
+    object-fit: cover;
+    border-radius: 0.25rem;
+    border: 2px solid transparent;
+    cursor: pointer;
+    display: inline-block;
+    margin: 0 0.25rem;
+    transition: border-color 0.3s;
+}
+
+.thumbnail.active {
+    border-color: #EC4899;
+    box-shadow: 0 0 10px #EC4899;
+}
+
+#favorites-empty-state {
+    display: none; /* Initially hidden */
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #9ca3af;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+}
+
+#music-control {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 101;
+    background-color: rgba(31, 41, 55, 0.5);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: white;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+}
+
+/* --- Gacha Modal Styles --- */
+.gacha-content {
+    background-color: rgba(12, 10, 24, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.75rem;
+    padding: 2rem;
+    width: 90vw;
+    max-width: 400px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+}
+
+.gacha-close-btn {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background: none;
+    border: none;
+    color: #9ca3af;
+    font-size: 2rem;
+    cursor: pointer;
+}
+
+.gacha-result-container {
+    width: 100%;
+    aspect-ratio: 2 / 3;
+    background-color: rgba(0,0,0,0.3);
+    border-radius: 0.5rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border: 1px dashed rgba(255,255,255,0.2);
+}
+
+.gacha-placeholder {
+    text-align: center;
+    padding: 1rem;
+    color: #9ca3af;
+}
+
+.gacha-result-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.gacha-controls {
+    text-align: center;
+}
+
+
+/* --- Responsive Design for Mobile Devices --- */
+@media (max-width: 768px) {
+    .card-container {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .card-footer {
+        padding: 1rem;
+    }
+
+    .story-btn {
+        padding: 0.75rem 1.25rem;
+    }
+
+    .like-btn, .share-btn {
+        padding: 0.5rem;
+    }
+
+    .sticky-header .btn-base {
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+    }
+    .sticky-header .flex-wrap {
+        gap: 0.5rem;
+    }
+}

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI 女神製造所 v10.0 (圖檔分離版)</title>
+    <title>AI 女神製造所 v11.0 (扭蛋系統)</title>
     
     <!-- 外部資源 -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -17,12 +17,8 @@
 
     <!-- 
       🔥🔥🔥 Firebase SDKs 🔥🔥🔥
-      我們在此處加入 Firebase 的核心程式庫，讓專案具備與雲端溝通的能力。
     -->
     <script type="module">
-      // 確保這些 SDK 的版本與 gscript.js 中的 import 語句一致
-      // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-
         const firebaseConfig = {
             apiKey: "AIzaSyDbWa8TWru1J048WK8msVBaC9JhhhtuhJw",
             authDomain: "goddess-chance.firebaseapp.com",
@@ -32,13 +28,11 @@
             appId: "1:440990936442:web:37d864cd13112f14913ac3",
             measurementId: "G-3HCCT2PFXX"
         };
-      // 我們將設定掛載到 window 物件上，方便 gscript.js 存取
       window.firebaseConfig = firebaseConfig;
     </script>
     <script type="module" src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
     <script type="module" src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"></script>
     <script type="module" src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"></script>
-    <!-- ✨ 新增 Firebase Storage SDK ✨ -->
     <script type="module" src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js"></script>
 
 </head>
@@ -50,9 +44,7 @@
     <div id="loading-overlay">
         <canvas id="loading-canvas"></canvas>
         <div id="loading-content">
-             <div class="silhouette-container">
-                <!-- Silhouettes will be injected here by JS -->
-             </div>
+             <div class="silhouette-container"></div>
             <h2 id="loading-text" class="text-2xl font-bold text-gray-300 mt-4">正在連接雲端...</h2>
         </div>
     </div>
@@ -85,6 +77,23 @@
         </div>
         <div id="thumbnail-bar"></div>
     </div>
+    <!-- ✨ 新增：扭蛋機 Modal ✨ -->
+    <div id="gacha-modal" class="modal">
+        <div class="gacha-content modal-content">
+            <button id="gacha-close-btn" class="gacha-close-btn">&times;</button>
+            <h2 class="text-3xl font-bold text-center mb-4 bg-clip-text text-transparent bg-gradient-to-r from-amber-400 to-orange-600">命運的邂逅</h2>
+            <div id="gacha-result-container" class="gacha-result-container">
+                <div class="gacha-placeholder">
+                    <p class="text-6xl mb-4">?</p>
+                    <p>點擊下方按鈕，遇見一位來自他人宇宙的女神</p>
+                </div>
+            </div>
+            <div class="gacha-controls">
+                <button id="gacha-draw-btn" class="btn-base btn-primary text-white font-bold py-3 px-8 rounded-full text-xl">召喚 (剩餘 <span id="gacha-count">5</span> 次)</button>
+                <p id="gacha-unlock-info" class="text-xs text-gray-500 mt-2" style="display: none;">明日將重置次數，或考慮<a href="#" class="text-amber-400 hover:underline">付費解鎖</a>無限次召喚。</p>
+            </div>
+        </div>
+    </div>
     
     <!-- TTS 播放器 -->
     <audio id="tts-audio"></audio>
@@ -102,20 +111,22 @@
             <div class="container mx-auto px-4">
                 <div class="text-center">
                     <h1 class="text-3xl md:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-pink-500 to-violet-500 mb-2">
-                        AI 女神製造所 10.0
+                        AI 女神製造所 11.0
                     </h1>
                 </div>
-                <div class="flex flex-col md:flex-row justify-center items-center gap-4 my-4">
+                <div class="flex flex-wrap justify-center items-center gap-2 md:gap-4 my-4">
                     <div class="flex items-center gap-2">
-                        <label for="model-select" class="text-md text-gray-300">AI 圖片模型:</label>
+                        <label for="model-select" class="text-md text-gray-300">AI 模型:</label>
                         <select id="model-select" class="model-selector">
-                            <option value="gemini-flash">Gemini Flash (推薦)</option>
-                            <option value="imagen-3">Imagen 3 (高品質)</option>
+                            <option value="gemini-flash">Gemini Flash</option>
+                            <option value="imagen-3">Imagen 3</option>
                         </select>
                     </div>
                     <button id="generate-one-btn" class="btn-base btn-primary text-white font-bold py-2 px-6 rounded-full text-lg">遇見一位</button>
                     <button id="generate-four-btn" class="btn-base btn-secondary text-white font-bold py-2 px-6 rounded-full text-lg">遇見四位</button>
                     <button id="favorites-btn" class="btn-base btn-primary text-white font-bold py-2 px-6 rounded-full text-lg">女神殿堂 ❤️ <span id="favorites-count">0</span></button>
+                    <!-- ✨ 新增：扭蛋機按鈕 ✨ -->
+                    <button id="gacha-btn" class="btn-base btn-secondary text-white font-bold py-2 px-6 rounded-full text-lg">女神扭蛋 🎰</button>
                 </div>
                 <nav id="tab-navigation" class="flex justify-center border-b border-gray-700"></nav>
                  <div id="user-info" class="text-center text-xs text-gray-500 py-1"></div>

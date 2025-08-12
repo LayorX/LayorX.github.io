@@ -2,16 +2,16 @@
 // 從 Firebase 的 CDN 引入我們需要的功能模組
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, getDoc, getDocs, query, limit, startAfter, orderBy, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getStorage, ref, uploadString, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
 
 // --- Global Scope & Constants ---
-const apiKey = "AIzaSyAslSVvJtBt0VWgFgec0WLc7je9YatU1_k"//"AIzaSyCOFOoppNQRakvBcKyKmWHEHpMBPODi9s4"; 
+const apiKey = "AIzaSyCOFOoppNQRakvBcKyKmWHEHpMBPODi9s4"; 
 const styles = [
     { id: 'beach-silhouette', title: '🏖️ 沙灘剪影', description: '黃昏、唯美、充滿想像的浪漫詩篇', prompt: "A beautiful Asian model as a silhouette against a sunset on a deserted beach. She wears a light, semi-transparent white dress. The mood is romantic and beautiful." },
     { id: 'morning-lazy', title: '☀️ 晨光私房', description: '慵懶、私密、屬於你的女友感瞬間', prompt: "A sexy and curvy Asian model with a lazy aura on a messy bed. She wears an oversized men's shirt, unbuttoned, with black stockings. Morning sun streams through blinds, creating a soft, intimate, and seductive atmosphere." },
-    { id: 'neon-noir', title: '💦 濕身惡女', description: '霓虹、慾望、無法抗拒的危險魅力', prompt: "A tall, wild, and seductive Asian model in a white shirt caught in a city alley downpour, against a backdrop of blurry neon lights. Her eyes are defiant and confident." },
+    { id: 'neon-noir', title: '� 濕身惡女', description: '霓虹、慾望、無法抗拒的危險魅力', prompt: "A tall, wild, and seductive Asian model in a white shirt caught in a city alley downpour, against a backdrop of blurry neon lights. Her eyes are defiant and confident." },
     { id: 'cyberpunk-warrior', title: '🤖 賽博龐克戰姬', description: '未來、科技、堅毅眼神中的致命吸引力', prompt: "Cyberpunk style. A female Asian warrior in glowing mechanical armor, holding an energy sword. The background is a futuristic city with flying vehicles and towering skyscrapers." }
 ];
 const randomKeywords = {
@@ -48,6 +48,15 @@ const musicControl = document.getElementById('music-control');
 const musicOnIcon = document.getElementById('music-on-icon');
 const musicOffIcon = document.getElementById('music-off-icon');
 const userInfoEl = document.getElementById('user-info');
+// Gacha Elements
+const gachaBtn = document.getElementById('gacha-btn');
+const gachaModal = document.getElementById('gacha-modal');
+const gachaCloseBtn = document.getElementById('gacha-close-btn');
+const gachaDrawBtn = document.getElementById('gacha-draw-btn');
+const gachaCountEl = document.getElementById('gacha-count');
+const gachaResultContainer = document.getElementById('gacha-result-container');
+const gachaUnlockInfo = document.getElementById('gacha-unlock-info');
+
 
 // --- State Management ---
 let isGenerating = false;
@@ -55,6 +64,7 @@ let activeStyleId = styles[0].id;
 let isStoryGenerating = false;
 let isTtsGenerating = false;
 let favorites = [];
+let publicGoddesses = [];
 let currentSlideshowIndex = 0;
 let musicPlayer = null;
 let isMusicPlaying = false;
@@ -63,6 +73,7 @@ let auth; // Firebase Auth instance
 let storage; // Firebase Storage instance
 let userId; // Current user's ID
 let unsubscribeFavorites; // Listener for real-time updates
+let gachaState = { count: 5, lastDrawDate: null };
 
 // --- Sound Engine ---
 const sounds = {
@@ -77,6 +88,13 @@ const sounds = {
     tab: () => sounds.tabSynth.triggerAttackRelease("C4", "32n"),
     open: () => sounds.fmSynth.triggerAttackRelease("A3", "16n"),
     like: () => sounds.mainSynth.triggerAttackRelease("A5", "32n"),
+    gacha: () => {
+        const synth = new Tone.PolySynth(Tone.Synth).toDestination();
+        const now = Tone.now();
+        synth.triggerAttackRelease(["C4", "E4", "G4", "C5"], "8n", now);
+        synth.triggerAttackRelease(["F4", "A4", "C5", "E5"], "8n", now + 0.2);
+        synth.triggerAttackRelease(["G4", "B4", "D5", "G5"], "4n", now + 0.4);
+    }
 };
 
 // --- Firebase Initialization and Auth ---
@@ -89,7 +107,7 @@ async function initFirebase() {
         const app = initializeApp(firebaseConfig);
         auth = getAuth(app);
         db = getFirestore(app);
-        storage = getStorage(app); // 初始化 Storage
+        storage = getStorage(app);
         console.log("Firebase initialized successfully.");
         await handleAuthentication();
     } catch (error) {
@@ -100,12 +118,15 @@ async function initFirebase() {
 
 function handleAuthentication() {
     return new Promise((resolve) => {
-        onAuthStateChanged(auth, (user) => {
+        onAuthStateChanged(auth, async (user) => { // Make this callback async
             if (user) {
                 userId = user.uid;
                 console.log("User is signed in with UID:", userId);
                 userInfoEl.textContent = `雲端使用者 ID: ${userId}`;
-                loadFavoritesFromFirestore(); 
+                await loadFavoritesFromFirestore(); 
+                await loadGachaState(); 
+                // ✨ 登入且載入使用者資料後，才開始產生初始圖片
+                generateInitialImages(); 
                 resolve(user);
             } else {
                 console.log("No user signed in, attempting anonymous sign in...");
@@ -153,8 +174,10 @@ async function initializeUI() {
     });
     
     addEventListeners();
+    // ✨ 立即啟動開頭動畫，不等待 Firebase
+    startLoadingSequence(); 
+    // ✨ 讓 Firebase 在背景進行連線
     await initFirebase(); 
-    startLoadingSequence();
 }
 
 function addEventListeners() {
@@ -191,17 +214,10 @@ function addEventListeners() {
         }
     });
     
-    const slider = document.getElementById('slideshow-container');
-    if (slider) {
-        let touchstartX = 0;
-        let touchendX = 0;
-        slider.addEventListener('touchstart', e => { touchstartX = e.changedTouches[0].screenX; }, { passive: true });
-        slider.addEventListener('touchend', e => {
-            touchendX = e.changedTouches[0].screenX;
-            if (touchendX < touchstartX - 50) navigateSlideshow(1);
-            if (touchendX > touchstartX + 50) navigateSlideshow(-1);
-        }, { passive: true });
-    }
+    // Gacha Listeners
+    gachaBtn.addEventListener('click', openGachaModal);
+    gachaCloseBtn.addEventListener('click', () => gachaModal.classList.remove('show'));
+    gachaDrawBtn.addEventListener('click', drawGacha);
 }
 
 function startLoadingSequence() {
@@ -215,8 +231,7 @@ function startLoadingSequence() {
     
     const silhouetteElements = document.querySelectorAll('.loading-silhouette');
     if (silhouetteElements.length === 0) {
-        generateInitialImages();
-        return;
+        return; // 如果沒有圖片，就直接返回
     }
 
     const animationStep = 3;
@@ -247,7 +262,7 @@ function startLoadingSequence() {
         el.style.animationDuration = `${totalDuration}s`;
     });
     
-    generateInitialImages();
+    // ✨ 不再從這裡呼叫 generateInitialImages()
 }
 
 async function generateInitialImages() {
@@ -279,12 +294,13 @@ async function generateInitialImages() {
 
 function createImageCard(imageData) {
     const { src, style, id, imageUrl } = imageData;
-    const displaySrc = imageUrl || src; // 優先使用雲端 URL
+    const displaySrc = imageUrl || src; 
     const imageCard = document.createElement('div');
     imageCard.className = 'image-card';
     imageCard.dataset.id = id;
 
     const isLiked = favorites.some(fav => fav.id === id);
+    const isShared = publicGoddesses.some(pub => pub.id === id);
 
     imageCard.innerHTML = `
         <div class="flipper">
@@ -297,7 +313,10 @@ function createImageCard(imageData) {
                 </div>
                 <div class="card-footer">
                      <button class="story-btn">生成故事 ✨</button>
-                     <button class="like-btn ${isLiked ? 'liked' : ''}">♥</button>
+                     <div class="card-actions">
+                        <button class="share-btn ${isShared ? 'shared' : ''}" title="分享至公開殿堂">🌐</button>
+                        <button class="like-btn ${isLiked ? 'liked' : ''}" title="收藏至私人殿堂">♥</button>
+                     </div>
                 </div>
             </div>
         </div>
@@ -321,6 +340,9 @@ function createImageCard(imageData) {
         } else if (e.target.closest('.like-btn')) {
             e.stopPropagation();
             toggleFavorite(imageData, e.target.closest('.like-btn'));
+        } else if (e.target.closest('.share-btn')) {
+            e.stopPropagation();
+            shareFavoriteToPublic(imageData, e.target.closest('.share-btn'));
         } else if (e.target.closest('.image-card-img-wrapper')) {
             modalImage.src = displaySrc;
             imageModal.classList.add('show');
@@ -427,13 +449,11 @@ async function toggleFavorite(imageData, btn) {
         return;
     }
     sounds.like();
-    // [FIX] 新增安全檢查，確保 btn 存在才操作
     if (btn) btn.disabled = true;
 
     const index = favorites.findIndex(fav => fav.id === imageData.id);
     
     if (index > -1) {
-        // --- Remove from favorites ---
         const favoriteToRemove = favorites[index];
         try {
             await removeFavoriteFromFirestore(favoriteToRemove);
@@ -443,7 +463,6 @@ async function toggleFavorite(imageData, btn) {
             showMessage("取消收藏失敗", true);
         }
     } else {
-        // --- Add to favorites ---
         try {
             showMessage("正在上傳至雲端...");
             const downloadURL = await uploadImageToStorage(imageData.src, imageData.id);
@@ -463,7 +482,6 @@ async function toggleFavorite(imageData, btn) {
             showMessage("收藏失敗", true);
         }
     }
-    // [FIX] 新增安全檢查，確保 btn 存在才操作
     if (btn) btn.disabled = false;
 }
 
@@ -586,7 +604,6 @@ async function unfavoriteCurrentSlide() {
     if (favorites.length === 0) return;
     const currentFavorite = favorites[currentSlideshowIndex];
     
-    // [FIX] 這裡傳入 null 是造成錯誤的原因，但我們已在 toggleFavorite 中修正
     await toggleFavorite(currentFavorite, null);
 
     const cardInGallery = document.querySelector(`.image-card[data-id='${currentFavorite.id}']`);
@@ -604,6 +621,143 @@ async function unfavoriteCurrentSlide() {
         showSlide(currentSlideshowIndex);
     }
 }
+
+// --- Gacha System Logic ---
+async function openGachaModal() {
+    gachaModal.classList.add('show');
+    await checkGachaCount();
+}
+
+async function checkGachaCount() {
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+    if (gachaState.lastDrawDate !== today) {
+        gachaState.count = 5;
+        gachaState.lastDrawDate = today;
+        await saveGachaState();
+    }
+    updateGachaUI();
+}
+
+function updateGachaUI() {
+    gachaCountEl.textContent = gachaState.count;
+    if (gachaState.count <= 0) {
+        gachaDrawBtn.disabled = true;
+        gachaDrawBtn.textContent = "明日再來";
+        gachaUnlockInfo.style.display = 'block';
+    } else {
+        gachaDrawBtn.disabled = false;
+        gachaDrawBtn.textContent = `召喚 (剩餘 ${gachaState.count} 次)`;
+        gachaUnlockInfo.style.display = 'none';
+    }
+}
+
+async function drawGacha() {
+    await checkGachaCount();
+    if (gachaState.count <= 0) {
+        showMessage("今日次數已用完！", true);
+        return;
+    }
+
+    gachaDrawBtn.disabled = true;
+    gachaResultContainer.innerHTML = '<div class="loader"></div>';
+    sounds.gacha();
+
+    try {
+        const publicRef = collection(db, 'public-goddesses');
+        const q = query(publicRef, orderBy('__name__'), limit(100)); // Simple query to get docs
+        const querySnapshot = await getDocs(q);
+        
+        if (querySnapshot.empty) {
+            throw new Error("獎池是空的！快去分享一些女神吧！");
+        }
+
+        const allDocs = querySnapshot.docs;
+        const randomIndex = Math.floor(Math.random() * allDocs.length);
+        const randomGoddess = allDocs[randomIndex].data();
+
+        // Display result
+        const gachaCard = createImageCard(randomGoddess);
+        gachaResultContainer.innerHTML = '';
+        gachaResultContainer.appendChild(gachaCard);
+
+        // Update count
+        gachaState.count--;
+        await saveGachaState();
+        updateGachaUI();
+
+    } catch (error) {
+        console.error("扭蛋失敗:", error);
+        showMessage(error.message, true);
+        gachaResultContainer.innerHTML = `<div class="gacha-placeholder"><p>召喚失敗...</p></div>`;
+    } finally {
+        if (gachaState.count > 0) {
+            gachaDrawBtn.disabled = false;
+        }
+    }
+}
+
+async function saveGachaState() {
+    if (!userId) return;
+    const gachaRef = doc(db, 'users', userId, 'status', 'gacha');
+    await setDoc(gachaRef, gachaState);
+}
+
+async function loadGachaState() {
+    if (!userId) return;
+    const gachaRef = doc(db, 'users', userId, 'status', 'gacha');
+    const docSnap = await getDoc(gachaRef);
+    if (docSnap.exists()) {
+        gachaState = docSnap.data();
+        checkGachaCount();
+    } else {
+        // No previous state, use default and save
+        await saveGachaState();
+    }
+}
+
+// --- Public Sharing Logic ---
+async function shareFavoriteToPublic(imageData, btn) {
+    if (!userId) {
+        showMessage("無法分享，使用者未登入雲端", true);
+        return;
+    }
+    if (!imageData.imageUrl) {
+        showMessage("請先收藏此女神才能分享！", true);
+        return;
+    }
+    
+    btn.disabled = true;
+    
+    try {
+        const publicRef = doc(db, 'public-goddesses', imageData.id);
+        const docSnap = await getDoc(publicRef);
+
+        if (docSnap.exists()) {
+            showMessage("這位女神已經在公開殿堂中了！");
+            btn.classList.add('shared');
+            return;
+        }
+
+        // We only need to store the light-weight data
+        const publicData = {
+            id: imageData.id,
+            style: imageData.style,
+            imageUrl: imageData.imageUrl,
+            sharedBy: userId // Record who shared it
+        };
+
+        await setDoc(publicRef, publicData);
+        showMessage("成功分享至公開殿堂！", false);
+        btn.classList.add('shared');
+
+    } catch (error) {
+        console.error("分享失敗:", error);
+        showMessage("分享失敗，請稍後再試。", true);
+    } finally {
+        btn.disabled = false;
+    }
+}
+
 
 // --- API Call Logic ---
 function generateUniqueId() {
@@ -755,17 +909,13 @@ function pcmToWav(pcmData, sampleRate) {
     return new Blob([view], { type: 'audio/wav' });
 }
 
-// ✨ 新增：上傳圖片至 Firebase Storage 的輔助函式
 async function uploadImageToStorage(base64String, imageId) {
     if (!userId) throw new Error("User not authenticated for upload.");
-    // 建立一個指向 Storage 的引用路徑，例如： 'users/USER_ID/images/IMAGE_ID.png'
     const storageRef = ref(storage, `users/${userId}/images/${imageId}.png`);
     
-    // 使用 uploadString 將 Base64 資料上傳
     const snapshot = await uploadString(storageRef, base64String, 'data_url');
     console.log('Uploaded a data_url string!', snapshot);
 
-    // 取得上傳後檔案的公開下載 URL
     const downloadURL = await getDownloadURL(snapshot.ref);
     return downloadURL;
 }
