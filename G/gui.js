@@ -20,71 +20,96 @@ export function updateFavoritesCountUI(count) {
 }
 
 // --- Image Card Factory ---
-export function createImageCard(imageData, handlers) {
-    const { src, style, id, imageUrl, isLiked, isShared, isShareable = true } = imageData; // ✨ NEW: Destructure isShareable, default to true
+export function createImageCard(imageData, handlers, options = {}) {
+    const { withAnimation = true, withButtons = true } = options; 
+    const { src, style, id, imageUrl, isLiked, isShared, isShareable = true } = imageData;
     const displaySrc = imageUrl || src; 
     const imageCard = document.createElement('div');
     imageCard.className = 'image-card';
     imageCard.dataset.id = id;
 
-    // ✨ FIX: Conditionally render the share button
-    const shareButtonHTML = isShareable 
-        ? `<button class="share-btn ${isShared ? 'shared' : ''}" title="分享至公開殿堂">🌐</button>`
-        : '';
+    const footerHTML = withButtons ? `
+        <div class="card-footer">
+             <button class="story-btn">生成故事 ✨</button>
+             <div class="card-actions">
+                ${isShareable ? `<button class="share-btn ${isShared ? 'shared' : ''}" title="分享至公開殿堂">🌐</button>` : ''}
+                <button class="like-btn ${isLiked ? 'liked' : ''}" title="收藏至私人殿堂">♥</button>
+             </div>
+        </div>
+    ` : '';
 
-    imageCard.innerHTML = `
-        <div class="flipper">
-            <div class="card-face card-front"><div class="loader"></div></div>
-            <div class="card-face card-back">
-                <div class="image-card-img-wrapper">
-                    <img src="${displaySrc}" alt="${style.title} AI 生成圖片" loading="lazy">
-                </div>
-                <div class="card-footer">
-                     <button class="story-btn">生成故事 ✨</button>
-                     <div class="card-actions">
-                        ${shareButtonHTML}
-                        <button class="like-btn ${isLiked ? 'liked' : ''}" title="收藏至私人殿堂">♥</button>
-                     </div>
+    if (withAnimation) {
+        imageCard.innerHTML = `
+            <div class="flipper">
+                <div class="card-face card-front"><div class="loader"></div></div>
+                <div class="card-face card-back">
+                    <div class="image-card-img-wrapper">
+                        <img alt="${style.title} AI 生成圖片" loading="lazy">
+                    </div>
+                    ${footerHTML}
                 </div>
             </div>
-        </div>
-    `;
+        `;
+    } else {
+        imageCard.style.opacity = '1';
+        imageCard.style.animation = 'none';
+        imageCard.style.position = 'relative';
+        imageCard.innerHTML = `
+            <div class="image-card-img-wrapper" style="width: 100%; height: 100%;">
+                 <img alt="${style ? style.title : 'Gacha Image'}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 0.5s;">
+            </div>
+            ${footerHTML}
+        `;
+    }
 
     const img = imageCard.querySelector('img');
-    const flipper = imageCard.querySelector('.flipper');
+    
     img.onload = () => {
-        const cardFront = imageCard.querySelector('.card-front');
-        if (cardFront) {
-            cardFront.style.display = 'none';
+        if (withAnimation) {
+            const flipper = imageCard.querySelector('.flipper');
+            setTimeout(() => {
+                flipper.classList.add('reveal');
+            }, 50);
+        } else {
+            img.style.opacity = '1';
         }
-        flipper.classList.add('reveal');
     };
-    // ✨ FIX: Added console.error for debugging gacha image issues
+    
     img.onerror = () => {
-         console.error("圖片載入失敗，請檢查此 URL 是否有效以及 Firebase Storage 權限:", displaySrc);
-         flipper.innerHTML = '<p class="text-red-400 p-4 text-center">圖片載入失敗</p>';
+         const errorMsg = "圖片載入失敗！";
+         console.error(errorMsg, "URL:", displaySrc);
+         imageCard.innerHTML = `<p class="text-red-400 p-4 text-center">${errorMsg}</p>`;
     };
 
-    // Attach event handlers from main.js
-    imageCard.addEventListener('click', (e) => {
-        if (e.target.closest('.story-btn')) {
-            e.stopPropagation();
-            // Disable story button for placeholder
-            if (id === 'vip-placeholder') {
-                showMessage('此為預覽卡片，無法生成故事喔！');
-                return;
+    if (withButtons) {
+        imageCard.addEventListener('click', (e) => {
+            if (e.target.closest('.story-btn')) {
+                e.stopPropagation();
+                if (id === 'vip-placeholder') {
+                    showMessage('此為預覽卡片，無法生成故事喔！');
+                    return;
+                }
+                handlers.onStory(style);
+            } else if (e.target.closest('.like-btn')) {
+                e.stopPropagation();
+                handlers.onLike(imageData, e.target.closest('.like-btn'));
+            } else if (e.target.closest('.share-btn')) {
+                e.stopPropagation();
+                handlers.onShare(imageData, e.target.closest('.share-btn'));
+            } else if (e.target.closest('.image-card-img-wrapper')) {
+                handlers.onImageClick(displaySrc);
             }
-            handlers.onStory(style);
-        } else if (e.target.closest('.like-btn')) {
-            e.stopPropagation();
-            handlers.onLike(imageData, e.target.closest('.like-btn'));
-        } else if (e.target.closest('.share-btn')) {
-            e.stopPropagation();
-            handlers.onShare(imageData, e.target.closest('.share-btn'));
-        } else if (e.target.closest('.image-card-img-wrapper')) {
-            handlers.onImageClick(displaySrc);
-        }
-    });
+        });
+    } else {
+         imageCard.addEventListener('click', (e) => {
+             if (e.target.closest('.image-card-img-wrapper')) {
+                handlers.onImageClick(displaySrc);
+            }
+         });
+    }
+
+    // ✨ FIX: 確保圖片的 src 屬性最後被正確設定
+    img.src = displaySrc;
 
     return imageCard;
 }

@@ -1,12 +1,13 @@
 // main.js - 專案總指揮
 
 // --- 模組引入 ---
-import { apiKey, styles, randomKeywords } from './gconfig.js';
+import { apiKey, styles, randomKeywords, gameSettings, apiSettings, uiSettings } from './gconfig.js';
 import { 
     initFirebase, handleAuthentication, getCurrentUserId,
     listenToFavorites, saveFavorite, removeFavorite, uploadImage,
     shareToPublic,
-    loadGachaStateFromDB, saveGachaStateToDB, getRandomGoddessFromDB
+    loadGachaStateFromDB, saveGachaStateToDB, getRandomGoddessFromDB,
+    saveTtsStateToDB, loadTtsStateFromDB
 } from './gfirebase.js';
 import {
     showMessage, createImageCard, initParticles, animateParticles,
@@ -25,6 +26,8 @@ const storyModal = document.getElementById('story-modal');
 const storyTextEl = document.getElementById('story-text');
 const ttsBtn = document.getElementById('tts-btn');
 const ttsAudio = document.getElementById('tts-audio');
+const ttsStopBtn = document.getElementById('tts-stop-btn');
+const ttsLimitInfo = document.getElementById('tts-limit-info');
 const generateOneBtn = document.getElementById('generate-one-btn');
 const generateFourBtn = document.getElementById('generate-four-btn');
 const favoritesBtn = document.getElementById('favorites-btn');
@@ -58,10 +61,14 @@ let favorites = [];
 let publicGoddesses = [];
 let currentSlideshowIndex = 0;
 let musicPlayer = null;
-let isMusicPlaying = false;
 let unsubscribeFavorites;
-let gachaState = { count: 5, lastDrawDate: null };
+let gachaState = { count: gameSettings.dailyGachaCount, lastDrawDate: null };
+let ttsState = { count: gameSettings.dailyTtsCount, lastListenDate: null };
 let ownGoddessStreak = 0;
+let needsRefreshAfterGacha = false;
+// ✨ NEW: 用於滑動操作的狀態變數
+let touchStartX = 0;
+let touchEndX = 0;
 
 // --- Sound Engine ---
 const sounds = {
@@ -103,7 +110,9 @@ window.onload = () => {
     const loadingCanvas = document.getElementById('loading-canvas');
     resizeLoadingCanvas(loadingCanvas);
     let petals = [];
-    for(let i = 0; i < 30; i++) { petals.push(new Petal(loadingCanvas)); }
+    for(let i = 0; i < uiSettings.loadingPetalCount; i++) { 
+        petals.push(new Petal(loadingCanvas)); 
+    }
     animateLoading(loadingCanvas, petals, loadingOverlay);
 };
 
@@ -112,6 +121,7 @@ function onUserSignedIn(uid, error) {
         userInfoEl.textContent = `雲端使用者 ID: ${uid}`;
         unsubscribeFavorites = listenToFavorites(onFavoritesUpdate);
         loadGachaState();
+        loadTtsState();
     } else {
         showMessage("無法連接雲端，部分功能將受限", true);
         console.error("Authentication Error:", error);
@@ -179,17 +189,17 @@ function initializeUI() {
         styleSectionsContainer.appendChild(section);
     });
     
-    // ✨ FIX: Create an interactive placeholder card for the VIP tab
     const vipGallery = document.getElementById('vip-exclusive-gallery');
     if (vipGallery) {
         const vipStyle = styles.find(s => s.id === 'vip-exclusive');
+        const randomPreviewImg = uiSettings.previewImages[Math.floor(Math.random() * uiSettings.previewImages.length)];
         const vipPlaceholderData = {
             id: 'vip-placeholder',
             style: vipStyle,
-            src: 'gimages/g/g1.jpg',
-            imageUrl: 'gimages/g/g1.jpg',
+            src: randomPreviewImg,
+            imageUrl: randomPreviewImg,
             isLiked: favorites.some(fav => fav.id === 'vip-placeholder'),
-            isShareable: false // Disable sharing for this card
+            isShareable: false 
         };
         const placeholderCard = createImageCard(vipPlaceholderData, getCardHandlers());
         vipGallery.appendChild(placeholderCard);
@@ -203,6 +213,10 @@ function initializeUI() {
 function addEventListeners() {
     document.querySelectorAll('.tab-button').forEach(button => {
         button.addEventListener('click', () => {
+            if (needsRefreshAfterGacha) {
+                location.reload();
+                return;
+            }
             sounds.tab();
             activeStyleId = button.dataset.styleId;
             document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
@@ -215,7 +229,12 @@ function addEventListeners() {
     });
 
     imageModal.addEventListener('click', () => imageModal.classList.remove('show'));
-    storyModal.addEventListener('click', (e) => { if (e.target === storyModal) storyModal.classList.remove('show'); });
+    storyModal.addEventListener('click', (e) => { 
+        if (e.target === storyModal) {
+            ttsAudio.pause(); 
+            storyModal.classList.remove('show');
+        }
+    });
     generateOneBtn.addEventListener('click', () => handleImageGeneration(1));
     generateFourBtn.addEventListener('click', () => handleImageGeneration(4));
     favoritesBtn.addEventListener('click', openSlideshow);
@@ -230,8 +249,41 @@ function addEventListeners() {
     document.getElementById('slideshow-prev').addEventListener('click', () => navigateSlideshow(-1));
     
     gachaBtn.addEventListener('click', openGachaModal);
-    gachaCloseBtn.addEventListener('click', () => gachaModal.classList.remove('show'));
+    gachaCloseBtn.addEventListener('click', () => {
+        gachaModal.classList.remove('show');
+    });
     gachaDrawBtn.addEventListener('click', drawGacha);
+
+    ttsStopBtn.addEventListener('click', () => {
+        ttsAudio.pause();
+        ttsAudio.currentTime = 0;
+        resetTtsButtons();
+    });
+    ttsAudio.addEventListener('ended', resetTtsButtons);
+    ttsAudio.addEventListener('pause', resetTtsButtons);
+
+    const startAudio = async () => {
+        try {
+            await Tone.start();
+            console.log("Audio context started by user gesture.");
+            if (!musicPlayer) {
+                toggleMusic();
+            }
+            document.body.removeEventListener('click', startAudio);
+            document.body.removeEventListener('touchend', startAudio);
+        } catch (e) {
+            console.error("Could not start audio context:", e);
+        }
+    };
+
+    document.body.addEventListener('click', startAudio);
+    document.body.addEventListener('touchend', startAudio);
+
+    // ✨ NEW: 新增鍵盤與滑動事件監聽
+    document.addEventListener('keydown', handleKeydown);
+    slideshowContainer.addEventListener('touchstart', handleTouchStart, false);
+    slideshowContainer.addEventListener('touchmove', handleTouchMove, false);
+    slideshowContainer.addEventListener('touchend', handleTouchEnd, false);
 }
 
 function updateGenerateButtonsState(styleId) {
@@ -241,11 +293,7 @@ function updateGenerateButtonsState(styleId) {
 }
 
 function startLoadingSequence() {
-    const silhouettes = [
-        'gimages/g/g1.jpg', 'gimages/g/g2.jpg', 'gimages/g/g3.jpg',
-        'gimages/g/g4.jpg', 'gimages/g/g5.jpg', 'gimages/g/g6.jpg',
-        'gimages/g/g7.png', 'gimages/g/g8.png', 'gimages/g/g9.png', 
-    ];
+    const silhouettes = uiSettings.loadingSilhouettes;
 
     silhouetteContainer.innerHTML = silhouettes.map(src => `<img src="${src}" class="loading-silhouette" alt="Loading Muse">`).join('');
     
@@ -264,30 +312,27 @@ function startLoadingSequence() {
 
 // --- Core Logic Handlers ---
 async function generateInitialImages() {
-    if (favorites.length >= 4) {
-        loadingText.textContent = '正在從您的殿堂召喚女神...';
-        await new Promise(res => setTimeout(res, 500)); 
-
-        for (const fav of favorites) {
-            if (!fav || !fav.style || !fav.style.id || !fav.imageUrl) {
-                console.warn("跳過無效的收藏項目:", fav);
-                continue;
-            }
-            const gallery = document.getElementById(`${fav.style.id}-gallery`);
-            if (gallery) {
-                const imageData = {
-                    src: fav.imageUrl,
-                    style: fav.style,
-                    id: fav.id,
-                    isLiked: true,
-                    imageUrl: fav.imageUrl
-                };
-                const imageCard = createImageCard(imageData, getCardHandlers());
-                gallery.appendChild(imageCard);
-            }
+    if (favorites.length < 4) {
+       await generateNewUserImages();
+    }
+    
+    for (const fav of favorites) {
+        if (!fav || !fav.style || !fav.style.id || !fav.imageUrl) {
+            console.warn("跳過無效的收藏項目:", fav);
+            continue;
         }
-    } else {
-        await generateNewUserImages();
+        const gallery = document.getElementById(`${fav.style.id}-gallery`);
+        if (gallery) {
+            const imageData = {
+                src: fav.imageUrl,
+                style: fav.style,
+                id: fav.id,
+                isLiked: true,
+                imageUrl: fav.imageUrl
+            };
+            const imageCard = createImageCard(imageData, getCardHandlers());
+            gallery.appendChild(imageCard);
+        }
     }
     
     loadingText.textContent = '邂逅即將開始...';
@@ -309,7 +354,7 @@ async function generateNewUserImages() {
                 src: base64Src, 
                 style: style, 
                 id: newId,
-                isLiked: favorites.some(fav => fav && fav.id === newId)
+                isLiked: favorites.some(fav => fav.id === newId)
             };
             const imageCard = createImageCard(imageData, getCardHandlers());
             document.getElementById(`${style.id}-gallery`).appendChild(imageCard);
@@ -352,7 +397,7 @@ async function handleImageGeneration(count = 1) {
                 src: base64Src, 
                 style: style, 
                 id: newId,
-                isLiked: favorites.some(fav => fav && fav.id === newId)
+                isLiked: favorites.some(fav => fav.id === newId)
             };
             const imageCard = createImageCard(imageData, getCardHandlers());
             loadingCards[i].replaceWith(imageCard);
@@ -382,36 +427,42 @@ function getCardHandlers() {
 
 async function handleStoryGeneration(style) {
     if (isStoryGenerating) return;
+    
+    await checkTtsCount();
+    
     isStoryGenerating = true;
     storyTextEl.innerHTML = '<div class="loader mx-auto"></div>';
-    ttsBtn.disabled = true;
     storyModal.classList.add('show');
-    
+    updateTtsUi();
+
     try {
-        const storyPrompt = `以繁體中文，為一張風格為「${style.title}」的女性照片，寫一段約150字的短篇故事或情境描述。請用充滿想像力且感性的筆觸，描述她的背景、心情或一個正在發生的瞬間。`;
+        const storyPrompt = `以繁體中文，為一張風格為「${style.title}」的女性照片融合${style.description}，寫一段約150字的短篇故事或情境描述。請用充滿想像力且感性的筆觸，描述她的背景、心情或一個正在發生的瞬間。`;
         const story = await callTextGenerationAPI(storyPrompt);
         storyTextEl.textContent = story;
-        ttsBtn.disabled = false;
+        ttsBtn.onclick = () => {
+            if(storyTextEl.textContent) handleTTSGeneration(storyTextEl.textContent);
+        };
     } catch (error) {
         console.error('故事生成失敗:', error);
         storyTextEl.textContent = '故事的靈感暫時枯竭了，請稍後再試。';
+        ttsBtn.disabled = true;
     } finally {
         isStoryGenerating = false;
     }
-
-    ttsBtn.onclick = () => {
-        if(storyTextEl.textContent) handleTTSGeneration(storyTextEl.textContent);
-    };
 }
 
 async function handleTTSGeneration(text) {
-    if (isTtsGenerating) return;
+    if (isTtsGenerating || ttsState.count <= 0) return;
     isTtsGenerating = true;
     ttsBtn.textContent = '聲音合成中...';
     ttsBtn.disabled = true;
     
     try {
         const { audioData, mimeType } = await callTTSAPI(`Say in a gentle and alluring female voice: ${text}`);
+        ttsState.count--;
+        await saveTtsState();
+        updateTtsUi();
+
         const sampleRate = parseInt(mimeType.match(/rate=(\d+)/)[1], 10);
         const pcmData = base64ToArrayBuffer(audioData);
         const pcm16 = new Int16Array(pcmData);
@@ -419,13 +470,16 @@ async function handleTTSGeneration(text) {
         const audioUrl = URL.createObjectURL(wavBlob);
         ttsAudio.src = audioUrl;
         ttsAudio.play();
+
+        ttsBtn.style.display = 'none';
+        ttsStopBtn.style.display = 'inline-block';
+
     } catch (error) {
         console.error('TTS 生成失敗:', error);
         showMessage('語音功能暫時無法使用', true);
+        resetTtsButtons();
     } finally {
         isTtsGenerating = false;
-        ttsBtn.textContent = '聆聽故事';
-        ttsBtn.disabled = false;
     }
 }
 
@@ -444,20 +498,33 @@ async function toggleFavorite(imageData, btn) {
     if (index > -1) {
         try {
             await removeFavorite(favorites[index]);
+            needsRefreshAfterGacha = true;
         } catch (error) {
             console.error("Failed to remove favorite:", error);
             showMessage("取消收藏失敗", true);
         }
     } else {
         try {
-            showMessage("正在上傳至雲端...");
-            const downloadURL = await uploadImage(imageData.src, imageData.id);
-            const favoriteData = { id: imageData.id, style: imageData.style, imageUrl: downloadURL };
+            let favoriteData;
+            if (imageData.src && imageData.src.startsWith('data:image')) {
+                showMessage("正在上傳至雲端...");
+                const downloadURL = await uploadImage(imageData.src, imageData.id);
+                favoriteData = { id: imageData.id, style: imageData.style, imageUrl: downloadURL };
+            } else {
+                favoriteData = { 
+                    id: imageData.id, 
+                    style: imageData.style, 
+                    imageUrl: imageData.imageUrl
+                };
+            }
+            
             await saveFavorite(favoriteData);
+            needsRefreshAfterGacha = true;
             showMessage("收藏成功！");
+
         } catch (error) {
             console.error("Failed to save favorite:", error);
-            showMessage("收藏失敗", true);
+            showMessage(`收藏失敗: ${error.message}`, true);
         }
     }
     if (btn) btn.disabled = false;
@@ -593,7 +660,7 @@ async function openGachaModal() {
 async function checkGachaCount() {
     const today = new Date().toISOString().split('T')[0];
     if (gachaState.lastDrawDate !== today) {
-        gachaState.count = 5;
+        gachaState.count = gameSettings.dailyGachaCount;
         gachaState.lastDrawDate = today;
         await saveGachaStateToDB(gachaState);
     }
@@ -630,7 +697,7 @@ async function drawGacha() {
         const currentUid = getCurrentUserId();
         if (randomGoddess.sharedBy && randomGoddess.sharedBy === currentUid) {
             ownGoddessStreak++;
-            const REQUIRED_STREAK = 2;
+            const REQUIRED_STREAK = gameSettings.gachaStreakGoal;
             if (ownGoddessStreak >= REQUIRED_STREAK) {
                 gachaState.count++; 
                 showMessage(`幸運！連續抽到自己的女神 ${ownGoddessStreak} 次，額外獲得一次召喚！`);
@@ -649,7 +716,8 @@ async function drawGacha() {
             id: randomGoddess.id,
             isLiked: favorites.some(fav => fav.id === randomGoddess.id)
         };
-        const gachaCard = createImageCard(imageData, getCardHandlers());
+        
+        const gachaCard = createImageCard(imageData, getCardHandlers(), { withAnimation: false, withButtons: true });
         gachaResultContainer.innerHTML = '';
         gachaResultContainer.appendChild(gachaCard);
 
@@ -658,8 +726,8 @@ async function drawGacha() {
         updateGachaUI();
     } catch (error) {
         console.error("Gacha draw failed:", error);
-        showMessage(error.message, true);
-        gachaResultContainer.innerHTML = `<div class="gacha-placeholder"><p>召喚失敗...</p></div>`;
+        showMessage(`召喚失敗: ${error.message}`, true);
+        gachaResultContainer.innerHTML = `<div class="gacha-placeholder"><p>召喚失敗...</p><p class="text-xs text-gray-400 mt-2">${error.message}</p></div>`;
     } finally {
         if (gachaState.count > 0) gachaDrawBtn.disabled = false;
     }
@@ -673,6 +741,55 @@ async function loadGachaState() {
     checkGachaCount();
 }
 
+// --- TTS State Management ---
+async function saveTtsState() {
+    try {
+        await saveTtsStateToDB(ttsState);
+    } catch (error) {
+        console.error("Failed to save TTS state:", error);
+    }
+}
+
+async function loadTtsState() {
+    try {
+        const state = await loadTtsStateFromDB();
+        if (state) {
+            ttsState = state;
+        }
+        checkTtsCount();
+    } catch (error) {
+        console.error("Failed to load TTS state:", error);
+    }
+}
+
+async function checkTtsCount() {
+    const today = new Date().toISOString().split('T')[0];
+    if (ttsState.lastListenDate !== today) {
+        ttsState.count = gameSettings.dailyTtsCount;
+        ttsState.lastListenDate = today;
+        await saveTtsState();
+    }
+}
+
+function updateTtsUi() {
+    if (ttsState.count <= 0) {
+        ttsBtn.disabled = true;
+        ttsBtn.textContent = "明日再來";
+        ttsLimitInfo.style.display = 'block';
+    } else {
+        ttsBtn.disabled = false;
+        ttsBtn.textContent = "聆聽故事";
+        ttsLimitInfo.style.display = 'none';
+    }
+}
+
+function resetTtsButtons() {
+    ttsBtn.style.display = 'inline-block';
+    ttsStopBtn.style.display = 'none';
+    updateTtsUi();
+}
+
+
 // --- API Call Logic ---
 function generateUniqueId() {
     return Date.now().toString(36) + Math.random().toString(36).substring(2);
@@ -683,7 +800,10 @@ function getRandomItems(arr, count) {
     return shuffled.slice(0, count);
 }
 
-async function generateImageWithRetry(prompt, retries = 3, delay = 1000) {
+async function generateImageWithRetry(prompt) {
+    const retries = apiSettings.imageGenerationRetries;
+    const delay = apiSettings.imageGenerationDelay;
+    
     const enhancedPrompt = `${prompt}, ${getRandomItems(randomKeywords.hair, 1)}, ${getRandomItems(randomKeywords.outfit, 2).join(', ')}, ${getRandomItems(randomKeywords.setting, 1)}, ${getRandomItems(randomKeywords.artStyle, 1)}, ${getRandomItems(randomKeywords.bodyDetails, 2).join(', ')}, ${getRandomItems(randomKeywords.expression, 1)}, ${getRandomItems(randomKeywords.mood, 1)}.`;
     const fullPrompt = `masterpiece, best quality, ultra-detailed, photorealistic, 8k, sharp focus, detailed beautiful face. ${enhancedPrompt} aspect ratio 2:3, raw style. Negative prompt: ugly, blurry, bad anatomy, disfigured, poorly drawn face, mutation, mutated, extra limb, dull eyes, bad hands, missing fingers, low quality, jpeg artifacts, text, watermark, signature, cartoon, 3d, deformed.`;
 
@@ -794,7 +914,7 @@ async function callTTSAPI(text) {
             responseModalities: ["AUDIO"],
             speechConfig: {
                 voiceConfig: {
-                    prebuiltVoiceConfig: { voiceName: "Zubenelgenubi" } 
+                    prebuiltVoiceConfig: { voiceName: apiSettings.ttsVoice } 
                 }
             }
         },
@@ -850,18 +970,17 @@ function pcmToWav(pcmData, sampleRate) {
     view.setUint32(8, 0x57415645, false); // "WAVE"
     // "fmt " sub-chunk
     view.setUint32(12, 0x666d7420, false); // "fmt "
-    view.setUint32(16, 16, true); // Sub-chunk size
-    view.setUint16(20, 1, true); // Audio format (1 for PCM)
+    view.setUint32(16, 16, true);
+    view.setUint16(20, 1, true);
     view.setUint16(22, numChannels, true);
     view.setUint32(24, sampleRate, true);
     view.setUint32(28, byteRate, true);
     view.setUint16(32, blockAlign, true);
-    view.setUint16(34, bytesPerSample * 8, true); // Bits per sample
+    view.setUint16(34, bytesPerSample * 8, true);
     // "data" sub-chunk
     view.setUint32(36, 0x64617461, false); // "data"
     view.setUint32(40, dataSize, true);
 
-    // Write PCM data
     const pcm16 = new Int16Array(pcmData.buffer);
     for (let i = 0; i < pcmData.length; i++) {
         view.setInt16(44 + i * 2, pcmData[i], true);
@@ -873,14 +992,13 @@ function pcmToWav(pcmData, sampleRate) {
 function toggleMusic() {
     if (!musicPlayer) {
         musicPlayer = new Tone.Player({
-            url: "gmusic/gm1.mp3",
+            url: gameSettings.musicPath,
             loop: true,
-            autostart: true,
             volume: -12,
         }).toDestination();
     }
     
-    if (isMusicPlaying) {
+    if (musicPlayer.state === 'started') {
         musicPlayer.stop();
         musicOnIcon.style.display = 'none';
         musicOffIcon.style.display = 'block';
@@ -889,13 +1007,47 @@ function toggleMusic() {
         musicOnIcon.style.display = 'block';
         musicOffIcon.style.display = 'none';
     }
-    isMusicPlaying = !isMusicPlaying;
 }
 
-document.body.addEventListener('click', () => { 
-    Tone.start(); 
-    if (!isMusicPlaying && !musicPlayer) {
-        // Let user decide when to start music
-        // toggleMusic();
+// ✨ NEW: 新增處理鍵盤與滑動操作的函數
+function handleKeydown(e) {
+    if (!slideshowModal.classList.contains('show')) return;
+
+    switch (e.key) {
+        case 'ArrowLeft':
+            navigateSlideshow(-1);
+            break;
+        case 'ArrowRight':
+            navigateSlideshow(1);
+            break;
+        case 'Escape':
+            slideshowModal.classList.remove('show');
+            break;
     }
-}, { once: true });
+}
+
+function handleTouchStart(e) {
+    touchStartX = e.changedTouches[0].screenX;
+}
+
+function handleTouchMove(e) {
+    touchEndX = e.changedTouches[0].screenX;
+}
+
+function handleTouchEnd() {
+    const swipeThreshold = 50; // 判定為滑動的最小距離
+    if (touchEndX === 0) return; // 避免單純點擊觸發
+
+    if (touchEndX < touchStartX - swipeThreshold) {
+        // 向左滑
+        navigateSlideshow(1);
+    }
+
+    if (touchEndX > touchStartX + swipeThreshold) {
+        // 向右滑
+        navigateSlideshow(-1);
+    }
+    // 重置座標
+    touchStartX = 0;
+    touchEndX = 0;
+}

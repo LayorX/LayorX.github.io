@@ -42,7 +42,6 @@ export function handleAuthentication(onUserSignedIn) {
     });
 }
 
-// ✨ NEW: Export a function to get the current user ID safely
 export function getCurrentUserId() {
     return currentUserId;
 }
@@ -69,10 +68,8 @@ export async function saveFavorite(favoriteData) {
 
 export async function removeFavorite(favoriteToRemove) {
     if (!currentUserId) throw new Error("User not signed in.");
-    // 1. Delete Firestore document
     const favoriteRef = doc(db, 'users', currentUserId, 'favorites', favoriteToRemove.id);
     await deleteDoc(favoriteRef);
-    // 2. Delete image from Storage
     const imageRef = ref(storage, `users/${currentUserId}/images/${favoriteToRemove.id}.png`);
     try {
         await deleteObject(imageRef);
@@ -123,4 +120,18 @@ export async function getRandomGoddessFromDB() {
     const allDocs = querySnapshot.docs;
     const randomIndex = Math.floor(Math.random() * allDocs.length);
     return allDocs[randomIndex].data();
+}
+
+// ✨ FIX: 將 TTS 狀態管理函數移至此處，統一管理 Firebase 操作
+export async function saveTtsStateToDB(ttsState) {
+    if (!currentUserId) throw new Error("User not signed in.");
+    const ttsRef = doc(db, 'users', currentUserId, 'status', 'tts');
+    await setDoc(ttsRef, ttsState);
+}
+
+export async function loadTtsStateFromDB() {
+    if (!currentUserId) throw new Error("User not signed in.");
+    const ttsRef = doc(db, 'users', currentUserId, 'status', 'tts');
+    const docSnap = await getDoc(ttsRef);
+    return docSnap.exists() ? docSnap.data() : null;
 }
