@@ -1,4 +1,7 @@
+// gui.js - 專門處理所有與 UI 畫面相關的功能
+
 import { uiMessages } from './game-config.js';
+import { getState } from './stateManager.js';
 
 const favoritesCountEl = document.getElementById('favorites-count');
 const messageBox = document.getElementById('message-box');
@@ -20,8 +23,11 @@ export function createImageCard(imageData, handlers, options = {}) {
     const { withAnimation = true, withButtons = true } = options;
     const { style, id, isLiked, isShared, isShareable = true, isGachaCard = false } = imageData;
 
-    const displaySrc = imageData.resizedUrl || imageData.imageUrl || imageData.src;
+    const imageQuality = getState('imageQuality');
     const originalSrc = imageData.imageUrl || imageData.src;
+    const displaySrc = (imageQuality === 'original') 
+        ? originalSrc 
+        : (imageData.resizedUrl || originalSrc);
 
     const imageCard = document.createElement('div');
     imageCard.className = 'image-card';
@@ -29,7 +35,7 @@ export function createImageCard(imageData, handlers, options = {}) {
     imageCard.dataset.originalSrc = originalSrc;
 
     const mainButtonHTML = isGachaCard
-        ? `<button class="dislike-btn story-btn">審判時刻... 👎</button>`
+        ? `<button class="dislike-btn story-btn">我覺得不行!...👎</button>`
         : `<button class="story-btn">生成故事 ✨</button>`;
 
     const footerHTML = withButtons ? `
@@ -86,6 +92,7 @@ export function createImageCard(imageData, handlers, options = {}) {
         if (this.src === originalUrlFromData) {
             const errorTitle = uiMessages.errors.imageLoadFailure;
             const errorHint = uiMessages.errors.imageLoadHint;
+            // ✨ FIX: 修正 console.error 的語法
             console.error(errorTitle, "Failed on both resized and original URL:", originalUrlFromData);
             card.innerHTML = `<div class="text-red-400 p-4 text-center text-sm flex flex-col justify-center h-full">
                                 <p class="font-bold">${errorTitle}</p>
@@ -117,14 +124,14 @@ export function createImageCard(imageData, handlers, options = {}) {
                 e.stopPropagation();
                 handlers.onShare(imageData, e.target.closest('.share-btn'));
             } else if (e.target.closest('.image-card-img-wrapper')) {
-                handlers.onImageClick(clickedCard.dataset.originalSrc);
+                handlers.onImageClick(clickedCard);
             }
         });
     } else {
          imageCard.addEventListener('click', (e) => {
              const clickedCard = e.currentTarget;
              if (e.target.closest('.image-card-img-wrapper')) {
-                handlers.onImageClick(clickedCard.dataset.originalSrc);
+                handlers.onImageClick(clickedCard);
             }
          });
     }

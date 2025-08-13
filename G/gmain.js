@@ -90,6 +90,7 @@ function onFavoritesUpdate(newFavorites, err) {
     setState({ favorites: newFavorites });
 }
 
+// ✨ UPDATE: 使用 config 中的設定來驅動載入動畫
 function startLoadingSequence() {
     const loadingOverlay = document.getElementById('loading-overlay');
     const loadingText = document.getElementById('loading-text');
@@ -98,12 +99,12 @@ function startLoadingSequence() {
 
     if(loadingText) loadingText.textContent = uiMessages.loading.connecting;
 
-    const silhouettes = ['gimages/g/g1.jpg', 'gimages/g/g2.jpg', 'gimages/g/g3.jpg', 'gimages/g/g4.jpg', 'gimages/g/g5.jpg', 'gimages/g/g6.jpg', 'gimages/g/g7.png', 'gimages/g/g8.png', 'gimages/g/g9.png'].sort(() => Math.random() - 0.5);
+    const silhouettes = [...uiSettings.loadingSilhouettes].sort(() => Math.random() - 0.5);
     silhouetteContainer.innerHTML = silhouettes.map(src => `<img src="${src}" class="loading-silhouette" alt="Loading Muse">`).join('');
     
     const silhouetteElements = document.querySelectorAll('.loading-silhouette');
     if (silhouetteElements.length > 0) {
-        const animationStep = 1;
+        const animationStep = uiSettings.loadingAnimationStep;
         const totalDuration = silhouetteElements.length * animationStep;
         silhouetteElements.forEach((el, index) => {
             el.style.animationDelay = `${index * animationStep}s`;
@@ -113,7 +114,7 @@ function startLoadingSequence() {
     }
 
     resizeLoadingCanvas(loadingCanvas);
-    let petals = Array.from({ length: 60 }, () => new Petal(loadingCanvas));
+    let petals = Array.from({ length: uiSettings.loadingPetalCount }, () => new Petal(loadingCanvas));
     animateLoading(loadingCanvas, petals, loadingOverlay);
 
     setTimeout(() => {
@@ -171,8 +172,11 @@ function setupAppInfo() {
     const headerTitleEl = document.getElementById('header-title');
     const appFooter = document.getElementById('app-footer');
     document.title = `${appInfo.title} v${appInfo.version}`;
-    headerTitleEl.textContent = `${appInfo.title} v${appInfo.version}`;
     
+    // ✨ FIX: 使用 innerHTML 並為版本號加上 span 和 class
+    headerTitleEl.innerHTML = `${appInfo.title} <span class="text-base align-middle text-gray-400 font-medium">v${appInfo.version}</span>`;
+    
+
     const { copyrightYear, authorName, authorLink } = appInfo.footer;
     appFooter.innerHTML = `
         © ${copyrightYear} <a href="${authorLink}" target="_blank" class="hover:underline">${authorName}</a>. All Rights Reserved.

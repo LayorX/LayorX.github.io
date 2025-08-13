@@ -1,3 +1,5 @@
+// handlers.js - 包含所有核心的事件處理函式
+
 import { saveFavorite, removeFavorite, uploadImage, shareToPublic, getRandomGoddessFromDB, getCurrentUserId, addDislikeToGoddess, updatePublicGoddessVote } from './gfirebase.js';
 import { getState, setState } from './stateManager.js';
 import { uiMessages, gameSettings, apiSettings, styles } from './game-config.js';
@@ -8,8 +10,55 @@ import { useTask, getTaskCount, addTaskCount } from './dailyTaskManager.js';
 import { incrementStat } from './analyticsManager.js';
 import { sounds } from './soundManager.js';
 
-// ... (Utility functions: generateUniqueId, base64ToArrayBuffer, pcmToWav)
+// --- Utility Functions ---
+// ✨ FIX: 將遺漏的 generateUniqueId 函式加回來
+function generateUniqueId() {
+    return Date.now().toString(36) + Math.random().toString(36).substring(2);
+}
 
+function base64ToArrayBuffer(base64) {
+    const binaryString = window.atob(base64);
+    const len = binaryString.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+    }
+    return bytes.buffer;
+}
+
+function pcmToWav(pcmData, sampleRate) {
+    const numChannels = 1;
+    const bytesPerSample = 2;
+    const blockAlign = numChannels * bytesPerSample;
+    const byteRate = sampleRate * blockAlign;
+    const dataSize = pcmData.length * bytesPerSample;
+    const buffer = new ArrayBuffer(44 + dataSize);
+    const view = new DataView(buffer);
+
+    view.setUint32(0, 0x52494646, false);
+    view.setUint32(4, 36 + dataSize, true);
+    view.setUint32(8, 0x57415645, false);
+    view.setUint32(12, 0x666d7420, false);
+    view.setUint32(16, 16, true);
+    view.setUint16(20, 1, true);
+    view.setUint16(22, numChannels, true);
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(28, byteRate, true);
+    view.setUint16(32, blockAlign, true);
+    view.setUint16(34, bytesPerSample * 8, true);
+    view.setUint32(36, 0x64617461, false);
+    view.setUint32(40, dataSize, true);
+
+    const pcm16 = new Int16Array(pcmData.buffer);
+    for (let i = 0; i < pcmData.length; i++) {
+        view.setInt16(44 + i * 2, pcmData[i], true);
+    }
+
+    return new Blob([view], { type: 'audio/wav' });
+}
+
+
+// --- Core Logic Handlers ---
 export async function handleImageGeneration(count = 1) {
     if (getState('isGenerating')) return;
 
@@ -107,11 +156,20 @@ export function getCardHandlers() {
         onStory: handleStoryGeneration,
         onLike: (imageData, btn) => toggleFavorite(imageData, btn),
         onShare: shareFavoriteToPublicHandler,
-        onImageClick: (displaySrc) => {
+        onImageClick: (cardElement) => {
+            const originalSrc = cardElement.dataset.originalSrc;
             const modalImage = document.getElementById('modal-image');
             const imageModal = document.getElementById('image-modal');
-            modalImage.src = displaySrc;
+            
+            modalImage.src = originalSrc;
             imageModal.classList.add('show');
+
+            modalImage.onload = () => {
+                const galleryImg = cardElement.querySelector('img');
+                if (galleryImg && galleryImg.src !== originalSrc) {
+                    galleryImg.src = originalSrc;
+                }
+            };
         },
         onDislike: handleDislike
     };

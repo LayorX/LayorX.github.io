@@ -1,5 +1,7 @@
+// uiManager.js - 負責所有 UI 初始化、事件綁定和 DOM 更新
+
 import { serviceKeys } from './app-config.js';
-import { styles, uiMessages, uiSettings } from './game-config.js';
+import { styles, uiSettings, uiMessages } from './game-config.js';
 import { getState, setState, subscribe } from './stateManager.js';
 import { getTaskCount } from './dailyTaskManager.js';
 import { getCardHandlers, handleImageGeneration, drawGacha, unfavoriteCurrentSlide } from './handlers.js';
@@ -42,6 +44,7 @@ export function initializeUI() {
         soundOffIcon: document.getElementById('sound-off-icon'),
         moreOptionsBtn: document.getElementById('more-options-btn'),
         moreOptionsMenu: document.getElementById('more-options-menu'),
+        settingsBtn: document.getElementById('settings-btn'),
         aboutBtn: document.getElementById('about-btn'),
         contactBtn: document.getElementById('contact-btn'),
         apikeyBtn: document.getElementById('apikey-btn'),
@@ -56,6 +59,8 @@ export function initializeUI() {
         contactModalContent: document.getElementById('contact-modal-content'),
         comingSoonModal: document.getElementById('coming-soon-modal'),
         comingSoonModalContent: document.getElementById('coming-soon-modal-content'),
+        settingsModal: document.getElementById('settings-modal'),
+        settingsModalContent: document.getElementById('settings-modal-content'),
     };
 
     setupUIText();
@@ -79,7 +84,14 @@ function setupUIText() {
     DOMElements.favoritesEmptyState.querySelector('p:nth-child(2)').textContent = uiMessages.favorites.emptyTitle;
     DOMElements.favoritesEmptyState.querySelector('p:nth-child(3)').textContent = uiMessages.favorites.emptySubtitle;
     document.querySelector('.gacha-placeholder p:nth-child(2)').textContent = uiMessages.gacha.placeholder;
+
+    DOMElements.settingsBtn.textContent = uiMessages.moreOptions.settings;
+    DOMElements.aboutBtn.textContent = uiMessages.moreOptions.about;
+    DOMElements.contactBtn.textContent = uiMessages.moreOptions.contact;
+    DOMElements.apikeyBtn.textContent = uiMessages.moreOptions.apiKey;
+    DOMElements.extraGachaBtn.textContent = uiMessages.moreOptions.extraGacha;
 }
+
 
 function createTabsAndSections() {
     styles.forEach((style, index) => {
@@ -108,8 +120,8 @@ function createTabsAndSections() {
         const vipPlaceholderData = {
             id: 'vip-placeholder',
             style: vipStyle,
-            src: 'gimages/g/g1.jpg',
-            imageUrl: 'gimages/g/g1.jpg',
+            src: uiSettings.previewImages[0],
+            imageUrl: uiSettings.previewImages[0],
             isLiked: false,
             isShareable: false 
         };
@@ -153,6 +165,11 @@ function addEventListeners() {
         }
     });
 
+    DOMElements.settingsBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        openSettingsModal();
+        DOMElements.moreOptionsMenu.classList.add('hidden');
+    });
     DOMElements.aboutBtn.addEventListener('click', (e) => { e.preventDefault(); window.open('GoddeSpark.html', '_blank'); DOMElements.moreOptionsMenu.classList.add('hidden'); });
     DOMElements.contactBtn.addEventListener('click', (e) => { e.preventDefault(); openContactModal(); DOMElements.moreOptionsMenu.classList.add('hidden'); });
     DOMElements.apikeyBtn.addEventListener('click', (e) => { e.preventDefault(); openApiKeyModal(); DOMElements.moreOptionsMenu.classList.add('hidden'); });
@@ -386,6 +403,7 @@ async function handleContactFormSubmit(e) {
 }
 
 function openComingSoonModal() {
+    
     DOMElements.comingSoonModalContent.innerHTML = `
         <button class="modal-close-btn">&times;</button>
         <div class="text-center p-8">
@@ -429,14 +447,27 @@ function toggleTheme() {
     initParticles(newTheme);
 }
 
+// --- Slideshow Logic ---
+// ✨ FIX: 修正了初始渲染的邏輯
 function openSlideshow() {
     const favorites = getState('favorites');
     if (!Array.isArray(favorites) || favorites.length === 0) {
-        showMessage(uiMessages.favorites.empty);
+        DOMElements.favoritesEmptyState.style.display = 'flex';
+        DOMElements.slideshowContainer.style.display = 'none';
+        DOMElements.slideshowModal.classList.add('show');
         return;
     }
+
     sounds.open();
+    DOMElements.favoritesEmptyState.style.display = 'none';
+    DOMElements.slideshowContainer.style.display = 'flex';
+    
     setState({ currentSlideshowIndex: 0 });
+    
+    // 直接呼叫渲染函式
+    renderThumbnails();
+    showSlide(0); 
+    
     DOMElements.slideshowModal.classList.add('show');
 }
 
@@ -475,7 +506,7 @@ function navigateSlideshow(direction) {
 
 function showSlide(index) {
     const favorites = getState('favorites');
-    if (index < 0 || index >= favorites.length) {
+    if (!favorites || index < 0 || index >= favorites.length) {
         DOMElements.slideshowModal.classList.remove('show');
         return;
     }
@@ -504,6 +535,7 @@ function renderThumbnails() {
         thumb.dataset.index = index;
         thumb.onclick = () => {
             setState({ currentSlideshowIndex: index });
+            showSlide(index); // 點擊縮圖時直接顯示對應幻燈片
         };
         DOMElements.thumbnailBar.appendChild(thumb);
     });
@@ -523,4 +555,53 @@ function handleTouchEnd() {
     if (touchEndX < touchStartX - uiSettings.swipeThreshold) navigateSlideshow(1);
     if (touchEndX > touchStartX + uiSettings.swipeThreshold) navigateSlideshow(-1);
     setState({ touchStartX: 0, touchEndX: 0 });
+}
+
+function openSettingsModal() {
+    const { title, imageQualityTitle, qualityThumbnail, qualityThumbnailDesc, qualityOriginal, qualityOriginalDesc } = uiMessages.settingsModal;
+    const currentQuality = getState('imageQuality');
+
+    DOMElements.settingsModalContent.innerHTML = `
+        <button class="modal-close-btn">&times;</button>
+        <h2 class="text-3xl font-bold text-center mb-6">${title}</h2>
+        <div class="space-y-6 text-left">
+            <div>
+                <p class="text-lg font-semibold mb-3">${imageQualityTitle}</p>
+                <div class="space-y-3">
+                    <label class="flex items-center p-3 rounded-lg border border-gray-700 hover:bg-gray-800/50 cursor-pointer">
+                        <input type="radio" name="imageQuality" value="thumbnail" class="w-5 h-5" ${currentQuality === 'thumbnail' ? 'checked' : ''}>
+                        <span class="ml-4">
+                            <p class="font-medium">${qualityThumbnail}</p>
+                            <p class="text-xs text-gray-400">${qualityThumbnailDesc}</p>
+                        </span>
+                    </label>
+                    <label class="flex items-center p-3 rounded-lg border border-gray-700 hover:bg-gray-800/50 cursor-pointer">
+                        <input type="radio" name="imageQuality" value="original" class="w-5 h-5" ${currentQuality === 'original' ? 'checked' : ''}>
+                        <span class="ml-4">
+                            <p class="font-medium">${qualityOriginal}</p>
+                            <p class="text-xs text-gray-400">${qualityOriginalDesc}</p>
+                        </span>
+                    </label>
+                </div>
+            </div>
+            <!-- 預留給未來設定的位置 -->
+            <div class="opacity-50">
+                <p class="text-lg font-semibold mb-3">音效設定 (開發中)</p>
+                <p class="text-sm text-gray-500">此處將可調整背景音樂、音效等。</p>
+            </div>
+        </div>
+    `;
+
+    DOMElements.settingsModal.classList.add('show');
+    DOMElements.settingsModalContent.querySelector('.modal-close-btn').addEventListener('click', () => DOMElements.settingsModal.classList.remove('show'));
+
+    DOMElements.settingsModalContent.querySelectorAll('input[name="imageQuality"]').forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            const newQuality = e.target.value;
+            localStorage.setItem('userImageQuality', newQuality);
+            setState({ imageQuality: newQuality });
+            showMessage(uiMessages.settingsModal.settingSaved);
+            showMessage("設定將於下次重整後完全生效！");
+        });
+    });
 }
