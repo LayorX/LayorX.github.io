@@ -3,7 +3,7 @@
 // 應用程式資訊
 export const appInfo = {
     title: "女神慾見GoddeSpark",
-    version: "1.3.0", // 版本更新
+    version: "1.5.0", // 版本更新
     icons: {
         appleTouchIcon: "gimages/icon/apple-touch-icon.png",
         favicon32: "gimages/icon/favicon-32x32.png",
@@ -31,7 +31,6 @@ export const firebaseSettings = {
 
 // 這是 Google AI 的金鑰，獨立出來
 export const apiKey = "AIzaSyAZUc69ryBPqw0Ss2ZV-f4Jg5kP3VjDd0c"; 
-export const userApiKey= "AIzaSyAZUc69ryBPqw0Ss2ZV-f4Jg5kP3VjDd0c"; 
 
 // 遊戲與應用的核心設定
 export const gameSettings = {
@@ -43,6 +42,19 @@ export const gameSettings = {
         tts: 3,
     },
     gachaStreakGoal: 2,
+};
+
+// ✨ NEW: 使用者行為統計的資料結構
+export const userStatsStructure = {
+    likes: 0,
+    unlikes: 0,
+    shares: 0,
+    gachaDraws: 0,
+    generateOne: 0,
+    generateFour: 0,
+    apiImports: 0,
+    storyGenerations: 0,
+    ttsGenerations: 0,
 };
 
 // API 相關設定

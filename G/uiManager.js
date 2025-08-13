@@ -1,14 +1,16 @@
 // uiManager.js - 負責所有 UI 初始化、事件綁定和 DOM 更新
 
-import { styles, uiSettings, uiMessages, apiKey } from './gconfig.js';
-import { getState, setState } from './state.js';
+import { styles, uiSettings, uiMessages, apiKey as defaultConfigApiKey } from './gconfig.js';
+// ✨ CHANGE: 引入新的 stateManager
+import { getState, setState, subscribe } from './stateManager.js';
 import { getTaskCount } from './dailyTaskManager.js';
 import { getCardHandlers, handleImageGeneration, drawGacha, unfavoriteCurrentSlide } from './handlers.js';
-import { createImageCard, showMessage, initParticles } from './gui.js';
-import { sounds } from './soundManager.js'; // ✨ FIX: 直接從 soundManager 引入
+import { createImageCard, showMessage, initParticles, updateFavoritesCountUI } from './gui.js';
+import { sounds } from './soundManager.js';
 
 // --- DOM Elements ---
 const DOMElements = {
+    // ... (保持不變)
     headerTitle: document.getElementById('header-title'),
     storyModalTitle: document.getElementById('story-modal-title'),
     gachaModalTitle: document.getElementById('gacha-modal-title'),
@@ -57,6 +59,7 @@ const DOMElements = {
 };
 
 function setupUIText() {
+    // ... (保持不變)
     DOMElements.loadingText.textContent = uiMessages.loading.connecting;
     DOMElements.gachaModalTitle.textContent = uiMessages.gachaModalTitle;
     DOMElements.storyModalTitle.textContent = uiMessages.storyModalTitle;
@@ -75,12 +78,14 @@ function setupUIText() {
 }
 
 // --- Initialization ---
-export function initializeUI() { // ✨ FIX: 移除 sounds 參數
-    DOMElements.generateOneBtn.disabled = true;
-    DOMElements.generateFourBtn.disabled = true;
-
+export function initializeUI() {
     setupUIText();
+    createTabsAndSections();
+    addEventListeners();
+    setupSubscriptions(); // ✨ NEW: 集中設定 UI 訂閱
+}
 
+function createTabsAndSections() {
     styles.forEach((style, index) => {
         const tabButton = document.createElement('button');
         tabButton.className = `tab-button text-md font-medium py-2 px-4 text-gray-400 ${index === 0 ? 'active' : ''}`;
@@ -116,23 +121,27 @@ export function initializeUI() { // ✨ FIX: 移除 sounds 參數
         const placeholderCard = createImageCard(vipPlaceholderData, getCardHandlers());
         vipGallery.appendChild(placeholderCard);
     }
-    
-    addEventListeners();
 }
 
-function addEventListeners() { // ✨ FIX: 移除 sounds 參數
+function addEventListeners() {
+    // ... (大部分監聽器保持不變)
     document.querySelectorAll('.tab-button').forEach(button => {
         button.addEventListener('click', () => {
             sounds.tab();
             setState({ activeStyleId: button.dataset.styleId });
-            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
-            button.classList.add('active');
-            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-            document.getElementById(button.dataset.target).classList.add('active');
-            updateGenerateButtonsState();
         });
     });
-
+    
+    DOMElements.generateOneBtn.addEventListener('click', () => handleImageGeneration(1));
+    DOMElements.generateFourBtn.addEventListener('click', () => handleImageGeneration(4));
+    DOMElements.favoritesBtn.addEventListener('click', openSlideshow);
+    DOMElements.soundControl.addEventListener('click', toggleMute);
+    DOMElements.themeSwitchBtn.addEventListener('click', toggleTheme);
+    DOMElements.gachaBtn.addEventListener('click', openGachaModal);
+    DOMElements.gachaCloseBtn.addEventListener('click', () => DOMElements.gachaModal.classList.remove('show'));
+    DOMElements.gachaDrawBtn.addEventListener('click', () => drawGacha());
+    
+    // 其他 Modal 和按鈕的監聽器...
     DOMElements.imageModal.addEventListener('click', () => DOMElements.imageModal.classList.remove('show'));
     DOMElements.storyModal.addEventListener('click', (e) => { 
         if (e.target === DOMElements.storyModal) {
@@ -141,12 +150,6 @@ function addEventListeners() { // ✨ FIX: 移除 sounds 參數
         }
     });
 
-    DOMElements.generateOneBtn.addEventListener('click', () => handleImageGeneration(1));
-    DOMElements.generateFourBtn.addEventListener('click', () => handleImageGeneration(4));
-    DOMElements.favoritesBtn.addEventListener('click', openSlideshow);
-    DOMElements.soundControl.addEventListener('click', toggleMute);
-    DOMElements.themeSwitchBtn.addEventListener('click', toggleTheme);
-    
     DOMElements.moreOptionsBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         DOMElements.moreOptionsMenu.classList.toggle('hidden');
@@ -157,46 +160,20 @@ function addEventListeners() { // ✨ FIX: 移除 sounds 參數
         }
     });
 
-    DOMElements.aboutBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        window.open('GoddeSpark.html', '_blank');
-        DOMElements.moreOptionsMenu.classList.add('hidden');
-    });
-    DOMElements.contactBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        openContactModal();
-        DOMElements.moreOptionsMenu.classList.add('hidden');
-    });
-    DOMElements.apikeyBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        openApiKeyModal();
-        DOMElements.moreOptionsMenu.classList.add('hidden');
-    });
-    DOMElements.extraGachaBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        openComingSoonModal();
-        DOMElements.moreOptionsMenu.classList.add('hidden');
-    });
+    DOMElements.aboutBtn.addEventListener('click', (e) => { e.preventDefault(); window.open('GoddeSpark.html', '_blank'); DOMElements.moreOptionsMenu.classList.add('hidden'); });
+    DOMElements.contactBtn.addEventListener('click', (e) => { e.preventDefault(); openContactModal(); DOMElements.moreOptionsMenu.classList.add('hidden'); });
+    DOMElements.apikeyBtn.addEventListener('click', (e) => { e.preventDefault(); openApiKeyModal(); DOMElements.moreOptionsMenu.classList.add('hidden'); });
+    DOMElements.extraGachaBtn.addEventListener('click', (e) => { e.preventDefault(); openComingSoonModal(); DOMElements.moreOptionsMenu.classList.add('hidden'); });
 
-    DOMElements.slideshowModal.addEventListener('click', (e) => {
-        if(e.target === DOMElements.slideshowModal) DOMElements.slideshowModal.classList.remove('show');
-    });
+    DOMElements.slideshowModal.addEventListener('click', (e) => { if(e.target === DOMElements.slideshowModal) DOMElements.slideshowModal.classList.remove('show'); });
     document.getElementById('slideshow-close').addEventListener('click', () => DOMElements.slideshowModal.classList.remove('show'));
     document.getElementById('slideshow-unfavorite').addEventListener('click', unfavoriteCurrentSlide);
     document.getElementById('slideshow-next').addEventListener('click', () => navigateSlideshow(1));
     document.getElementById('slideshow-prev').addEventListener('click', () => navigateSlideshow(-1));
     
-    DOMElements.gachaBtn.addEventListener('click', openGachaModal);
-    DOMElements.gachaCloseBtn.addEventListener('click', () => DOMElements.gachaModal.classList.remove('show'));
-    DOMElements.gachaDrawBtn.addEventListener('click', () => drawGacha());
-
-    DOMElements.ttsStopBtn.addEventListener('click', () => {
-        DOMElements.ttsAudio.pause();
-        DOMElements.ttsAudio.currentTime = 0;
-        resetTtsButtons();
-    });
-    DOMElements.ttsAudio.addEventListener('ended', resetTtsButtons);
-    DOMElements.ttsAudio.addEventListener('pause', resetTtsButtons);
+    DOMElements.ttsStopBtn.addEventListener('click', () => { DOMElements.ttsAudio.pause(); DOMElements.ttsAudio.currentTime = 0; });
+    DOMElements.ttsAudio.addEventListener('ended', () => setState({ isTtsGenerating: false }));
+    DOMElements.ttsAudio.addEventListener('pause', () => setState({ isTtsGenerating: false }));
 
     document.addEventListener('keydown', handleKeydown);
     DOMElements.slideshowContainer.addEventListener('touchstart', handleTouchStart, false);
@@ -204,19 +181,52 @@ function addEventListeners() { // ✨ FIX: 移除 sounds 參數
     DOMElements.slideshowContainer.addEventListener('touchend', handleTouchEnd, false);
 }
 
+// ✨ NEW: 設定所有 UI 相關的狀態訂閱
+function setupSubscriptions() {
+    subscribe('activeStyleId', (styleId) => {
+        document.querySelectorAll('.tab-button').forEach(btn => btn.classList.toggle('active', btn.dataset.styleId === styleId));
+        document.querySelectorAll('.tab-content').forEach(content => content.classList.toggle('active', content.id === `content-${styleId}`));
+        updateGenerateButtonsState();
+    });
+
+    subscribe('isGenerating', (isGenerating) => {
+        updateGenerateButtonsState();
+    });
+    
+    subscribe('hasUserApiKey', () => {
+        updateAllTaskUIs();
+    });
+
+    subscribe('isStoryGenerating', (isGenerating) => {
+        updateTtsUi();
+    });
+
+    subscribe('isTtsGenerating', (isGenerating) => {
+        DOMElements.ttsBtn.style.display = isGenerating ? 'none' : 'inline-block';
+        DOMElements.ttsStopBtn.style.display = isGenerating ? 'inline-block' : 'none';
+        if (!isGenerating) {
+            updateTtsUi();
+        } else {
+            DOMElements.ttsBtn.textContent = '聲音合成中...';
+            DOMElements.ttsBtn.disabled = true;
+        }
+    });
+}
+
+
 // --- UI Update Functions ---
 export async function updateAllTaskUIs() {
-    updateGenerateButtonsState();
-    updateGachaUI();
-    updateTtsUi();
+    await updateGenerateButtonsState();
+    await updateGachaUI();
+    await updateTtsUi();
 }
 
 export async function updateGenerateButtonsState() {
     const { activeStyleId, isGenerating, hasUserApiKey } = getState('activeStyleId', 'isGenerating', 'hasUserApiKey');
     const isVip = activeStyleId === 'vip-exclusive';
     
-    DOMElements.generateOneBtn.disabled = isVip || isGenerating;
-    DOMElements.generateFourBtn.disabled = isVip || isGenerating;
+    let oneBtnDisabled = isVip || isGenerating;
+    let fourBtnDisabled = isVip || isGenerating;
     
     if (hasUserApiKey) {
         DOMElements.generateOneBtn.textContent = uiMessages.buttons.generateOne;
@@ -226,13 +236,16 @@ export async function updateGenerateButtonsState() {
         const fourCount = await getTaskCount('generateFour');
         DOMElements.generateOneBtn.textContent = `${uiMessages.buttons.generateOne} (${oneCount})`;
         DOMElements.generateFourBtn.textContent = `${uiMessages.buttons.generateFour} (${fourCount})`;
-        if (oneCount <= 0) DOMElements.generateOneBtn.disabled = true;
-        if (fourCount <= 0) DOMElements.generateFourBtn.disabled = true;
+        if (oneCount <= 0) oneBtnDisabled = true;
+        if (fourCount <= 0) fourBtnDisabled = true;
     }
+    
+    DOMElements.generateOneBtn.disabled = oneBtnDisabled;
+    DOMElements.generateFourBtn.disabled = fourBtnDisabled;
 }
 
 export async function updateGachaUI() {
-    const { hasUserApiKey } = getState('hasUserApiKey');
+    const hasUserApiKey = getState('hasUserApiKey');
     if(hasUserApiKey) {
         DOMElements.gachaDrawBtn.textContent = uiMessages.buttons.gachaDraw;
         DOMElements.gachaDrawBtn.disabled = false;
@@ -253,7 +266,14 @@ export async function updateGachaUI() {
 }
 
 export async function updateTtsUi() {
-    const { hasUserApiKey } = getState('hasUserApiKey');
+    const { hasUserApiKey, isStoryGenerating } = getState('hasUserApiKey', 'isStoryGenerating');
+    
+    if (isStoryGenerating) {
+        DOMElements.ttsBtn.disabled = true;
+        DOMElements.ttsLimitInfo.style.display = 'none';
+        return;
+    }
+
     if (hasUserApiKey) {
         DOMElements.ttsBtn.disabled = false;
         DOMElements.ttsBtn.textContent = uiMessages.buttons.ttsPlay;
@@ -268,14 +288,9 @@ export async function updateTtsUi() {
     } else {
         DOMElements.ttsBtn.disabled = false;
         DOMElements.ttsBtn.textContent = uiMessages.buttons.ttsPlay;
-        DOMElements.ttsLimitInfo.style.display = 'none';
+        DOMElements.ttsLimitInfo.style.display = 'block';
+        DOMElements.ttsLimitInfo.textContent = `今日剩餘 ${count} 次`;
     }
-}
-
-export function resetTtsButtons() {
-    DOMElements.ttsBtn.style.display = 'inline-block';
-    DOMElements.ttsStopBtn.style.display = 'none';
-    updateTtsUi();
 }
 
 // --- Modal Functions ---
@@ -309,7 +324,6 @@ function openApiKeyModal() {
             setState({ userApiKey: input.value, hasUserApiKey: true });
             showMessage("API Key 已儲存！您現在擁有無限次數。");
             DOMElements.apikeyModal.classList.remove('show');
-            updateAllTaskUIs();
         } else {
             showMessage("請輸入有效的 API Key", true);
         }
@@ -317,13 +331,13 @@ function openApiKeyModal() {
 
     document.getElementById('restore-api-key-btn').addEventListener('click', () => {
         localStorage.removeItem('userGeminiApiKey');
-        setState({ userApiKey: apiKey, hasUserApiKey: false });
+        setState({ userApiKey: defaultConfigApiKey, hasUserApiKey: !!defaultConfigApiKey });
         showMessage("已恢復預設 API 設定。");
         DOMElements.apikeyModal.classList.remove('show');
-        updateAllTaskUIs();
     });
 }
 
+// ... (其他 Modal 函式保持不變)
 function openContactModal() {
     DOMElements.contactModalContent.innerHTML = `
         <button class="modal-close-btn">&times;</button>
@@ -395,7 +409,7 @@ function openComingSoonModal() {
     DOMElements.comingSoonModalContent.querySelector('.modal-close-btn').addEventListener('click', () => DOMElements.comingSoonModal.classList.remove('show'));
 }
 
-function toggleMute() { // ✨ FIX: 移除 sounds 參數
+function toggleMute() {
     Tone.Master.mute = !Tone.Master.mute;
     if (Tone.Master.mute) {
         DOMElements.soundOnIcon.style.display = 'none';
@@ -406,104 +420,106 @@ function toggleMute() { // ✨ FIX: 移除 sounds 參數
     }
 }
 
-function toggleTheme() { // ✨ FIX: 移除 sounds 參數
-    const { currentTheme } = getState('currentTheme');
-    if (currentTheme === 'night') {
+function toggleTheme() {
+    const currentTheme = getState('currentTheme');
+    const newTheme = currentTheme === 'night' ? 'day' : 'night';
+    
+    if (newTheme === 'day') {
         sounds.toDay();
         document.body.classList.remove('theme-night');
         document.body.classList.add('theme-day');
         DOMElements.sunIcon.style.display = 'block';
         DOMElements.moonIcon.style.display = 'none';
-        setState({ currentTheme: 'day' });
     } else {
         sounds.toNight();
         document.body.classList.remove('theme-day');
         document.body.classList.add('theme-night');
         DOMElements.sunIcon.style.display = 'none';
         DOMElements.moonIcon.style.display = 'block';
-        setState({ currentTheme: 'night' });
     }
-    initParticles(getState('currentTheme'));
+    setState({ currentTheme: newTheme });
+    initParticles(newTheme);
 }
 
 // --- Slideshow Logic ---
-function openSlideshow() { // ✨ FIX: 移除 sounds 參數
-    const { favorites } = getState('favorites');
-    if (favorites.length === 0) {
+function openSlideshow() {
+    const favorites = getState('favorites');
+    if (!Array.isArray(favorites) || favorites.length === 0) {
         showMessage(uiMessages.favorites.empty);
-        DOMElements.favoritesEmptyState.style.display = 'flex';
-        DOMElements.slideshowContainer.style.display = 'none'; 
-        DOMElements.slideshowModal.classList.add('show');
+        return;
+    }
+    sounds.open();
+    setState({ currentSlideshowIndex: 0 });
+    DOMElements.slideshowModal.classList.add('show');
+}
+
+// ✨ NEW: 獨立出來的 Slideshow UI 更新函式
+export function updateSlideshowUI(favorites) {
+    const isSlideshowOpen = DOMElements.slideshowModal.classList.contains('show');
+
+    if (!Array.isArray(favorites) || favorites.length === 0) {
+        if (isSlideshowOpen) {
+            DOMElements.favoritesEmptyState.style.display = 'flex';
+            DOMElements.slideshowContainer.style.display = 'none';
+        }
         return;
     }
 
-    sounds.open();
-    DOMElements.favoritesEmptyState.style.display = 'none';
-    DOMElements.slideshowContainer.style.display = 'flex';
-    
-    setState({ currentSlideshowIndex: 0 });
-    renderThumbnails();
-    showSlide(0); 
-    DOMElements.slideshowModal.classList.add('show');
+    if (isSlideshowOpen) {
+        DOMElements.favoritesEmptyState.style.display = 'none';
+        DOMElements.slideshowContainer.style.display = 'flex';
+        renderThumbnails();
+        const currentIndex = getState('currentSlideshowIndex');
+        const newIndex = Math.min(currentIndex, favorites.length - 1);
+        if (currentIndex !== newIndex) {
+            setState({ currentSlideshowIndex: newIndex });
+        }
+        showSlide(newIndex);
+    }
 }
+
 
 function navigateSlideshow(direction) {
     const { favorites, currentSlideshowIndex } = getState('favorites', 'currentSlideshowIndex');
     if (favorites.length <= 1) return;
     
-    DOMElements.slideshowImage.classList.remove('visible');
-    setTimeout(() => {
-        const newIndex = (currentSlideshowIndex + direction + favorites.length) % favorites.length;
-        setState({ currentSlideshowIndex: newIndex });
-        showSlide(newIndex);
-    }, uiSettings.slideshowTransitionSpeed);
+    const newIndex = (currentSlideshowIndex + direction + favorites.length) % favorites.length;
+    setState({ currentSlideshowIndex: newIndex });
+    showSlide(newIndex);
 }
 
 function showSlide(index) {
-    const { favorites } = getState('favorites');
+    const favorites = getState('favorites');
     if (index < 0 || index >= favorites.length) {
         DOMElements.slideshowModal.classList.remove('show');
         return;
     }
 
     const slideData = favorites[index];
-    if (!slideData || !slideData.imageUrl) {
-        showMessage(uiMessages.errors.imageLoad, true);
-        navigateSlideshow(1); 
-        return;
-    }
-    
-    DOMElements.slideshowImage.src = slideData.imageUrl; 
+    DOMElements.slideshowImage.src = slideData.imageUrl; // ✨ 永遠載入原始高畫質圖
     
     DOMElements.slideshowImage.style.opacity = '0';
-    DOMElements.slideshowImage.onload = () => {
-        DOMElements.slideshowImage.style.opacity = '1';
-    };
-    DOMElements.slideshowImage.onerror = () => {
-        showMessage('無法載入此圖片', true);
-        DOMElements.slideshowImage.alt = '圖片載入失敗';
-    };
+    DOMElements.slideshowImage.onload = () => { DOMElements.slideshowImage.style.opacity = '1'; };
+    DOMElements.slideshowImage.onerror = () => { showMessage('無法載入此圖片', true); };
     
-    document.querySelectorAll('.thumbnail').forEach((thumb, i) => {
-        thumb.classList.toggle('active', i === index);
-    });
+    document.querySelectorAll('.thumbnail').forEach((thumb, i) => thumb.classList.toggle('active', i === index));
     const activeThumb = document.querySelector(`.thumbnail[data-index='${index}']`);
     if(activeThumb) activeThumb.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
 }
 
 function renderThumbnails() {
-    const { favorites } = getState('favorites');
+    const favorites = getState('favorites');
     DOMElements.thumbnailBar.innerHTML = '';
-    if (favorites.length === 0) return;
+    if (!favorites) return;
 
     favorites.forEach((fav, index) => {
         const thumb = document.createElement('img');
-        thumb.src = fav.imageUrl;
+        // ✨ 這裡可以載入縮圖
+        thumb.src = fav.imageUrl; 
         thumb.className = 'thumbnail';
         thumb.dataset.index = index;
         thumb.onclick = () => {
             setState({ currentSlideshowIndex: index });
-            showSlide(index);
         };
         DOMElements.thumbnailBar.appendChild(thumb);
     });
@@ -512,13 +528,10 @@ function renderThumbnails() {
 // --- Keyboard and Touch Handlers ---
 function handleKeydown(e) {
     if (!DOMElements.slideshowModal.classList.contains('show')) return;
-    switch (e.key) {
-        case 'ArrowLeft': navigateSlideshow(-1); break;
-        case 'ArrowRight': navigateSlideshow(1); break;
-        case 'Escape': DOMElements.slideshowModal.classList.remove('show'); break;
-    }
+    if (e.key === 'ArrowLeft') navigateSlideshow(-1);
+    if (e.key === 'ArrowRight') navigateSlideshow(1);
+    if (e.key === 'Escape') DOMElements.slideshowModal.classList.remove('show');
 }
-
 function handleTouchStart(e) { setState({ touchStartX: e.changedTouches[0].screenX }); }
 function handleTouchMove(e) { setState({ touchEndX: e.changedTouches[0].screenX }); }
 function handleTouchEnd() {

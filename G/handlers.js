@@ -1,9 +1,11 @@
 // handlers.js - 包含所有核心的事件處理函式
 
-import { getState, setState } from './state.js';
+// ✨ CHANGE: 引入新的 stateManager
+import { getState, setState } from './stateManager.js';
 import { uiMessages, gameSettings, apiSettings, styles } from './gconfig.js';
 import { showMessage, createImageCard } from './gui.js';
-import { updateGenerateButtonsState, updateAllTaskUIs, updateTtsUi, resetTtsButtons } from './uiManager.js';
+// ✨ CHANGE: 移除 uiManager 的更新函式，因為現在是響應式的
+import { updateAllTaskUIs } from './uiManager.js';
 import { generateImageWithRetry, callTextGenerationAPI, callTTSAPI } from './api.js';
 import { useTask, getTaskCount, addTaskCount } from './dailyTaskManager.js';
 import { saveFavorite, removeFavorite, uploadImage, shareToPublic, getRandomGoddessFromDB, getCurrentUserId } from './gfirebase.js';
@@ -61,7 +63,7 @@ export async function handleImageGeneration(count = 1) {
     if (getState('isGenerating')) return;
 
     const taskName = count === 1 ? 'generateOne' : 'generateFour';
-    const { hasUserApiKey } = getState('hasUserApiKey');
+    const hasUserApiKey = getState('hasUserApiKey');
     
     if (!hasUserApiKey) {
         const remaining = await getTaskCount(taskName);
@@ -74,11 +76,12 @@ export async function handleImageGeneration(count = 1) {
              showMessage(uiMessages.generateLimit.message, true);
             return;
         }
+        updateAllTaskUIs(); // 手動更新任務計數UI
     }
 
     sounds.start();
+    // ✨ CHANGE: 只需更新狀態，UI 會自動響應
     setState({ isGenerating: true });
-    updateGenerateButtonsState();
     
     const { activeStyleId, favorites } = getState('activeStyleId', 'favorites');
     const style = styles.find(s => s.id === activeStyleId);
@@ -104,7 +107,7 @@ export async function handleImageGeneration(count = 1) {
                 src: base64Src, 
                 style: style, 
                 id: newId,
-                isLiked: Array.isArray(favorites) && favorites.some(fav => fav.id === newId) // ✨ FIX: Add safety check
+                isLiked: Array.isArray(favorites) && favorites.some(fav => fav.id === newId)
             };
             const imageCard = createImageCard(imageData, getCardHandlers());
             loadingCards[i].replaceWith(imageCard);
@@ -116,8 +119,8 @@ export async function handleImageGeneration(count = 1) {
     }
     
     showMessage(`完成了 ${count} 次新的邂逅！`);
+    // ✨ CHANGE: 只需更新狀態
     setState({ isGenerating: false });
-    updateGenerateButtonsState();
 }
 
 export function getCardHandlers() {
@@ -137,7 +140,7 @@ export function getCardHandlers() {
 export async function handleStoryGeneration(style) {
     if (getState('isStoryGenerating')) return;
     
-    const { hasUserApiKey } = getState('hasUserApiKey');
+    const hasUserApiKey = getState('hasUserApiKey');
     if (!hasUserApiKey) {
         const remaining = await getTaskCount('tts');
         if (remaining <= 0) {
@@ -146,6 +149,7 @@ export async function handleStoryGeneration(style) {
         }
     }
     
+    // ✨ CHANGE: 只需更新狀態
     setState({ isStoryGenerating: true });
     const storyTextEl = document.getElementById('story-text');
     const storyModal = document.getElementById('story-modal');
@@ -153,7 +157,7 @@ export async function handleStoryGeneration(style) {
 
     storyTextEl.innerHTML = '<div class="loader mx-auto"></div>';
     storyModal.classList.add('show');
-    updateTtsUi();
+    // updateTtsUi(); // 這個會由 isStoryGenerating 的訂閱者處理
 
     try {
         const storyPrompt = apiSettings.prompts.story(style.title, style.description);
@@ -167,6 +171,7 @@ export async function handleStoryGeneration(style) {
         storyTextEl.textContent = uiMessages.errors.storyFailed;
         ttsBtn.disabled = true;
     } finally {
+        // ✨ CHANGE: 只需更新狀態
         setState({ isStoryGenerating: false });
     }
 }
@@ -174,28 +179,24 @@ export async function handleStoryGeneration(style) {
 export async function handleTTSGeneration(text) {
     if (getState('isTtsGenerating')) return;
     
-    const { hasUserApiKey } = getState('hasUserApiKey');
+    const hasUserApiKey = getState('hasUserApiKey');
      if (!hasUserApiKey) {
         const canUse = await useTask('tts');
         if (!canUse) {
             showMessage(uiMessages.buttons.ttsLimit, true);
-            updateTtsUi();
+            updateAllTaskUIs(); // 手動更新
             return;
         }
+        updateAllTaskUIs(); // 手動更新
     }
 
+    // ✨ CHANGE: 只需更新狀態
     setState({ isTtsGenerating: true });
-    const ttsBtn = document.getElementById('tts-btn');
-    const ttsStopBtn = document.getElementById('tts-stop-btn');
     const ttsAudio = document.getElementById('tts-audio');
-
-    ttsBtn.textContent = '聲音合成中...';
-    ttsBtn.disabled = true;
     
     try {
         const ttsPrompt = apiSettings.prompts.tts(text);
         const { audioData, mimeType } = await callTTSAPI(ttsPrompt);
-        updateTtsUi();
 
         const sampleRate = parseInt(mimeType.match(/rate=(\d+)/)[1], 10);
         const pcmData = base64ToArrayBuffer(audioData);
@@ -205,14 +206,11 @@ export async function handleTTSGeneration(text) {
         ttsAudio.src = audioUrl;
         ttsAudio.play();
 
-        ttsBtn.style.display = 'none';
-        ttsStopBtn.style.display = 'inline-block';
-
     } catch (error) {
         console.error('TTS 生成失敗:', error);
         showMessage(uiMessages.errors.ttsFailed, true);
-        resetTtsButtons();
     } finally {
+        // ✨ CHANGE: 只需更新狀態
         setState({ isTtsGenerating: false });
     }
 }
@@ -224,12 +222,11 @@ export async function toggleFavorite(imageData, btn) {
         return;
     }
     
-    const { favorites } = getState('favorites');
+    const favorites = getState('favorites');
     
-    // ✨ FIX: 徹底修復 race condition 問題
-    if (!Array.isArray(favorites)) {
+    if (favorites === null) {
         showMessage("雲端資料同步中，請稍候再試...", true);
-        return; // 直接退出，不鎖定按鈕
+        return;
     }
 
     sounds.like();
@@ -281,12 +278,11 @@ export async function toggleFavorite(imageData, btn) {
 }
 
 export async function shareFavoriteToPublicHandler(imageData, btn) {
-    const { favorites } = getState('favorites');
+    const favorites = getState('favorites');
 
-    // ✨ FIX: 徹底修復 race condition 問題
-    if (!Array.isArray(favorites)) {
+    if (favorites === null) {
         showMessage("雲端資料同步中，請稍候再試...", true);
-        return; // 直接退出
+        return;
     }
 
     const favoriteData = favorites.find(fav => fav.id === imageData.id);
@@ -303,7 +299,7 @@ export async function shareFavoriteToPublicHandler(imageData, btn) {
             showMessage(uiMessages.gacha.alreadyShared);
         } else {
             await addTaskCount('gacha', 1);
-            updateAllTaskUIs();
+            updateAllTaskUIs(); // 手動更新
             showMessage(uiMessages.gacha.shareSuccess);
         }
         btn.classList.add('shared');
@@ -333,12 +329,12 @@ export async function unfavoriteCurrentSlide() {
 
 // --- Gacha System ---
 export async function drawGacha() {
-    const { hasUserApiKey } = getState('hasUserApiKey');
+    const hasUserApiKey = getState('hasUserApiKey');
     if (!hasUserApiKey) {
         const canUse = await useTask('gacha');
         if (!canUse) {
             showMessage("今日次數已用完！", true);
-            updateAllTaskUIs();
+            updateAllTaskUIs(); // 手動更新
             return;
         }
     }
@@ -375,19 +371,18 @@ export async function drawGacha() {
             imageUrl: randomGoddess.imageUrl,
             style: randomGoddess.style,
             id: randomGoddess.id,
-            isLiked: Array.isArray(favorites) && favorites.some(fav => fav.id === randomGoddess.id) // ✨ FIX: Add safety check
+            isLiked: Array.isArray(favorites) && favorites.some(fav => fav.id === randomGoddess.id)
         };
         
         const gachaCard = createImageCard(imageData, getCardHandlers(), { withAnimation: false, withButtons: true });
         gachaResultContainer.innerHTML = '';
         gachaResultContainer.appendChild(gachaCard);
 
-        updateAllTaskUIs();
     } catch (error) {
         console.error("Gacha draw failed:", error);
         showMessage(`${uiMessages.gacha.drawFailed}: ${error.message}`, true);
         gachaResultContainer.innerHTML = `<div class="gacha-placeholder"><p>${uiMessages.gacha.drawFailed}...</p><p class="text-xs text-gray-400 mt-2">${error.message}</p></div>`;
     } finally {
-        updateAllTaskUIs();
+        updateAllTaskUIs(); // 手動更新
     }
 }

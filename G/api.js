@@ -1,7 +1,8 @@
 // api.js - 封裝所有對 Gemini API 的請求
 
 import { apiSettings, randomKeywords_day, randomKeywords_night } from './gconfig.js';
-import { getState } from './state.js';
+// ✨ FIX: 修正 import 路徑，從新的 stateManager 獲取狀態
+import { getState } from './stateManager.js';
 
 function getRandomItems(arr, count) {
     const shuffled = [...arr].sort(() => 0.5 - Math.random());
@@ -12,7 +13,6 @@ export async function generateImageWithRetry(prompt) {
     const retries = apiSettings.imageGenerationRetries;
     const delay = apiSettings.imageGenerationDelay;
     
-    // ✨ FIX: 修正了 getState 的用法，直接接收回傳值
     const currentTheme = getState('currentTheme');
     const keywords = currentTheme === 'day' ? randomKeywords_day : randomKeywords_night;
     
@@ -33,7 +33,6 @@ export async function generateImageWithRetry(prompt) {
 }
 
 async function callImageGenerationAPI(userPrompt, model) {
-    // ✨ FIX: 修正了 getState 的用法
     const userApiKey = getState('userApiKey');
     const modelName = model === 'imagen-3' ? 'imagen-3.0-generate-002' : 'gemini-2.0-flash-preview-image-generation';
     const isImagen = model === 'imagen-3';
@@ -95,7 +94,6 @@ async function callImageGenerationAPI(userPrompt, model) {
 
 
 export async function callTextGenerationAPI(prompt) {
-    // ✨ FIX: 修正了 getState 的用法
     const userApiKey = getState('userApiKey');
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${userApiKey}`;
     const payload = {
@@ -123,7 +121,6 @@ export async function callTextGenerationAPI(prompt) {
 }
 
 export async function callTTSAPI(text) {
-    // ✨ FIX: 修正了 getState 的用法
     const userApiKey = getState('userApiKey');
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${userApiKey}`;
     const payload = {

@@ -1,4 +1,4 @@
-// ui.js - 專門處理所有與 UI 畫面相關的功能
+// gui.js - 專門處理所有與 UI 畫面相關的功能
 
 // --- DOM Elements ---
 const favoritesCountEl = document.getElementById('favorites-count');
@@ -21,12 +21,19 @@ export function updateFavoritesCountUI(count) {
 
 // --- Image Card Factory ---
 export function createImageCard(imageData, handlers, options = {}) {
-    const { withAnimation = true, withButtons = true } = options; 
-    const { src, style, id, imageUrl, isLiked, isShared, isShareable = true } = imageData;
-    const displaySrc = imageUrl || src; 
+    const { withAnimation = true, withButtons = true } = options;
+    const { style, id, isLiked, isShared, isShareable = true } = imageData;
+
+    // ✨ FIX: 決定顯示 URL 和原始 URL
+    // displaySrc 優先使用縮圖，originalSrc 永遠是原圖
+    const displaySrc = imageData.resizedUrl || imageData.imageUrl || imageData.src;
+    const originalSrc = imageData.imageUrl || imageData.src;
+
     const imageCard = document.createElement('div');
     imageCard.className = 'image-card';
     imageCard.dataset.id = id;
+    // 將原始 URL 存儲在 dataset 中，以便在出錯時回退
+    imageCard.dataset.originalSrc = originalSrc;
 
     const footerHTML = withButtons ? `
         <div class="card-footer">
@@ -63,7 +70,7 @@ export function createImageCard(imageData, handlers, options = {}) {
     }
 
     const img = imageCard.querySelector('img');
-    
+
     img.onload = () => {
         if (withAnimation) {
             const flipper = imageCard.querySelector('.flipper');
@@ -74,15 +81,27 @@ export function createImageCard(imageData, handlers, options = {}) {
             img.style.opacity = '1';
         }
     };
-    
-    img.onerror = () => {
-         const errorMsg = "圖片載入失敗！";
-         console.error(errorMsg, "URL:", displaySrc);
-         imageCard.innerHTML = `<p class="text-red-400 p-4 text-center">${errorMsg}</p>`;
+
+    // ✨ FIX: 實作了強大的 onerror 回退機制
+    img.onerror = function() {
+        const card = this.closest('.image-card');
+        const originalUrlFromData = card.dataset.originalSrc;
+
+        // 如果當前的 src 已經是原始 URL，代表連原始 URL 都載入失敗
+        if (this.src === originalUrlFromData) {
+            const errorMsg = "圖片載入失敗！";
+            console.error(errorMsg, "Failed on both resized and original URL:", originalUrlFromData);
+            card.innerHTML = `<p class="text-red-400 p-4 text-center">${errorMsg}</p>`;
+        } else {
+            // 這是第一次錯誤，代表縮圖載入失敗。現在回退到載入原始 URL。
+            console.warn(`Resized image failed, falling back to original: ${originalUrlFromData}`);
+            this.src = originalUrlFromData;
+        }
     };
 
     if (withButtons) {
         imageCard.addEventListener('click', (e) => {
+            const clickedCard = e.currentTarget;
             if (e.target.closest('.story-btn')) {
                 e.stopPropagation();
                 if (id === 'vip-placeholder') {
@@ -97,18 +116,19 @@ export function createImageCard(imageData, handlers, options = {}) {
                 e.stopPropagation();
                 handlers.onShare(imageData, e.target.closest('.share-btn'));
             } else if (e.target.closest('.image-card-img-wrapper')) {
-                handlers.onImageClick(displaySrc);
+                handlers.onImageClick(clickedCard.dataset.originalSrc);
             }
         });
     } else {
          imageCard.addEventListener('click', (e) => {
+             const clickedCard = e.currentTarget;
              if (e.target.closest('.image-card-img-wrapper')) {
-                handlers.onImageClick(displaySrc);
+                handlers.onImageClick(clickedCard.dataset.originalSrc);
             }
          });
     }
 
-    // ✨ FIX: 確保圖片的 src 屬性最後被正確設定
+    // 初始載入時，總是先嘗試 displaySrc (優先是縮圖)
     img.src = displaySrc;
 
     return imageCard;
