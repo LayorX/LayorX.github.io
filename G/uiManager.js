@@ -1,6 +1,5 @@
-// uiManager.js - 負責所有 UI 初始化、事件綁定和 DOM 更新
-
-import { styles, uiSettings, uiMessages, apiKey as defaultConfigApiKey } from './gconfig.js';
+import { serviceKeys } from './app-config.js';
+import { styles, uiMessages, uiSettings } from './game-config.js';
 import { getState, setState, subscribe } from './stateManager.js';
 import { getTaskCount } from './dailyTaskManager.js';
 import { getCardHandlers, handleImageGeneration, drawGacha, unfavoriteCurrentSlide } from './handlers.js';
@@ -9,12 +8,9 @@ import { getCurrentUserId } from './gfirebase.js';
 import { createImageCard, showMessage, initParticles, updateFavoritesCountUI } from './gui.js';
 import { sounds } from './soundManager.js';
 
-// ✨ FIX: 先宣告一個空物件，等 DOM 載入後再填入內容
 let DOMElements = {};
 
-// --- Initialization ---
 export function initializeUI() {
-    // ✨ FIX: 在初始化時才擷取 DOM 元素，確保它們都已存在
     DOMElements = {
         headerTitle: document.getElementById('header-title'),
         storyModalTitle: document.getElementById('story-modal-title'),
@@ -69,7 +65,6 @@ export function initializeUI() {
 }
 
 function setupUIText() {
-    // DOMElements.loadingText is not in this object, assuming it's handled elsewhere
     DOMElements.gachaModalTitle.textContent = uiMessages.gachaModalTitle;
     DOMElements.storyModalTitle.textContent = uiMessages.storyModalTitle;
     DOMElements.generateOneBtn.textContent = uiMessages.buttons.generateOne;
@@ -85,7 +80,6 @@ function setupUIText() {
     DOMElements.favoritesEmptyState.querySelector('p:nth-child(3)').textContent = uiMessages.favorites.emptySubtitle;
     document.querySelector('.gacha-placeholder p:nth-child(2)').textContent = uiMessages.gacha.placeholder;
 }
-
 
 function createTabsAndSections() {
     styles.forEach((style, index) => {
@@ -111,12 +105,11 @@ function createTabsAndSections() {
     const vipGallery = document.getElementById('vip-exclusive-gallery');
     if (vipGallery) {
         const vipStyle = styles.find(s => s.id === 'vip-exclusive');
-        const randomPreviewImg = uiSettings.previewImages[Math.floor(Math.random() * uiSettings.previewImages.length)];
         const vipPlaceholderData = {
             id: 'vip-placeholder',
             style: vipStyle,
-            src: randomPreviewImg,
-            imageUrl: randomPreviewImg,
+            src: 'gimages/g/g1.jpg',
+            imageUrl: 'gimages/g/g1.jpg',
             isLiked: false,
             isShareable: false 
         };
@@ -212,8 +205,6 @@ function setupSubscriptions() {
     });
 }
 
-
-// --- UI Update Functions ---
 export async function updateAllTaskUIs() {
     await updateGenerateButtonsState();
     await updateGachaUI();
@@ -292,7 +283,6 @@ export async function updateTtsUi() {
     }
 }
 
-// --- Modal Functions ---
 function openGachaModal() {
     DOMElements.gachaModal.classList.add('show');
     updateGachaUI();
@@ -331,7 +321,7 @@ function openApiKeyModal() {
 
     document.getElementById('restore-api-key-btn').addEventListener('click', () => {
         localStorage.removeItem('userGeminiApiKey');
-        setState({ userApiKey: defaultConfigApiKey, hasUserApiKey: !!defaultConfigApiKey });
+        setState({ userApiKey: serviceKeys.defaultApiKey, hasUserApiKey: !!serviceKeys.defaultApiKey });
         showMessage("已恢復預設 API 設定。");
         DOMElements.apikeyModal.classList.remove('show');
     });
@@ -348,7 +338,7 @@ function openContactModal() {
             <p class="mt-1 text-sm">只要您的建議或回報被證實有效，我就會不定期空投 <span class="font-bold text-white">5 ~ 20 次</span> 的額外扭蛋機會到您的帳戶作為謝禮！</p>
         </div>
 
-        <form id="contact-form" action="https://formspree.io/f/xnnzgpdn" method="POST" class="max-w-xl mx-auto space-y-4 text-left">
+        <form id="contact-form" action="${serviceKeys.formspreeUrl}" method="POST" class="max-w-xl mx-auto space-y-4 text-left">
             <textarea name="message" placeholder="請在此詳細描述您的發現或建議..." rows="5" required class="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"></textarea>
             <input type="text" name="userId" value="您的雲端ID: ${getCurrentUserId() || '尚未登入'}" readonly class="w-full p-3 border rounded-md bg-gray-700/50 cursor-not-allowed">
             <p class="text-xs text-center text-gray-400 -mt-2">（請務必保留此 ID 以便發放獎勵！）</p>
@@ -395,7 +385,6 @@ async function handleContactFormSubmit(e) {
     }
 }
 
-
 function openComingSoonModal() {
     DOMElements.comingSoonModalContent.innerHTML = `
         <button class="modal-close-btn">&times;</button>
@@ -440,7 +429,6 @@ function toggleTheme() {
     initParticles(newTheme);
 }
 
-// --- Slideshow Logic ---
 function openSlideshow() {
     const favorites = getState('favorites');
     if (!Array.isArray(favorites) || favorites.length === 0) {
@@ -475,7 +463,6 @@ export function updateSlideshowUI(favorites) {
         showSlide(newIndex);
     }
 }
-
 
 function navigateSlideshow(direction) {
     const { favorites, currentSlideshowIndex } = getState('favorites', 'currentSlideshowIndex');
@@ -522,7 +509,6 @@ function renderThumbnails() {
     });
 }
 
-// --- Keyboard and Touch Handlers ---
 function handleKeydown(e) {
     if (!DOMElements.slideshowModal.classList.contains('show')) return;
     if (e.key === 'ArrowLeft') navigateSlideshow(-1);

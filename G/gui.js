@@ -1,10 +1,8 @@
-// gui.js - 專門處理所有與 UI 畫面相關的功能
+import { uiMessages } from './game-config.js';
 
-// --- DOM Elements ---
 const favoritesCountEl = document.getElementById('favorites-count');
-
-// --- Message Box ---
 const messageBox = document.getElementById('message-box');
+
 export function showMessage(text, isError = false) {
     messageBox.textContent = text;
     messageBox.style.backgroundColor = isError ? '#E11D48' : '#EC4899';
@@ -12,17 +10,14 @@ export function showMessage(text, isError = false) {
     setTimeout(() => messageBox.classList.remove('show'), 3000);
 }
 
-// --- UI Updates ---
 export function updateFavoritesCountUI(count) {
     if (favoritesCountEl) {
         favoritesCountEl.textContent = count;
     }
 }
 
-// --- Image Card Factory ---
 export function createImageCard(imageData, handlers, options = {}) {
     const { withAnimation = true, withButtons = true } = options;
-    // ✨ FIX: 確保 isGachaCard 被正確解構
     const { style, id, isLiked, isShared, isShareable = true, isGachaCard = false } = imageData;
 
     const displaySrc = imageData.resizedUrl || imageData.imageUrl || imageData.src;
@@ -33,7 +28,6 @@ export function createImageCard(imageData, handlers, options = {}) {
     imageCard.dataset.id = id;
     imageCard.dataset.originalSrc = originalSrc;
 
-    // ✨ FIX: 根據 isGachaCard 決定顯示哪個按鈕
     const mainButtonHTML = isGachaCard
         ? `<button class="dislike-btn story-btn">審判時刻... 👎</button>`
         : `<button class="story-btn">生成故事 ✨</button>`;
@@ -90,8 +84,8 @@ export function createImageCard(imageData, handlers, options = {}) {
         const originalUrlFromData = card.dataset.originalSrc;
 
         if (this.src === originalUrlFromData) {
-            const errorTitle = "圖片載入失敗！";
-            const errorHint = "提示：請嘗試暫時關閉廣告攔截器 (AdBlocker) 或檢查您的網路連線。";
+            const errorTitle = uiMessages.errors.imageLoadFailure;
+            const errorHint = uiMessages.errors.imageLoadHint;
             console.error(errorTitle, "Failed on both resized and original URL:", originalUrlFromData);
             card.innerHTML = `<div class="text-red-400 p-4 text-center text-sm flex flex-col justify-center h-full">
                                 <p class="font-bold">${errorTitle}</p>
@@ -114,7 +108,6 @@ export function createImageCard(imageData, handlers, options = {}) {
                 }
                 handlers.onStory(style);
             } else if (e.target.closest('.dislike-btn')) {
-                // ✨ FIX: 新增倒讚按鈕的事件處理
                 e.stopPropagation();
                 handlers.onDislike(imageData, e.target.closest('.dislike-btn'));
             } else if (e.target.closest('.like-btn')) {
@@ -137,12 +130,9 @@ export function createImageCard(imageData, handlers, options = {}) {
     }
 
     img.src = displaySrc;
-
     return imageCard;
 }
 
-
-// --- Background & Loading Animations ---
 const canvas = document.getElementById('background-canvas');
 const ctx = canvas.getContext('2d');
 let particlesArray;

@@ -1,8 +1,8 @@
-// main.js - 專案總指揮 (重構版)
-
-import { appInfo, firebaseSettings, uiSettings, uiMessages } from './gconfig.js';
+import { appInfo, serviceKeys } from './app-config.js';
+import { uiSettings, uiMessages } from './game-config.js';
 import { initFirebase, handleAuthentication, getCurrentUserId, getDbInstance, listenToFavorites, getRandomGoddessesFromDB } from './gfirebase.js';
 import { initDailyTaskManager } from './dailyTaskManager.js';
+import { initAnalyticsManager } from './analyticsManager.js';
 import { setState, subscribe, initState } from './stateManager.js';
 import { getInitialState } from './state.js';
 import { initializeUI, updateAllTaskUIs, updateSlideshowUI } from './uiManager.js';
@@ -10,12 +10,11 @@ import { getCardHandlers } from './handlers.js';
 import { showMessage, initParticles, animateParticles, resizeLoadingCanvas, animateLoading, Petal, createImageCard, updateFavoritesCountUI } from './gui.js';
 import { initSounds } from './soundManager.js';
 
-// --- 主初始化流程 ---
 window.onload = () => {
     initState(getInitialState()); 
 
     setupAppInfo();
-    window.firebaseConfig = firebaseSettings;
+    window.firebaseConfig = serviceKeys.firebaseConfig;
 
     initializeUI();
     setupStateSubscriptions();
@@ -41,7 +40,6 @@ window.onload = () => {
     document.body.addEventListener('touchend', startAudioOnce);
 };
 
-// --- 狀態訂閱 ---
 function setupStateSubscriptions() {
     subscribe('favorites', (favorites) => {
         if (favorites === null) return;
@@ -65,18 +63,18 @@ function setupStateSubscriptions() {
     });
 }
 
-/**
- * ✨ UPDATE: 此函式現在是異步的，以等待資料遷移完成
- */
 async function onUserSignedIn(uid, error) {
     if (uid) {
         document.getElementById('user-info').textContent = `雲端使用者 ID: ${uid}`;
+        const db = getDbInstance();
         
-        // ✨ CHANGE: 使用 await 確保任務管理器在執行後續操作前已完全初始化
-        await initDailyTaskManager(getDbInstance(), uid);
+        await Promise.all([
+            initDailyTaskManager(db, uid),
+            initAnalyticsManager(db, uid)
+        ]);
         
         listenToFavorites(onFavoritesUpdate);
-        updateAllTaskUIs(); // 現在這個函式可以安全地執行
+        updateAllTaskUIs();
     } else {
         showMessage(uiMessages.errors.cloudConnect, true);
         console.error("Authentication Error:", error);
@@ -92,19 +90,20 @@ function onFavoritesUpdate(newFavorites, err) {
     setState({ favorites: newFavorites });
 }
 
-// --- 初始載入邏輯 ---
 function startLoadingSequence() {
     const loadingOverlay = document.getElementById('loading-overlay');
     const loadingText = document.getElementById('loading-text');
     const silhouetteContainer = document.querySelector('.silhouette-container');
     const loadingCanvas = document.getElementById('loading-canvas');
 
-    const silhouettes = [...uiSettings.loadingSilhouettes].sort(() => Math.random() - 0.5);
+    if(loadingText) loadingText.textContent = uiMessages.loading.connecting;
+
+    const silhouettes = ['gimages/g/g1.jpg', 'gimages/g/g2.jpg', 'gimages/g/g3.jpg', 'gimages/g/g4.jpg', 'gimages/g/g5.jpg', 'gimages/g/g6.jpg', 'gimages/g/g7.png', 'gimages/g/g8.png', 'gimages/g/g9.png'].sort(() => Math.random() - 0.5);
     silhouetteContainer.innerHTML = silhouettes.map(src => `<img src="${src}" class="loading-silhouette" alt="Loading Muse">`).join('');
     
     const silhouetteElements = document.querySelectorAll('.loading-silhouette');
     if (silhouetteElements.length > 0) {
-        const animationStep = uiSettings.loadingAnimationStep;
+        const animationStep = 1;
         const totalDuration = silhouetteElements.length * animationStep;
         silhouetteElements.forEach((el, index) => {
             el.style.animationDelay = `${index * animationStep}s`;
@@ -114,11 +113,11 @@ function startLoadingSequence() {
     }
 
     resizeLoadingCanvas(loadingCanvas);
-    let petals = Array.from({ length: uiSettings.loadingPetalCount }, () => new Petal(loadingCanvas));
+    let petals = Array.from({ length: 60 }, () => new Petal(loadingCanvas));
     animateLoading(loadingCanvas, petals, loadingOverlay);
 
     setTimeout(() => {
-        loadingText.textContent = uiMessages.loading.starting;
+        if(loadingText) loadingText.textContent = uiMessages.loading.starting;
         setTimeout(() => {
             loadingOverlay.classList.add('hidden');
             if (!getCurrentUserId()) {

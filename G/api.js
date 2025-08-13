@@ -1,7 +1,4 @@
-// api.js - 封裝所有對 Gemini API 的請求
-
-import { apiSettings, randomKeywords_day, randomKeywords_night } from './gconfig.js';
-// ✨ FIX: 修正 import 路徑，從新的 stateManager 獲取狀態
+import { apiSettings, randomKeywords_day, randomKeywords_night } from './game-config.js';
 import { getState } from './stateManager.js';
 
 function getRandomItems(arr, count) {

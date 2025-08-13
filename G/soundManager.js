@@ -1,11 +1,7 @@
-// soundManager.js - 統一管理所有音效的初始化與播放
+import { soundSettings } from './game-config.js';
 
-import { soundSettings } from './gconfig.js';
-
-// 為了防止在音效初始化前呼叫而出錯，先用一個什麼都不做的空函式當作預設值
 const dummySound = () => {};
 
-// 導出 sounds 物件，讓其他模組可以立即引用
 export const sounds = {
     start: dummySound,
     success: dummySound,
@@ -19,16 +15,11 @@ export const sounds = {
 
 let isInitialized = false;
 
-/**
- * 初始化 Tone.js 音效引擎。
- * 這個函式必須在使用者首次與頁面互動（如點擊）後呼叫。
- */
 export async function initSounds() {
-    if (isInitialized) return; // 避免重複初始化
+    if (isInitialized) return;
     try {
         await Tone.start();
         
-        // 初始化成功後，用真正的音效函式覆蓋掉預設的空函式
         const mainSynth = new Tone.Synth().toDestination();
         const fmSynth = new Tone.FMSynth().toDestination();
         const tabSynth = new Tone.Synth().toDestination();

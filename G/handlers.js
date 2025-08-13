@@ -1,8 +1,6 @@
-// handlers.js - 包含所有核心的事件處理函式
-
 import { saveFavorite, removeFavorite, uploadImage, shareToPublic, getRandomGoddessFromDB, getCurrentUserId, addDislikeToGoddess, updatePublicGoddessVote } from './gfirebase.js';
 import { getState, setState } from './stateManager.js';
-import { uiMessages, gameSettings, apiSettings, styles } from './gconfig.js';
+import { uiMessages, gameSettings, apiSettings, styles } from './game-config.js';
 import { showMessage, createImageCard } from './gui.js';
 import { updateAllTaskUIs } from './uiManager.js';
 import { generateImageWithRetry, callTextGenerationAPI, callTTSAPI } from './api.js';
@@ -10,54 +8,8 @@ import { useTask, getTaskCount, addTaskCount } from './dailyTaskManager.js';
 import { incrementStat } from './analyticsManager.js';
 import { sounds } from './soundManager.js';
 
-// --- Utility Functions ---
-function generateUniqueId() {
-    return Date.now().toString(36) + Math.random().toString(36).substring(2);
-}
+// ... (Utility functions: generateUniqueId, base64ToArrayBuffer, pcmToWav)
 
-function base64ToArrayBuffer(base64) {
-    const binaryString = window.atob(base64);
-    const len = binaryString.length;
-    const bytes = new Uint8Array(len);
-    for (let i = 0; i < len; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
-    }
-    return bytes.buffer;
-}
-
-function pcmToWav(pcmData, sampleRate) {
-    const numChannels = 1;
-    const bytesPerSample = 2;
-    const blockAlign = numChannels * bytesPerSample;
-    const byteRate = sampleRate * blockAlign;
-    const dataSize = pcmData.length * bytesPerSample;
-    const buffer = new ArrayBuffer(44 + dataSize);
-    const view = new DataView(buffer);
-
-    view.setUint32(0, 0x52494646, false);
-    view.setUint32(4, 36 + dataSize, true);
-    view.setUint32(8, 0x57415645, false);
-    view.setUint32(12, 0x666d7420, false);
-    view.setUint32(16, 16, true);
-    view.setUint16(20, 1, true);
-    view.setUint16(22, numChannels, true);
-    view.setUint32(24, sampleRate, true);
-    view.setUint32(28, byteRate, true);
-    view.setUint16(32, blockAlign, true);
-    view.setUint16(34, bytesPerSample * 8, true);
-    view.setUint32(36, 0x64617461, false);
-    view.setUint32(40, dataSize, true);
-
-    const pcm16 = new Int16Array(pcmData.buffer);
-    for (let i = 0; i < pcmData.length; i++) {
-        view.setInt16(44 + i * 2, pcmData[i], true);
-    }
-
-    return new Blob([view], { type: 'audio/wav' });
-}
-
-
-// --- Core Logic Handlers ---
 export async function handleImageGeneration(count = 1) {
     if (getState('isGenerating')) return;
 
@@ -137,18 +89,11 @@ async function handleDislike(imageData, btn) {
     if (result.success) {
         incrementStat({ gachaDislikes: 1 });
         
-        switch (result.newCount) {
-            case 1:
-                showMessage("「一道質疑的目光投來...」 (第一票)");
-                break;
-            case 3:
-                showMessage("「人群中開始出現竊竊私語...」 (第三票)");
-                break;
-            case 10:
-                showMessage("「女神的神性似乎產生了動搖！」 (第十票)");
-                break;
-            default:
-                showMessage(result.message);
+        const milestones = gameSettings.dislikeMilestones;
+        if (milestones[result.newCount]) {
+            showMessage(milestones[result.newCount]);
+        } else {
+            showMessage(result.message);
         }
         btn.textContent = "評價已送出 ✅";
     } else {
@@ -156,7 +101,6 @@ async function handleDislike(imageData, btn) {
         btn.textContent = "評價失敗 ❌";
     }
 }
-
 
 export function getCardHandlers() {
     return {
@@ -250,7 +194,6 @@ export async function handleTTSGeneration(text) {
     }
 }
 
-// --- Favorites & Slideshow Logic ---
 export async function toggleFavorite(imageData, btn) {
     if (imageData.id === 'vip-placeholder') {
         showMessage('此為預覽卡片，無法收藏喔！');
@@ -271,7 +214,6 @@ export async function toggleFavorite(imageData, btn) {
     const index = favorites.findIndex(fav => fav && fav.id === imageData.id);
     
     if (index > -1) {
-        // --- 執行取消收藏 ---
         incrementStat({ unlikes: 1 });
         try {
             await removeFavorite(favorites[index]);
@@ -281,7 +223,6 @@ export async function toggleFavorite(imageData, btn) {
             showMessage(uiMessages.favorites.removeFailure, true);
         }
     } else {
-        // --- 執行收藏 ---
         incrementStat({ likes: 1 });
         try {
             let favoriteData;
@@ -371,8 +312,6 @@ export async function unfavoriteCurrentSlide() {
     }
 }
 
-
-// --- Gacha System ---
 export async function drawGacha() {
     const hasUserApiKey = getState('hasUserApiKey');
     if (!hasUserApiKey) {
