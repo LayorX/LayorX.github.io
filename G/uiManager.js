@@ -1,66 +1,75 @@
 // uiManager.js - 負責所有 UI 初始化、事件綁定和 DOM 更新
 
 import { styles, uiSettings, uiMessages, apiKey as defaultConfigApiKey } from './gconfig.js';
-// ✨ CHANGE: 引入新的 stateManager
 import { getState, setState, subscribe } from './stateManager.js';
 import { getTaskCount } from './dailyTaskManager.js';
 import { getCardHandlers, handleImageGeneration, drawGacha, unfavoriteCurrentSlide } from './handlers.js';
+import { incrementStat } from './analyticsManager.js';
+import { getCurrentUserId } from './gfirebase.js';
 import { createImageCard, showMessage, initParticles, updateFavoritesCountUI } from './gui.js';
 import { sounds } from './soundManager.js';
 
-// --- DOM Elements ---
-const DOMElements = {
-    // ... (保持不變)
-    headerTitle: document.getElementById('header-title'),
-    storyModalTitle: document.getElementById('story-modal-title'),
-    gachaModalTitle: document.getElementById('gacha-modal-title'),
-    tabNavigation: document.getElementById('tab-navigation'),
-    styleSectionsContainer: document.getElementById('style-sections'),
-    generateOneBtn: document.getElementById('generate-one-btn'),
-    generateFourBtn: document.getElementById('generate-four-btn'),
-    gachaBtn: document.getElementById('gacha-btn'),
-    gachaDrawBtn: document.getElementById('gacha-draw-btn'),
-    gachaCountEl: document.getElementById('gacha-count'),
-    gachaUnlockInfo: document.getElementById('gacha-unlock-info'),
-    ttsBtn: document.getElementById('tts-btn'),
-    ttsStopBtn: document.getElementById('tts-stop-btn'),
-    ttsLimitInfo: document.getElementById('tts-limit-info'),
-    ttsAudio: document.getElementById('tts-audio'),
-    favoritesBtn: document.getElementById('favorites-btn'),
-    favoritesBtnText: document.getElementById('favorites-btn-text'),
-    slideshowModal: document.getElementById('slideshow-modal'),
-    slideshowImage: document.getElementById('slideshow-image'),
-    thumbnailBar: document.getElementById('thumbnail-bar'),
-    slideshowContainer: document.getElementById('slideshow-container'),
-    favoritesEmptyState: document.getElementById('favorites-empty-state'),
-    themeSwitchBtn: document.getElementById('theme-switch-btn'),
-    sunIcon: document.getElementById('sun-icon'),
-    moonIcon: document.getElementById('moon-icon'),
-    soundControl: document.getElementById('sound-control'),
-    soundOnIcon: document.getElementById('sound-on-icon'),
-    soundOffIcon: document.getElementById('sound-off-icon'),
-    moreOptionsBtn: document.getElementById('more-options-btn'),
-    moreOptionsMenu: document.getElementById('more-options-menu'),
-    aboutBtn: document.getElementById('about-btn'),
-    contactBtn: document.getElementById('contact-btn'),
-    apikeyBtn: document.getElementById('apikey-btn'),
-    extraGachaBtn: document.getElementById('extra-gacha-btn'),
-    gachaModal: document.getElementById('gacha-modal'),
-    gachaCloseBtn: document.getElementById('gacha-close-btn'),
-    storyModal: document.getElementById('story-modal'),
-    imageModal: document.getElementById('image-modal'),
-    apikeyModal: document.getElementById('apikey-modal'),
-    apikeyModalContent: document.getElementById('apikey-modal-content'),
-    contactModal: document.getElementById('contact-modal'),
-    contactModalContent: document.getElementById('contact-modal-content'),
-    comingSoonModal: document.getElementById('coming-soon-modal'),
-    comingSoonModalContent: document.getElementById('coming-soon-modal-content'),
-    loadingText: document.getElementById('loading-text'),
-};
+// ✨ FIX: 先宣告一個空物件，等 DOM 載入後再填入內容
+let DOMElements = {};
+
+// --- Initialization ---
+export function initializeUI() {
+    // ✨ FIX: 在初始化時才擷取 DOM 元素，確保它們都已存在
+    DOMElements = {
+        headerTitle: document.getElementById('header-title'),
+        storyModalTitle: document.getElementById('story-modal-title'),
+        gachaModalTitle: document.getElementById('gacha-modal-title'),
+        tabNavigation: document.getElementById('tab-navigation'),
+        styleSectionsContainer: document.getElementById('style-sections'),
+        generateOneBtn: document.getElementById('generate-one-btn'),
+        generateFourBtn: document.getElementById('generate-four-btn'),
+        gachaBtn: document.getElementById('gacha-btn'),
+        gachaDrawBtn: document.getElementById('gacha-draw-btn'),
+        gachaCountEl: document.getElementById('gacha-count'),
+        gachaUnlockInfo: document.getElementById('gacha-unlock-info'),
+        ttsBtn: document.getElementById('tts-btn'),
+        ttsStopBtn: document.getElementById('tts-stop-btn'),
+        ttsLimitInfo: document.getElementById('tts-limit-info'),
+        ttsAudio: document.getElementById('tts-audio'),
+        favoritesBtn: document.getElementById('favorites-btn'),
+        favoritesBtnText: document.getElementById('favorites-btn-text'),
+        slideshowModal: document.getElementById('slideshow-modal'),
+        slideshowImage: document.getElementById('slideshow-image'),
+        thumbnailBar: document.getElementById('thumbnail-bar'),
+        slideshowContainer: document.getElementById('slideshow-container'),
+        favoritesEmptyState: document.getElementById('favorites-empty-state'),
+        themeSwitchBtn: document.getElementById('theme-switch-btn'),
+        sunIcon: document.getElementById('sun-icon'),
+        moonIcon: document.getElementById('moon-icon'),
+        soundControl: document.getElementById('sound-control'),
+        soundOnIcon: document.getElementById('sound-on-icon'),
+        soundOffIcon: document.getElementById('sound-off-icon'),
+        moreOptionsBtn: document.getElementById('more-options-btn'),
+        moreOptionsMenu: document.getElementById('more-options-menu'),
+        aboutBtn: document.getElementById('about-btn'),
+        contactBtn: document.getElementById('contact-btn'),
+        apikeyBtn: document.getElementById('apikey-btn'),
+        extraGachaBtn: document.getElementById('extra-gacha-btn'),
+        gachaModal: document.getElementById('gacha-modal'),
+        gachaCloseBtn: document.getElementById('gacha-close-btn'),
+        storyModal: document.getElementById('story-modal'),
+        imageModal: document.getElementById('image-modal'),
+        apikeyModal: document.getElementById('apikey-modal'),
+        apikeyModalContent: document.getElementById('apikey-modal-content'),
+        contactModal: document.getElementById('contact-modal'),
+        contactModalContent: document.getElementById('contact-modal-content'),
+        comingSoonModal: document.getElementById('coming-soon-modal'),
+        comingSoonModalContent: document.getElementById('coming-soon-modal-content'),
+    };
+
+    setupUIText();
+    createTabsAndSections();
+    addEventListeners();
+    setupSubscriptions();
+}
 
 function setupUIText() {
-    // ... (保持不變)
-    DOMElements.loadingText.textContent = uiMessages.loading.connecting;
+    // DOMElements.loadingText is not in this object, assuming it's handled elsewhere
     DOMElements.gachaModalTitle.textContent = uiMessages.gachaModalTitle;
     DOMElements.storyModalTitle.textContent = uiMessages.storyModalTitle;
     DOMElements.generateOneBtn.textContent = uiMessages.buttons.generateOne;
@@ -77,13 +86,6 @@ function setupUIText() {
     document.querySelector('.gacha-placeholder p:nth-child(2)').textContent = uiMessages.gacha.placeholder;
 }
 
-// --- Initialization ---
-export function initializeUI() {
-    setupUIText();
-    createTabsAndSections();
-    addEventListeners();
-    setupSubscriptions(); // ✨ NEW: 集中設定 UI 訂閱
-}
 
 function createTabsAndSections() {
     styles.forEach((style, index) => {
@@ -124,7 +126,6 @@ function createTabsAndSections() {
 }
 
 function addEventListeners() {
-    // ... (大部分監聽器保持不變)
     document.querySelectorAll('.tab-button').forEach(button => {
         button.addEventListener('click', () => {
             sounds.tab();
@@ -141,7 +142,6 @@ function addEventListeners() {
     DOMElements.gachaCloseBtn.addEventListener('click', () => DOMElements.gachaModal.classList.remove('show'));
     DOMElements.gachaDrawBtn.addEventListener('click', () => drawGacha());
     
-    // 其他 Modal 和按鈕的監聽器...
     DOMElements.imageModal.addEventListener('click', () => DOMElements.imageModal.classList.remove('show'));
     DOMElements.storyModal.addEventListener('click', (e) => { 
         if (e.target === DOMElements.storyModal) {
@@ -181,7 +181,6 @@ function addEventListeners() {
     DOMElements.slideshowContainer.addEventListener('touchend', handleTouchEnd, false);
 }
 
-// ✨ NEW: 設定所有 UI 相關的狀態訂閱
 function setupSubscriptions() {
     subscribe('activeStyleId', (styleId) => {
         document.querySelectorAll('.tab-button').forEach(btn => btn.classList.toggle('active', btn.dataset.styleId === styleId));
@@ -322,6 +321,7 @@ function openApiKeyModal() {
         if (input.value) {
             localStorage.setItem('userGeminiApiKey', input.value);
             setState({ userApiKey: input.value, hasUserApiKey: true });
+            incrementStat({ apiImports: 1 });
             showMessage("API Key 已儲存！您現在擁有無限次數。");
             DOMElements.apikeyModal.classList.remove('show');
         } else {
@@ -337,25 +337,24 @@ function openApiKeyModal() {
     });
 }
 
-// ... (其他 Modal 函式保持不變)
 function openContactModal() {
     DOMElements.contactModalContent.innerHTML = `
         <button class="modal-close-btn">&times;</button>
-        <h2 class="text-4xl font-bold text-center mb-4">聯繫我</h2>
-        <p class="text-lg text-center mb-8 max-w-2xl mx-auto">如果您對我的作品感興趣，或是有任何合作想法，歡迎隨時與我聯繫！</p>
+        <h2 class="text-4xl font-bold text-center mb-2">發現臭蟲？有好點子？</h2>
+        <p class="text-lg text-center mb-6 max-w-2xl mx-auto">這裡是「女神製造所」的許願池！不管是抓到程式的 Bug，還是想到能讓這裡更有趣的鬼點子，都歡迎告訴我！</p>
+        
+        <div class="text-center bg-amber-900/50 border border-amber-500 text-amber-300 p-4 rounded-lg mb-6">
+            <p class="font-bold text-lg">✨ 懸賞任務 ✨</p>
+            <p class="mt-1 text-sm">只要您的建議或回報被證實有效，我就會不定期空投 <span class="font-bold text-white">5 ~ 20 次</span> 的額外扭蛋機會到您的帳戶作為謝禮！</p>
+        </div>
+
         <form id="contact-form" action="https://formspree.io/f/xnnzgpdn" method="POST" class="max-w-xl mx-auto space-y-4 text-left">
-            <div class="flex flex-col md:flex-row gap-4">
-                <input type="text" name="name" placeholder="您的名字" required class="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500">
-                <input type="email" name="email" placeholder="您的電子郵件" required class="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500">
-            </div>
-            <textarea name="message" placeholder="您的訊息..." rows="5" required class="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"></textarea>
-            <button type="submit" class="w-full p-3 font-bold rounded-md hover:opacity-90 transition-opacity">發送訊息</button>
+            <textarea name="message" placeholder="請在此詳細描述您的發現或建議..." rows="5" required class="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"></textarea>
+            <input type="text" name="userId" value="您的雲端ID: ${getCurrentUserId() || '尚未登入'}" readonly class="w-full p-3 border rounded-md bg-gray-700/50 cursor-not-allowed">
+            <p class="text-xs text-center text-gray-400 -mt-2">（請務必保留此 ID 以便發放獎勵！）</p>
+            <button type="submit" class="w-full p-3 font-bold rounded-md hover:opacity-90 transition-opacity">發送許願</button>
         </form>
         <div id="form-status" class="mt-4 text-center"></div>
-        <div class="mt-12 flex justify-center items-center space-x-8 text-4xl">
-            <a href="mailto:yor31117@gmail.com" class="transition-colors" aria-label="Email"><i class="fas fa-envelope"></i></a>
-            <a href="https://github.com/LayorX" target="_blank" rel="noopener noreferrer" class="transition-colors" aria-label="GitHub"><i class="fab fa-github"></i></a>
-        </div>
     `;
     DOMElements.contactModal.classList.add('show');
     DOMElements.contactModalContent.querySelector('.modal-close-btn').addEventListener('click', () => DOMElements.contactModal.classList.remove('show'));
@@ -453,7 +452,6 @@ function openSlideshow() {
     DOMElements.slideshowModal.classList.add('show');
 }
 
-// ✨ NEW: 獨立出來的 Slideshow UI 更新函式
 export function updateSlideshowUI(favorites) {
     const isSlideshowOpen = DOMElements.slideshowModal.classList.contains('show');
 
@@ -496,7 +494,7 @@ function showSlide(index) {
     }
 
     const slideData = favorites[index];
-    DOMElements.slideshowImage.src = slideData.imageUrl; // ✨ 永遠載入原始高畫質圖
+    DOMElements.slideshowImage.src = slideData.imageUrl;
     
     DOMElements.slideshowImage.style.opacity = '0';
     DOMElements.slideshowImage.onload = () => { DOMElements.slideshowImage.style.opacity = '1'; };
@@ -514,8 +512,7 @@ function renderThumbnails() {
 
     favorites.forEach((fav, index) => {
         const thumb = document.createElement('img');
-        // ✨ 這裡可以載入縮圖
-        thumb.src = fav.imageUrl; 
+        thumb.src = fav.resizedUrl || fav.imageUrl;
         thumb.className = 'thumbnail';
         thumb.dataset.index = index;
         thumb.onclick = () => {

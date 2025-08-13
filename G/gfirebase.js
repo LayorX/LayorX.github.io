@@ -3,7 +3,7 @@
 // --- Firebase SDKs ---
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, getDoc, getDocs, query, limit } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, getDoc, getDocs, query, limit, runTransaction, increment } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getStorage, ref, uploadString, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
 // --- Module State ---
@@ -11,7 +11,7 @@ let db, auth, storage;
 let currentUserId;
 
 // --- 圖片尺寸設定 ---
-const RESIZED_IMAGE_SUFFIX = '_400x600' //'_200x300'; // 建議尺寸
+const RESIZED_IMAGE_SUFFIX = '_200x300'; // 建議尺寸
 const RESIZED_IMAGE_EXTENSION = '.jpeg'; 
 
 // --- Initialization ---
@@ -192,4 +192,95 @@ export async function getRandomGoddessesFromDB(count) {
     });
     const shuffled = allDocs.sort(() => 0.5 - Math.random());
     return shuffled.slice(0, count);
+}
+
+
+// --- ✨ NEW: 通用的公開女神評價函式 ---
+/**
+ * 更新公開女神的喜歡/取消喜歡狀態
+ * @param {string} goddessId - 要評價的女神圖片 ID
+ * @param {string} voterId - 執行評價的使用者 ID
+ * @param {'like' | 'unlike'} action - 執行的動作
+ */
+export async function updatePublicGoddessVote(goddessId, voterId, action) {
+    if (!db) throw new Error("Firestore is not initialized.");
+    const goddessRef = doc(db, 'public-goddesses', goddessId);
+
+    try {
+        await runTransaction(db, async (transaction) => {
+            const goddessDoc = await transaction.get(goddessRef);
+            // 如果文件不存在於公開池中，就靜默失敗，不做任何事
+            if (!goddessDoc.exists()) {
+                return; 
+            }
+
+            const data = goddessDoc.data();
+            const likedBy = data.likedBy || [];
+            const hasLiked = likedBy.includes(voterId);
+
+            if (action === 'like' && !hasLiked) {
+                transaction.update(goddessRef, {
+                    likedBy: [...likedBy, voterId],
+                    likeCount: increment(1)
+                });
+            } else if (action === 'unlike' && hasLiked) {
+                transaction.update(goddessRef, {
+                    likedBy: likedBy.filter(id => id !== voterId),
+                    likeCount: increment(-1)
+                });
+            }
+        });
+    } catch (error) {
+        // 這個錯誤只在後台記錄，因為它不應該影響使用者收藏的核心體驗
+        console.error("更新公開女神喜歡數失敗:", error);
+    }
+}
+
+
+// --- ✨ NEW: 扭蛋倒讚功能 ---
+/**
+ * 為公開的女神增加一個倒讚
+ * @param {string} goddessId - 要倒讚的女神圖片 ID
+ * @param {string} dislikerId - 執行倒讚的使用者 ID
+ * @returns {Promise<{success: boolean, message: string, newCount?: number}>}
+ */
+export async function addDislikeToGoddess(goddessId, dislikerId) {
+    if (!db) throw new Error("Firestore is not initialized.");
+    const goddessRef = doc(db, 'public-goddesses', goddessId);
+
+    try {
+        const newCount = await runTransaction(db, async (transaction) => {
+            const goddessDoc = await transaction.get(goddessRef);
+            if (!goddessDoc.exists()) {
+                throw new Error("這張圖片不存在或已被移除。");
+            }
+
+            const data = goddessDoc.data();
+            const dislikedBy = data.dislikedBy || [];
+
+            if (dislikedBy.includes(dislikerId)) {
+                // 回傳 -1 來表示此使用者已按過
+                return -1;
+            }
+
+            const newDislikedBy = [...dislikedBy, dislikerId];
+            
+            transaction.update(goddessRef, {
+                dislikedBy: newDislikedBy,
+                dislikeCount: increment(1)
+            });
+            
+            return (data.dislikeCount || 0) + 1;
+        });
+
+        if (newCount === -1) {
+            return { success: false, message: "您已經評價過這位女神了！" };
+        }
+
+        return { success: true, message: "評價成功！", newCount: newCount };
+
+    } catch (error) {
+        console.error("倒讚操作失敗:", error);
+        return { success: false, message: error.message };
+    }
 }

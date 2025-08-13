@@ -22,22 +22,25 @@ export function updateFavoritesCountUI(count) {
 // --- Image Card Factory ---
 export function createImageCard(imageData, handlers, options = {}) {
     const { withAnimation = true, withButtons = true } = options;
-    const { style, id, isLiked, isShared, isShareable = true } = imageData;
+    // ✨ FIX: 確保 isGachaCard 被正確解構
+    const { style, id, isLiked, isShared, isShareable = true, isGachaCard = false } = imageData;
 
-    // ✨ FIX: 決定顯示 URL 和原始 URL
-    // displaySrc 優先使用縮圖，originalSrc 永遠是原圖
     const displaySrc = imageData.resizedUrl || imageData.imageUrl || imageData.src;
     const originalSrc = imageData.imageUrl || imageData.src;
 
     const imageCard = document.createElement('div');
     imageCard.className = 'image-card';
     imageCard.dataset.id = id;
-    // 將原始 URL 存儲在 dataset 中，以便在出錯時回退
     imageCard.dataset.originalSrc = originalSrc;
+
+    // ✨ FIX: 根據 isGachaCard 決定顯示哪個按鈕
+    const mainButtonHTML = isGachaCard
+        ? `<button class="dislike-btn story-btn">審判時刻... 👎</button>`
+        : `<button class="story-btn">生成故事 ✨</button>`;
 
     const footerHTML = withButtons ? `
         <div class="card-footer">
-             <button class="story-btn">生成故事 ✨</button>
+             ${mainButtonHTML}
              <div class="card-actions">
                 ${isShareable ? `<button class="share-btn ${isShared ? 'shared' : ''}" title="分享至公開殿堂">🌐</button>` : ''}
                 <button class="like-btn ${isLiked ? 'liked' : ''}" title="收藏至私人殿堂">♥</button>
@@ -82,18 +85,19 @@ export function createImageCard(imageData, handlers, options = {}) {
         }
     };
 
-    // ✨ FIX: 實作了強大的 onerror 回退機制
     img.onerror = function() {
         const card = this.closest('.image-card');
         const originalUrlFromData = card.dataset.originalSrc;
 
-        // 如果當前的 src 已經是原始 URL，代表連原始 URL 都載入失敗
         if (this.src === originalUrlFromData) {
-            const errorMsg = "圖片載入失敗！";
-            console.error(errorMsg, "Failed on both resized and original URL:", originalUrlFromData);
-            card.innerHTML = `<p class="text-red-400 p-4 text-center">${errorMsg}</p>`;
+            const errorTitle = "圖片載入失敗！";
+            const errorHint = "提示：請嘗試暫時關閉廣告攔截器 (AdBlocker) 或檢查您的網路連線。";
+            console.error(errorTitle, "Failed on both resized and original URL:", originalUrlFromData);
+            card.innerHTML = `<div class="text-red-400 p-4 text-center text-sm flex flex-col justify-center h-full">
+                                <p class="font-bold">${errorTitle}</p>
+                                <p class="text-xs mt-2">${errorHint}</p>
+                              </div>`;
         } else {
-            // 這是第一次錯誤，代表縮圖載入失敗。現在回退到載入原始 URL。
             console.warn(`Resized image failed, falling back to original: ${originalUrlFromData}`);
             this.src = originalUrlFromData;
         }
@@ -102,13 +106,17 @@ export function createImageCard(imageData, handlers, options = {}) {
     if (withButtons) {
         imageCard.addEventListener('click', (e) => {
             const clickedCard = e.currentTarget;
-            if (e.target.closest('.story-btn')) {
+            if (e.target.closest('.story-btn') && !e.target.closest('.dislike-btn')) {
                 e.stopPropagation();
                 if (id === 'vip-placeholder') {
                     showMessage('此為預覽卡片，無法生成故事喔！');
                     return;
                 }
                 handlers.onStory(style);
+            } else if (e.target.closest('.dislike-btn')) {
+                // ✨ FIX: 新增倒讚按鈕的事件處理
+                e.stopPropagation();
+                handlers.onDislike(imageData, e.target.closest('.dislike-btn'));
             } else if (e.target.closest('.like-btn')) {
                 e.stopPropagation();
                 handlers.onLike(imageData, e.target.closest('.like-btn'));
@@ -128,7 +136,6 @@ export function createImageCard(imageData, handlers, options = {}) {
          });
     }
 
-    // 初始載入時，總是先嘗試 displaySrc (優先是縮圖)
     img.src = displaySrc;
 
     return imageCard;

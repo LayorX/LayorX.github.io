@@ -1,14 +1,13 @@
 // handlers.js - 包含所有核心的事件處理函式
 
-// ✨ CHANGE: 引入新的 stateManager
+import { saveFavorite, removeFavorite, uploadImage, shareToPublic, getRandomGoddessFromDB, getCurrentUserId, addDislikeToGoddess, updatePublicGoddessVote } from './gfirebase.js';
 import { getState, setState } from './stateManager.js';
 import { uiMessages, gameSettings, apiSettings, styles } from './gconfig.js';
 import { showMessage, createImageCard } from './gui.js';
-// ✨ CHANGE: 移除 uiManager 的更新函式，因為現在是響應式的
 import { updateAllTaskUIs } from './uiManager.js';
 import { generateImageWithRetry, callTextGenerationAPI, callTTSAPI } from './api.js';
 import { useTask, getTaskCount, addTaskCount } from './dailyTaskManager.js';
-import { saveFavorite, removeFavorite, uploadImage, shareToPublic, getRandomGoddessFromDB, getCurrentUserId } from './gfirebase.js';
+import { incrementStat } from './analyticsManager.js';
 import { sounds } from './soundManager.js';
 
 // --- Utility Functions ---
@@ -35,10 +34,10 @@ function pcmToWav(pcmData, sampleRate) {
     const buffer = new ArrayBuffer(44 + dataSize);
     const view = new DataView(buffer);
 
-    view.setUint32(0, 0x52494646, false); // "RIFF"
+    view.setUint32(0, 0x52494646, false);
     view.setUint32(4, 36 + dataSize, true);
-    view.setUint32(8, 0x57415645, false); // "WAVE"
-    view.setUint32(12, 0x666d7420, false); // "fmt "
+    view.setUint32(8, 0x57415645, false);
+    view.setUint32(12, 0x666d7420, false);
     view.setUint32(16, 16, true);
     view.setUint16(20, 1, true);
     view.setUint16(22, numChannels, true);
@@ -46,7 +45,7 @@ function pcmToWav(pcmData, sampleRate) {
     view.setUint32(28, byteRate, true);
     view.setUint16(32, blockAlign, true);
     view.setUint16(34, bytesPerSample * 8, true);
-    view.setUint32(36, 0x64617461, false); // "data"
+    view.setUint32(36, 0x64617461, false);
     view.setUint32(40, dataSize, true);
 
     const pcm16 = new Int16Array(pcmData.buffer);
@@ -76,11 +75,12 @@ export async function handleImageGeneration(count = 1) {
              showMessage(uiMessages.generateLimit.message, true);
             return;
         }
-        updateAllTaskUIs(); // 手動更新任務計數UI
+        updateAllTaskUIs();
     }
+    
+    incrementStat({ [taskName]: count });
 
     sounds.start();
-    // ✨ CHANGE: 只需更新狀態，UI 會自動響應
     setState({ isGenerating: true });
     
     const { activeStyleId, favorites } = getState('activeStyleId', 'favorites');
@@ -119,9 +119,44 @@ export async function handleImageGeneration(count = 1) {
     }
     
     showMessage(`完成了 ${count} 次新的邂逅！`);
-    // ✨ CHANGE: 只需更新狀態
     setState({ isGenerating: false });
 }
+
+async function handleDislike(imageData, btn) {
+    const currentUserId = getCurrentUserId();
+    if (!currentUserId) {
+        showMessage("請先登入才能進行評價喔！", true);
+        return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = "傳送評價中...";
+
+    const result = await addDislikeToGoddess(imageData.id, currentUserId);
+
+    if (result.success) {
+        incrementStat({ gachaDislikes: 1 });
+        
+        switch (result.newCount) {
+            case 1:
+                showMessage("「一道質疑的目光投來...」 (第一票)");
+                break;
+            case 3:
+                showMessage("「人群中開始出現竊竊私語...」 (第三票)");
+                break;
+            case 10:
+                showMessage("「女神的神性似乎產生了動搖！」 (第十票)");
+                break;
+            default:
+                showMessage(result.message);
+        }
+        btn.textContent = "評價已送出 ✅";
+    } else {
+        showMessage(result.message, true);
+        btn.textContent = "評價失敗 ❌";
+    }
+}
+
 
 export function getCardHandlers() {
     return {
@@ -133,7 +168,8 @@ export function getCardHandlers() {
             const imageModal = document.getElementById('image-modal');
             modalImage.src = displaySrc;
             imageModal.classList.add('show');
-        }
+        },
+        onDislike: handleDislike
     };
 }
 
@@ -149,7 +185,8 @@ export async function handleStoryGeneration(style) {
         }
     }
     
-    // ✨ CHANGE: 只需更新狀態
+    incrementStat({ storyGenerations: 1 });
+
     setState({ isStoryGenerating: true });
     const storyTextEl = document.getElementById('story-text');
     const storyModal = document.getElementById('story-modal');
@@ -157,7 +194,6 @@ export async function handleStoryGeneration(style) {
 
     storyTextEl.innerHTML = '<div class="loader mx-auto"></div>';
     storyModal.classList.add('show');
-    // updateTtsUi(); // 這個會由 isStoryGenerating 的訂閱者處理
 
     try {
         const storyPrompt = apiSettings.prompts.story(style.title, style.description);
@@ -171,7 +207,6 @@ export async function handleStoryGeneration(style) {
         storyTextEl.textContent = uiMessages.errors.storyFailed;
         ttsBtn.disabled = true;
     } finally {
-        // ✨ CHANGE: 只需更新狀態
         setState({ isStoryGenerating: false });
     }
 }
@@ -184,13 +219,14 @@ export async function handleTTSGeneration(text) {
         const canUse = await useTask('tts');
         if (!canUse) {
             showMessage(uiMessages.buttons.ttsLimit, true);
-            updateAllTaskUIs(); // 手動更新
+            updateAllTaskUIs();
             return;
         }
-        updateAllTaskUIs(); // 手動更新
+        updateAllTaskUIs();
     }
+    
+    incrementStat({ ttsGenerations: 1 });
 
-    // ✨ CHANGE: 只需更新狀態
     setState({ isTtsGenerating: true });
     const ttsAudio = document.getElementById('tts-audio');
     
@@ -210,7 +246,6 @@ export async function handleTTSGeneration(text) {
         console.error('TTS 生成失敗:', error);
         showMessage(uiMessages.errors.ttsFailed, true);
     } finally {
-        // ✨ CHANGE: 只需更新狀態
         setState({ isTtsGenerating: false });
     }
 }
@@ -223,9 +258,10 @@ export async function toggleFavorite(imageData, btn) {
     }
     
     const favorites = getState('favorites');
+    const currentUserIdValue = getCurrentUserId();
     
-    if (favorites === null) {
-        showMessage("雲端資料同步中，請稍候再試...", true);
+    if (favorites === null || !currentUserIdValue) {
+        showMessage("雲端資料同步中或尚未登入，請稍候再試...", true);
         return;
     }
 
@@ -235,13 +271,18 @@ export async function toggleFavorite(imageData, btn) {
     const index = favorites.findIndex(fav => fav && fav.id === imageData.id);
     
     if (index > -1) {
+        // --- 執行取消收藏 ---
+        incrementStat({ unlikes: 1 });
         try {
             await removeFavorite(favorites[index]);
+            await updatePublicGoddessVote(imageData.id, currentUserIdValue, 'unlike');
         } catch (error) {
             console.error("Failed to remove favorite:", error);
             showMessage(uiMessages.favorites.removeFailure, true);
         }
     } else {
+        // --- 執行收藏 ---
+        incrementStat({ likes: 1 });
         try {
             let favoriteData;
             if (imageData.src && imageData.src.startsWith('data:image')) {
@@ -257,6 +298,8 @@ export async function toggleFavorite(imageData, btn) {
             }
             
             await saveFavorite(favoriteData);
+            await updatePublicGoddessVote(imageData.id, currentUserIdValue, 'like');
+
             showMessage(uiMessages.favorites.addSuccess);
 
             const cardExists = document.querySelector(`.image-card[data-id="${imageData.id}"]`);
@@ -298,8 +341,9 @@ export async function shareFavoriteToPublicHandler(imageData, btn) {
         if (result.alreadyExists) {
             showMessage(uiMessages.gacha.alreadyShared);
         } else {
+            incrementStat({ shares: 1 });
             await addTaskCount('gacha', 1);
-            updateAllTaskUIs(); // 手動更新
+            updateAllTaskUIs();
             showMessage(uiMessages.gacha.shareSuccess);
         }
         btn.classList.add('shared');
@@ -317,6 +361,7 @@ export async function unfavoriteCurrentSlide() {
     const currentFavorite = favorites[currentSlideshowIndex];
     if (!currentFavorite) return;
     
+    incrementStat({ unlikes: 1 });
     try {
         await removeFavorite(currentFavorite);
         showMessage(uiMessages.favorites.removeSuccess);
@@ -334,10 +379,12 @@ export async function drawGacha() {
         const canUse = await useTask('gacha');
         if (!canUse) {
             showMessage("今日次數已用完！", true);
-            updateAllTaskUIs(); // 手動更新
+            updateAllTaskUIs();
             return;
         }
     }
+    
+    incrementStat({ gachaDraws: 1 });
 
     const gachaDrawBtn = document.getElementById('gacha-draw-btn');
     const gachaResultContainer = document.getElementById('gacha-result-container');
@@ -369,9 +416,11 @@ export async function drawGacha() {
         const imageData = {
             src: randomGoddess.imageUrl,
             imageUrl: randomGoddess.imageUrl,
+            resizedUrl: randomGoddess.resizedUrl,
             style: randomGoddess.style,
             id: randomGoddess.id,
-            isLiked: Array.isArray(favorites) && favorites.some(fav => fav.id === randomGoddess.id)
+            isLiked: Array.isArray(favorites) && favorites.some(fav => fav.id === randomGoddess.id),
+            isGachaCard: true
         };
         
         const gachaCard = createImageCard(imageData, getCardHandlers(), { withAnimation: false, withButtons: true });
@@ -383,6 +432,6 @@ export async function drawGacha() {
         showMessage(`${uiMessages.gacha.drawFailed}: ${error.message}`, true);
         gachaResultContainer.innerHTML = `<div class="gacha-placeholder"><p>${uiMessages.gacha.drawFailed}...</p><p class="text-xs text-gray-400 mt-2">${error.message}</p></div>`;
     } finally {
-        updateAllTaskUIs(); // 手動更新
+        updateAllTaskUIs();
     }
 }
