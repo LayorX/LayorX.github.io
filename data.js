@@ -73,7 +73,33 @@ const portfolioData = [
         desc: '兒童故事PuffPaleCloudy角色設計YunBao。',
         details: `<h3>角色故事</h3><p>雲寶 (YunBao) 是一隻害羞但充滿好奇心的小雲龍，他能吐出各種形狀的雲朵來表達自己的心情。</p>`,
         externalLink: 'https://www.youtube.com/@PuffPalsCloudy' 
-    },
+    },{
+    title: '女神慾見GoddeSpark',
+    category: 'web',
+    images: [
+        'data/images/g_showcase_01.jpg',
+        'data/images/g_showcase_00.jpg', // 建議使用：主要介面截圖
+        'data/images/g_showcase_02.jpg', // 建議使用：生成圖片的拼貼
+        'data/images/g_showcase_03.jpg', // 建議使用：收藏庫或角色故事介面
+        'data/images/g_showcase_04.jpg'  // 建議使用：扭蛋或設定介面
+    ],
+    desc: '一個基於 Gemini API 的互動式 AI 圖像生成應用。使用者可透過直覺介面，探索並創造風格獨特的女神角色，並透過收藏、語音故事與扭蛋等遊戲化機制，享受創造的樂趣。',
+    details: `<h3>專案目標</h3>
+              <p>旨在探索 AI 生成藝術的可能性，打造一個讓使用者能輕鬆創造、互動並分享 AI 角色的平台。專案不僅展示了前端技術的應用，更專注於透過遊戲化設計提升使用者參與度。</p>
+              <h3>核心功能</h3>
+              <ul>
+                  <li><b>即時圖像生成：</b> 串接 Google Gemini API，根據使用者選擇的風格即時生成高品質圖像。</li>
+                  <li><b>互動遊戲機制：</b> 包含「我的最愛」收藏系統、可生成角色故事的 TTS 語音功能，以及充滿驚喜的「趣味扭蛋機」。</li>
+                  <li><b>高度個人化：</b> 使用者可自由切換介面主題、開關音效，甚至匯入自己的 API Key 以解除生成限制。</li>
+              </ul>
+              <h3>技術亮點</h3>
+              <ul>
+                  <li><b>前端架構：</b> 完全使用 Vanilla JS、HTML 與 Tailwind CSS 打造，不依賴任何框架，專注於原生效能與程式碼簡潔性。</li>
+                  <li><b>API 整合：</b> 穩定串接 Gemini API，並設計了完整的 API Key 管理與錯誤處理流程。</li>
+                  <li><b>音效與狀態管理：</b> 整合 Tone.js 創造豐富的音效回饋，並利用 Local Storage 實現使用者偏好與進度的本地持久化。</li>
+              </ul>`,
+    externalLink: 'G/g.html'
+},
     { 
         title: '個人品牌 Logo 設計', 
         category: 'design', 
