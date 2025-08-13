@@ -72,7 +72,7 @@
                 </div>
             </div>
             <div class="gacha-controls">
-                <button id="gacha-draw-btn" class="btn-base btn-primary text-white font-bold py-3 px-8 rounded-full text-xl"> (剩餘 <span id="gacha-count">5</span> 次)</button>
+                <button id="gacha-draw-btn" class="btn-base btn-primary text-white font-bold py-3 px-8 rounded-full text-xl"></button>
                 <p id="gacha-unlock-info" class="text-xs text-gray-500 mt-2" style="display: none;"></p>
             </div>
         </div>
@@ -121,7 +121,6 @@
                     <button id="favorites-btn" class="btn-base btn-primary text-white font-bold py-2 px-6 rounded-full text-lg"><span id="favorites-btn-text"></span> ❤️ <span id="favorites-count">0</span></button>
                     <button id="gacha-btn" class="btn-base btn-secondary text-white font-bold py-2 px-6 rounded-full text-lg"></button>
                     
-                    <!-- ✨ FIX: 更多選項按鈕 (移到扭蛋按鈕右邊) -->
                     <div class="relative" id="more-options-container">
                         <button id="more-options-btn" class="btn-base btn-secondary text-white font-bold py-2 px-4 rounded-full text-lg flex items-center">
                             更多選項 <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
@@ -130,9 +129,10 @@
                             <div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="options-menu">
                                 <a href="#" id="settings-btn" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700" role="menuitem">⚙️ 個人化設定</a>
                                 <a href="#" id="about-btn" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700" role="menuitem">關於作品</a>
-                                <a href="#" id="contact-btn" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700" role="menuitem">聯絡我 (報錯、建議)+5扭蛋</a>
+                                <a href="#" id="contact-btn" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700" role="menuitem">聯絡我 (報錯/建議)</a>
                                 <a href="#" id="apikey-btn" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700" role="menuitem">匯入 Gemini API Key</a>
-                                <a href="#" id="extra-gacha-btn" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700" role="menuitem">額外扭蛋次數 +3</a>
+                                <!-- ✨ FIX: 將此按鈕的文字和功能對應起來 -->
+                                <a href="#" id="extra-gacha-btn" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700" role="menuitem">💝公告👄</a>
                             </div>
                         </div>
                     </div>

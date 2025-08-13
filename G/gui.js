@@ -21,21 +21,20 @@ export function updateFavoritesCountUI(count) {
 
 export function createImageCard(imageData, handlers, options = {}) {
     const { withAnimation = true, withButtons = true } = options;
+    // ✨ FIX: 確保 isGachaCard 被正確解構
     const { style, id, isLiked, isShared, isShareable = true, isGachaCard = false } = imageData;
 
-    const imageQuality = getState('imageQuality');
+    const displaySrc = imageData.resizedUrl || imageData.imageUrl || imageData.src;
     const originalSrc = imageData.imageUrl || imageData.src;
-    const displaySrc = (imageQuality === 'original') 
-        ? originalSrc 
-        : (imageData.resizedUrl || originalSrc);
 
     const imageCard = document.createElement('div');
     imageCard.className = 'image-card';
     imageCard.dataset.id = id;
     imageCard.dataset.originalSrc = originalSrc;
 
+    // ✨ FIX: 根據 isGachaCard 決定顯示哪個按鈕
     const mainButtonHTML = isGachaCard
-        ? `<button class="dislike-btn story-btn">我覺得不行!...👎</button>`
+        ? `<button class="dislike-btn story-btn">審判時刻... 👎</button>`
         : `<button class="story-btn">生成故事 ✨</button>`;
 
     const footerHTML = withButtons ? `
@@ -92,7 +91,6 @@ export function createImageCard(imageData, handlers, options = {}) {
         if (this.src === originalUrlFromData) {
             const errorTitle = uiMessages.errors.imageLoadFailure;
             const errorHint = uiMessages.errors.imageLoadHint;
-            // ✨ FIX: 修正 console.error 的語法
             console.error(errorTitle, "Failed on both resized and original URL:", originalUrlFromData);
             card.innerHTML = `<div class="text-red-400 p-4 text-center text-sm flex flex-col justify-center h-full">
                                 <p class="font-bold">${errorTitle}</p>
@@ -115,6 +113,7 @@ export function createImageCard(imageData, handlers, options = {}) {
                 }
                 handlers.onStory(style);
             } else if (e.target.closest('.dislike-btn')) {
+                // ✨ FIX: 新增倒讚按鈕的事件處理
                 e.stopPropagation();
                 handlers.onDislike(imageData, e.target.closest('.dislike-btn'));
             } else if (e.target.closest('.like-btn')) {
@@ -137,9 +136,12 @@ export function createImageCard(imageData, handlers, options = {}) {
     }
 
     img.src = displaySrc;
+
     return imageCard;
 }
 
+
+// --- Background & Loading Animations ---
 const canvas = document.getElementById('background-canvas');
 const ctx = canvas.getContext('2d');
 let particlesArray;

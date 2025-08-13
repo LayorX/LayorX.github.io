@@ -23,7 +23,6 @@ export function initializeUI() {
         generateFourBtn: document.getElementById('generate-four-btn'),
         gachaBtn: document.getElementById('gacha-btn'),
         gachaDrawBtn: document.getElementById('gacha-draw-btn'),
-        gachaCountEl: document.getElementById('gacha-count'),
         gachaUnlockInfo: document.getElementById('gacha-unlock-info'),
         ttsBtn: document.getElementById('tts-btn'),
         ttsStopBtn: document.getElementById('tts-stop-btn'),
@@ -252,22 +251,16 @@ export async function updateGenerateButtonsState() {
 }
 
 export async function updateGachaUI() {
-    const hasUserApiKey = getState('hasUserApiKey');
-    if(hasUserApiKey) {
-        DOMElements.gachaDrawBtn.textContent = uiMessages.buttons.gachaDraw;
-        DOMElements.gachaDrawBtn.disabled = false;
-        DOMElements.gachaUnlockInfo.style.display = 'none';
-        return;
-    }
+    // ✨ FIX: 移除 hasUserApiKey 的判斷。扭蛋 UI 應始終根據自身次數顯示。
     const count = await getTaskCount('gacha');
-    DOMElements.gachaCountEl.textContent = count;
+    
     if (count <= 0) {
         DOMElements.gachaDrawBtn.disabled = true;
         DOMElements.gachaDrawBtn.textContent = "明日再來";
         DOMElements.gachaUnlockInfo.style.display = 'block';
     } else {
-        DOMElements.gachaDrawBtn.textContent = `${uiMessages.buttons.gachaDraw} (剩餘 ${count} 次)`;
         DOMElements.gachaDrawBtn.disabled = false;
+        DOMElements.gachaDrawBtn.textContent = `${uiMessages.buttons.gachaDraw} (剩餘 ${count} 次)`;
         DOMElements.gachaUnlockInfo.style.display = 'none';
     }
 }
@@ -292,6 +285,7 @@ export async function updateTtsUi() {
         DOMElements.ttsBtn.disabled = true;
         DOMElements.ttsBtn.textContent = uiMessages.buttons.ttsLimit;
         DOMElements.ttsLimitInfo.style.display = 'block';
+        DOMElements.ttsLimitInfo.textContent = `今日已用完`;
     } else {
         DOMElements.ttsBtn.disabled = false;
         DOMElements.ttsBtn.textContent = uiMessages.buttons.ttsPlay;
@@ -338,7 +332,7 @@ function openApiKeyModal() {
 
     document.getElementById('restore-api-key-btn').addEventListener('click', () => {
         localStorage.removeItem('userGeminiApiKey');
-        setState({ userApiKey: serviceKeys.defaultApiKey, hasUserApiKey: !!serviceKeys.defaultApiKey });
+        setState({ userApiKey: serviceKeys.defaultApiKey, hasUserApiKey: false }); // Ensure this is false
         showMessage("已恢復預設 API 設定。");
         DOMElements.apikeyModal.classList.remove('show');
     });
@@ -403,7 +397,6 @@ async function handleContactFormSubmit(e) {
 }
 
 function openComingSoonModal() {
-    
     DOMElements.comingSoonModalContent.innerHTML = `
         <button class="modal-close-btn">&times;</button>
         <div class="text-center p-8">
@@ -447,8 +440,6 @@ function toggleTheme() {
     initParticles(newTheme);
 }
 
-// --- Slideshow Logic ---
-// ✨ FIX: 修正了初始渲染的邏輯
 function openSlideshow() {
     const favorites = getState('favorites');
     if (!Array.isArray(favorites) || favorites.length === 0) {
@@ -464,7 +455,6 @@ function openSlideshow() {
     
     setState({ currentSlideshowIndex: 0 });
     
-    // 直接呼叫渲染函式
     renderThumbnails();
     showSlide(0); 
     
@@ -530,12 +520,26 @@ function renderThumbnails() {
 
     favorites.forEach((fav, index) => {
         const thumb = document.createElement('img');
-        thumb.src = fav.resizedUrl || fav.imageUrl;
+        const thumbnailUrl = fav.resizedUrl || fav.imageUrl;
+        const originalUrl = fav.imageUrl;
+
+        thumb.src = thumbnailUrl;
         thumb.className = 'thumbnail';
         thumb.dataset.index = index;
+        
+        thumb.onerror = function() {
+            if (this.src === originalUrl) {
+                console.error("預覽圖載入失敗 (已嘗試原圖):", originalUrl);
+                this.style.display = 'none';
+                return;
+            }
+            console.warn(`預覽縮圖載入失敗，回退至原圖: ${originalUrl}`);
+            this.src = originalUrl;
+        };
+
         thumb.onclick = () => {
             setState({ currentSlideshowIndex: index });
-            showSlide(index); // 點擊縮圖時直接顯示對應幻燈片
+            showSlide(index);
         };
         DOMElements.thumbnailBar.appendChild(thumb);
     });
@@ -584,7 +588,6 @@ function openSettingsModal() {
                     </label>
                 </div>
             </div>
-            <!-- 預留給未來設定的位置 -->
             <div class="opacity-50">
                 <p class="text-lg font-semibold mb-3">音效設定 (開發中)</p>
                 <p class="text-sm text-gray-500">此處將可調整背景音樂、音效等。</p>

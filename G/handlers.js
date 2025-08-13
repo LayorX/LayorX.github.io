@@ -11,7 +11,6 @@ import { incrementStat } from './analyticsManager.js';
 import { sounds } from './soundManager.js';
 
 // --- Utility Functions ---
-// ✨ FIX: 將遺漏的 generateUniqueId 函式加回來
 function generateUniqueId() {
     return Date.now().toString(36) + Math.random().toString(36).substring(2);
 }
@@ -371,15 +370,15 @@ export async function unfavoriteCurrentSlide() {
 }
 
 export async function drawGacha() {
-    const hasUserApiKey = getState('hasUserApiKey');
-    if (!hasUserApiKey) {
-        const canUse = await useTask('gacha');
-        if (!canUse) {
-            showMessage("今日次數已用完！", true);
-            updateAllTaskUIs();
-            return;
-        }
+    // ✨ FIX: 移除 hasUserApiKey 的判斷。扭蛋功能不消耗 API，應始終檢查並扣除自身次數。
+    const canUse = await useTask('gacha');
+    if (!canUse) {
+        showMessage("今日扭蛋次數已用完！", true);
+        updateAllTaskUIs(); // 確保 UI 顯示正確
+        return;
     }
+    // 使用後立即更新 UI
+    updateAllTaskUIs();
     
     incrementStat({ gachaDraws: 1 });
 
@@ -429,6 +428,7 @@ export async function drawGacha() {
         showMessage(`${uiMessages.gacha.drawFailed}: ${error.message}`, true);
         gachaResultContainer.innerHTML = `<div class="gacha-placeholder"><p>${uiMessages.gacha.drawFailed}...</p><p class="text-xs text-gray-400 mt-2">${error.message}</p></div>`;
     } finally {
+        // ✨ FIX: 確保在抽完卡後，按鈕狀態能被重新啟用 (如果還有次數)
         updateAllTaskUIs();
     }
 }
