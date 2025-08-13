@@ -34,7 +34,7 @@ export function createImageCard(imageData, handlers, options = {}) {
 
     // ✨ FIX: 根據 isGachaCard 決定顯示哪個按鈕
     const mainButtonHTML = isGachaCard
-        ? `<button class="dislike-btn story-btn">審判時刻... 👎</button>`
+        ? `<button class="dislike-btn story-btn">我覺得不行!...👎</button>`
         : `<button class="story-btn">生成故事 ✨</button>`;
 
     const footerHTML = withButtons ? `

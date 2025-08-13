@@ -7,6 +7,7 @@
     
     <!-- 外部資源 -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script data-goatcounter="https://goddespark.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -90,7 +91,11 @@
     <!-- TTS 播放器 -->
     <audio id="tts-audio"></audio>
 
-    <!-- ✨ NEW: 新增設定視窗的容器 -->
+    <!-- ✨ NEW: 新增緊急公告視窗的容器 -->
+    <div id="announcement-modal" class="modal">
+        <div id="announcement-modal-content" class="modal-content"></div>
+    </div>
+    
     <div id="settings-modal" class="modal">
         <div id="settings-modal-content" class="modal-content"></div>
     </div>
@@ -131,7 +136,6 @@
                                 <a href="#" id="about-btn" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700" role="menuitem">關於作品</a>
                                 <a href="#" id="contact-btn" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700" role="menuitem">聯絡我 (報錯/建議)</a>
                                 <a href="#" id="apikey-btn" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700" role="menuitem">匯入 Gemini API Key</a>
-                                <!-- ✨ FIX: 將此按鈕的文字和功能對應起來 -->
                                 <a href="#" id="extra-gacha-btn" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700" role="menuitem">💝公告👄</a>
                             </div>
                         </div>

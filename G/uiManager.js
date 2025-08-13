@@ -1,7 +1,7 @@
 // uiManager.js - 負責所有 UI 初始化、事件綁定和 DOM 更新
 
 import { serviceKeys } from './app-config.js';
-import { styles, uiSettings, uiMessages } from './game-config.js';
+import { styles, uiSettings, uiMessages, announcementSettings } from './game-config.js';
 import { getState, setState, subscribe } from './stateManager.js';
 import { getTaskCount } from './dailyTaskManager.js';
 import { getCardHandlers, handleImageGeneration, drawGacha, unfavoriteCurrentSlide } from './handlers.js';
@@ -60,6 +60,8 @@ export function initializeUI() {
         comingSoonModalContent: document.getElementById('coming-soon-modal-content'),
         settingsModal: document.getElementById('settings-modal'),
         settingsModalContent: document.getElementById('settings-modal-content'),
+        announcementModal: document.getElementById('announcement-modal'),
+        announcementModalContent: document.getElementById('announcement-modal-content'),
     };
 
     setupUIText();
@@ -333,7 +335,6 @@ function openApiKeyModal() {
         localStorage.removeItem('userGeminiApiKey');
         setState({ userApiKey: serviceKeys.defaultApiKey, hasUserApiKey: false });
         
-        // ✨ FIX: 手動觸發一次UI更新，確保介面能即時反應狀態變化
         updateAllTaskUIs();
         
         showMessage("已恢復預設 API 設定。");
@@ -610,4 +611,29 @@ function openSettingsModal() {
             showMessage("設定將於下次重整後完全生效！");
         });
     });
+}
+
+// ✨ FIX: 加上 export 關鍵字，讓 gmain.js 可以匯入並使用此函式
+export function openAnnouncementModal() {
+    if (!announcementSettings.enabled) return;
+    if (announcementSettings.checkSessionStorage && sessionStorage.getItem('announcementShown')) {
+        return;
+    }
+
+    const { title, message } = announcementSettings;
+
+    DOMElements.announcementModalContent.innerHTML = `
+        <button class="modal-close-btn">&times;</button>
+        <h2 class="text-3xl font-bold text-center mb-6">${title}</h2>
+        <div class="text-left leading-relaxed">${message}</div>
+    `;
+
+    DOMElements.announcementModal.classList.add('show');
+    DOMElements.announcementModalContent.querySelector('.modal-close-btn').addEventListener('click', () => {
+        DOMElements.announcementModal.classList.remove('show');
+    });
+
+    if (announcementSettings.checkSessionStorage) {
+        sessionStorage.setItem('announcementShown', 'true');
+    }
 }

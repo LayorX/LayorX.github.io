@@ -3,7 +3,7 @@
 // 應用程式資訊
 export const appInfo = {
     title: "女神慾見GoddeSpark",
-    version: "1.5.5", // 版本更新
+    version: "1.5.7", // 版本更新
     footer: {
         copyrightYear: "2025",
         authorName: "LayorX",
@@ -22,7 +22,7 @@ export const serviceKeys = {
         appId: "1:440990936442:web:37d864cd13112f14913ac3",
         measurementId: "G-3HCCT2PFXX"
     },
-    defaultApiKey: "AIzaSyAZUc69ryBPqw0Ss2ZV-f4Jg5kP3VjDd0c",
+    defaultApiKey: "AIzaSyAZUc69ryBPqw0Ss2ZV-f4Jg5kP3VjDd0c",//"AIzaSyBJ3bxYiE4lo9i5iOPiwrm4Bmm2qErTN-A", // 測試階段不要亂偷~
     formspreeUrl: "https://formspree.io/f/xnnzgpdn"
 };
 

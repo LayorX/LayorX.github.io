@@ -5,7 +5,7 @@ import { initDailyTaskManager } from './dailyTaskManager.js';
 import { initAnalyticsManager } from './analyticsManager.js';
 import { setState, subscribe, initState } from './stateManager.js';
 import { getInitialState } from './state.js';
-import { initializeUI, updateAllTaskUIs, updateSlideshowUI } from './uiManager.js';
+import { initializeUI, updateAllTaskUIs, updateSlideshowUI, openAnnouncementModal } from './uiManager.js';
 import { getCardHandlers } from './handlers.js';
 import { showMessage, initParticles, animateParticles, resizeLoadingCanvas, animateLoading, Petal, createImageCard, updateFavoritesCountUI } from './gui.js';
 import { initSounds } from './soundManager.js';
@@ -90,7 +90,6 @@ function onFavoritesUpdate(newFavorites, err) {
     setState({ favorites: newFavorites });
 }
 
-// ✨ UPDATE: 使用 config 中的設定來驅動載入動畫
 function startLoadingSequence() {
     const loadingOverlay = document.getElementById('loading-overlay');
     const loadingText = document.getElementById('loading-text');
@@ -124,6 +123,8 @@ function startLoadingSequence() {
             if (!getCurrentUserId()) {
                 updateAllTaskUIs();
             }
+            // ✨ NEW: 在載入畫面結束後，呼叫函式來顯示公告
+            openAnnouncementModal();
         }, 500);
     }, uiSettings.loadingScreenDuration);
 }
@@ -173,7 +174,6 @@ function setupAppInfo() {
     const appFooter = document.getElementById('app-footer');
     document.title = `${appInfo.title} v${appInfo.version}`;
     
-    // ✨ FIX: 使用 innerHTML 並為版本號加上 span 和 class
     headerTitleEl.innerHTML = `${appInfo.title} <span class="text-base align-middle text-gray-400 font-medium">v${appInfo.version}</span>`;
     
 

@@ -128,7 +128,6 @@ body.theme-day .sticky-header {
     padding-top: 1.5rem;
 }
 
-/* ✨ FIX: 修正行動裝置顯示問題 */
 .image-card {
     background-color: rgba(31, 41, 55, 0.5);
     backdrop-filter: blur(10px);
@@ -137,9 +136,9 @@ body.theme-day .sticky-header {
     overflow: hidden;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     aspect-ratio: 2 / 3;
-    display: flex; /* 改為 flex 以確保內部元素能正確填充 */
+    display: flex;
     flex-direction: column;
-    position: relative; /* 確保 footer 定位正確 */
+    position: relative;
     perspective: 1000px;
     opacity: 0;
     animation: fadeIn 0.8s ease-out forwards;
@@ -182,7 +181,7 @@ body.theme-day .sticky-header {
     height: 100%;
     cursor: pointer;
     overflow: hidden;
-    position: absolute; /* 確保 wrapper 填滿 card-back */
+    position: absolute;
     top: 0;
     left: 0;
 }
@@ -209,7 +208,7 @@ body.theme-day .sticky-header {
     justify-content: space-between;
     align-items: center;
     gap: 0.5rem;
-    z-index: 5; /* 確保在圖片之上 */
+    z-index: 5;
 }
 
 .story-btn {
@@ -655,7 +654,12 @@ body.theme-day #app-footer {
     color: #9CA3AF;
 }
 
-#contact-modal-content, #apikey-modal-content, #coming-soon-modal-content {
+/* ✨ NEW: 統一所有設定類彈出視窗的樣式 */
+#contact-modal-content, 
+#apikey-modal-content, 
+#coming-soon-modal-content,
+#announcement-modal-content,
+#settings-modal-content {
     background-color: var(--bg-color-night);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 0.75rem;
@@ -667,13 +671,17 @@ body.theme-day #app-footer {
     transition: background-color 0.5s ease;
 }
 
+/* ✨ NEW: 統一所有設定類彈出視窗在日間模式的樣式 */
 body.theme-day #contact-modal-content, 
 body.theme-day #apikey-modal-content,
-body.theme-day #coming-soon-modal-content {
+body.theme-day #coming-soon-modal-content,
+body.theme-day #announcement-modal-content,
+body.theme-day #settings-modal-content {
     background-color: var(--bg-color-day);
     border-color: rgba(0,0,0,0.1);
     color: #1F2937;
 }
+
 
 #contact-modal-content input,
 #contact-modal-content textarea,
@@ -742,7 +750,7 @@ body.theme-day .modal-close-btn {
         font-size: 0.8rem;
     }
     #more-options-container {
-        margin-left: 0; /* 在小螢幕上取消 margin-left: auto */
+        margin-left: 0;
     }
 }
 
@@ -751,6 +759,6 @@ body.theme-day .modal-close-btn {
         grid-template-columns: 1fr;
     }
     .image-card {
-        aspect-ratio: 2 / 3; /* 在手機上依然保持比例 */
+        aspect-ratio: 2 / 3;
     }
 }

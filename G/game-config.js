@@ -1,11 +1,27 @@
 // game-config.js - 存放遊戲性、內容、UI 等經常調整的設定
 
+// ✨ NEW: 緊急公告設定
+export const announcementSettings = {
+    enabled: true, // 設為 true 來啟用公告，false 來停用
+    // 使用 sessionStorage 來確保使用者每次開啟分頁只看到一次
+    // 如果要每次重整都看到，可以將此設為 false
+    checkSessionStorage: false, 
+    title: "🎉 扭蛋狂歡 & 懸賞獵人計畫開跑！ 🎉",
+    message: `
+        <p class="mb-4">Hey！各位神級製造師！準備好迎接一場靈魂的風暴了嗎？</p>
+        <p class="mb-3"><strong>【限時扭蛋大放送！】</strong><br>這幾天，我們偷偷把扭蛋機的馬力開到最大！每日扭蛋次數從 5 次瘋狂飆升到 <strong>20 次</strong>！是的，你沒看錯，就是 20 次！快來看看誰是真正的天選之人！</p>
+        <p class="mb-3"><strong>【Bug 懸賞令！】</strong><br>你是火眼金睛的抓蟲大師嗎？發現任何 Bug 或鬼點子，馬上回報，至少 <strong>5 次</strong> 扭蛋機會直接入帳！</p>
+        <p><strong>【女神星探計畫！】</strong><br>你手上有壓箱寶的絕美女神嗎？或是成功把你的女神分享到各大社群？快來填寫<a href="https://forms.gle/JXdobEdAa8is2wyR6" target="_blank" class="font-bold text-amber-300 hover:underline">>>>這個神秘表單<<<</a>，用截圖證明你的貢獻，我們將用至少 <strong>30 次</strong> 扭蛋機會淹沒你！</p>
+    `
+};
+
+
 // --- 遊戲數值設定 ---
 export const gameSettings = {
     dailyLimits: {
         generateOne: 20,
         generateFour: 2,
-        gacha: 5,
+        gacha: 20,//5,
         tts: 3,
     },
     gachaStreakGoal: 2,
