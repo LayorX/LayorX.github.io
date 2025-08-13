@@ -1,7 +1,7 @@
 // analyticsManager.js - 統一管理所有使用者行為分析與統計
 
 import { getFirestore, doc, getDoc, setDoc, increment, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { userStatsStructure } from './gconfig.js';
+import { userStatsStructure } from './game-config.js';
 
 let db;
 let userId;

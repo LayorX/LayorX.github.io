@@ -49,10 +49,6 @@ export const apiSettings = {
         tts: (text) => `Say in a gentle and alluring female voice: ${text}`
     }
 };
-
-
-
-
 // UI 介面與動畫相關設定
 export const uiSettings = {
     loadingScreenDuration: 5000, 
