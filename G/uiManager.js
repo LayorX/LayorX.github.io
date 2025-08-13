@@ -251,7 +251,6 @@ export async function updateGenerateButtonsState() {
 }
 
 export async function updateGachaUI() {
-    // ✨ FIX: 移除 hasUserApiKey 的判斷。扭蛋 UI 應始終根據自身次數顯示。
     const count = await getTaskCount('gacha');
     
     if (count <= 0) {
@@ -332,7 +331,11 @@ function openApiKeyModal() {
 
     document.getElementById('restore-api-key-btn').addEventListener('click', () => {
         localStorage.removeItem('userGeminiApiKey');
-        setState({ userApiKey: serviceKeys.defaultApiKey, hasUserApiKey: false }); // Ensure this is false
+        setState({ userApiKey: serviceKeys.defaultApiKey, hasUserApiKey: false });
+        
+        // ✨ FIX: 手動觸發一次UI更新，確保介面能即時反應狀態變化
+        updateAllTaskUIs();
+        
         showMessage("已恢復預設 API 設定。");
         DOMElements.apikeyModal.classList.remove('show');
     });
