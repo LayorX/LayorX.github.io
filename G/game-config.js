@@ -96,6 +96,10 @@ export const uiMessages = {
         qualityThumbnailDesc: "優先載入縮圖，點擊後顯示原圖，速度最快。",
         qualityOriginal: "原圖優先",
         qualityOriginalDesc: "所有圖片直接載入高解析度原圖，畫質最佳但較耗流量。",
+        // ✨ NEW: 新增暱稱相關文字
+        nicknameTitle: "您的暱稱",
+        nicknamePlaceholder: "請輸入您喜歡的暱稱...",
+        nicknameSave: "儲存",
         settingSaved: "設定已儲存！"
     },
     moreOptions: {

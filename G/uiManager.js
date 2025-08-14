@@ -6,7 +6,8 @@ import { getState, setState, subscribe } from './stateManager.js';
 import { getTaskCount } from './dailyTaskManager.js';
 import { getCardHandlers, handleImageGeneration, drawGacha, unfavoriteCurrentSlide } from './handlers.js';
 import { incrementStat } from './analyticsManager.js';
-import { getCurrentUserId } from './gfirebase.js';
+// ✨ NEW: 匯入 saveNickname
+import { getCurrentUserId, saveNickname } from './gfirebase.js';
 import { createImageCard, showMessage, initParticles, updateFavoritesCountUI } from './gui.js';
 import { sounds } from './soundManager.js';
 
@@ -62,6 +63,7 @@ export function initializeUI() {
         settingsModalContent: document.getElementById('settings-modal-content'),
         announcementModal: document.getElementById('announcement-modal'),
         announcementModalContent: document.getElementById('announcement-modal-content'),
+        userInfo: document.getElementById('user-info'), // ✨ NEW: 新增 user-info DOM 元素
     };
 
     setupUIText();
@@ -224,9 +226,7 @@ function setupSubscriptions() {
 }
 
 export async function updateAllTaskUIs() {
-    // ✨ FIX: 在這裡加入防衛，確保 App 初始化後才執行
     if (!getState('isAppInitialized')) {
-        console.log("App not initialized, skipping UI updates.");
         return;
     }
     await updateGenerateButtonsState();
@@ -235,8 +235,8 @@ export async function updateAllTaskUIs() {
 }
 
 export async function updateGenerateButtonsState() {
-    // ✨ FIX: 在這裡也加入防衛，更加保險
     if (!getState('isAppInitialized')) return;
+    
     const { activeStyleId, isGenerating, hasUserApiKey } = getState('activeStyleId', 'isGenerating', 'hasUserApiKey');
     const isVip = activeStyleId === 'vip-exclusive';
     
@@ -260,8 +260,8 @@ export async function updateGenerateButtonsState() {
 }
 
 export async function updateGachaUI() {
-    // ✨ FIX: 加入防衛
     if (!getState('isAppInitialized')) return;
+
     const count = await getTaskCount('gacha');
     
     if (count <= 0) {
@@ -276,9 +276,8 @@ export async function updateGachaUI() {
 }
 
 export async function updateTtsUi() {
-    // ✨ FIX: 加入防衛
     if (!getState('isAppInitialized')) return;
-    
+
     const { hasUserApiKey, isStoryGenerating } = getState('hasUserApiKey', 'isStoryGenerating');
     
     if (isStoryGenerating) {
@@ -577,14 +576,24 @@ function handleTouchEnd() {
     setState({ touchStartX: 0, touchEndX: 0 });
 }
 
+// ✨ NEW: 更新函式，加入暱稱設定
 function openSettingsModal() {
-    const { title, imageQualityTitle, qualityThumbnail, qualityThumbnailDesc, qualityOriginal, qualityOriginalDesc } = uiMessages.settingsModal;
+    const { title, imageQualityTitle, qualityThumbnail, qualityThumbnailDesc, qualityOriginal, qualityOriginalDesc, nicknameTitle, nicknamePlaceholder, nicknameSave } = uiMessages.settingsModal;
     const currentQuality = getState('imageQuality');
+    const currentNickname = getState('userNickname');
 
     DOMElements.settingsModalContent.innerHTML = `
         <button class="modal-close-btn">&times;</button>
         <h2 class="text-3xl font-bold text-center mb-6">${title}</h2>
         <div class="space-y-6 text-left">
+            <div>
+                <p class="text-lg font-semibold mb-3">${nicknameTitle}</p>
+                <div class="flex gap-2">
+                    <input type="text" id="nickname-input" placeholder="${nicknamePlaceholder}" value="${currentNickname}" class="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500 bg-gray-700/50">
+                    <button id="save-nickname-btn" class="p-3 font-bold rounded-md bg-pink-500 text-white hover:bg-pink-600 transition-colors">${nicknameSave}</button>
+                </div>
+            </div>
+            <div class="border-t border-gray-700"></div>
             <div>
                 <p class="text-lg font-semibold mb-3">${imageQualityTitle}</p>
                 <div class="space-y-3">
@@ -604,10 +613,6 @@ function openSettingsModal() {
                     </label>
                 </div>
             </div>
-            <div class="opacity-50">
-                <p class="text-lg font-semibold mb-3">音效設定 (開發中)</p>
-                <p class="text-sm text-gray-500">此處將可調整背景音樂、音效等。</p>
-            </div>
         </div>
     `;
 
@@ -623,9 +628,43 @@ function openSettingsModal() {
             showMessage("設定將於下次重整後完全生效！");
         });
     });
+
+    // ✨ NEW: 儲存暱稱的事件監聽
+    document.getElementById('save-nickname-btn').addEventListener('click', async () => {
+        const input = document.getElementById('nickname-input');
+        const newNickname = input.value.trim();
+        const uid = getCurrentUserId();
+
+        if (newNickname && uid) {
+            try {
+                await saveNickname(uid, newNickname);
+                localStorage.setItem('userNickname', newNickname);
+                setState({ userNickname: newNickname });
+                showMessage("暱稱已更新！");
+                DOMElements.settingsModal.classList.remove('show');
+            } catch (error) {
+                console.error("Failed to save nickname:", error);
+                showMessage("暱稱儲存失敗，請稍後再試。", true);
+            }
+        } else if (!newNickname) {
+            showMessage("暱稱不能為空喔！", true);
+        }
+    });
 }
 
-// ✨ FIX: 加上 export 關鍵字，讓 gmain.js 可以匯入並使用此函式
+// ✨ NEW: 更新使用者資訊顯示的函式
+export function updateUserInfo(uid, nickname) {
+    if (DOMElements.userInfo) {
+        if (uid) {
+            const nicknameHTML = nickname ? `<span class="user-nickname">(${nickname})</span>` : '';
+            DOMElements.userInfo.innerHTML = `雲端使用者 ${nicknameHTML} ID: ${uid}`;
+        } else {
+            DOMElements.userInfo.innerHTML = `雲端使用者 ID: 尚未登入`;
+        }
+    }
+}
+
+
 export function openAnnouncementModal() {
     if (!announcementSettings.enabled) return;
     if (announcementSettings.checkSessionStorage && sessionStorage.getItem('announcementShown')) {

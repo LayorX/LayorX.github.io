@@ -46,6 +46,29 @@ export function getDbInstance() {
     return db;
 }
 
+// ✨ NEW: 獲取使用者完整資料 (包含暱稱)
+export async function getUserData(uid) {
+    if (!uid) return null;
+    const userRef = doc(db, dbCollectionNames.users, uid);
+    const docSnap = await getDoc(userRef);
+    if (docSnap.exists()) {
+        return docSnap.data();
+    } else {
+        // 如果使用者文件不存在，可以建立一個預設的
+        await setDoc(userRef, { nickname: '' });
+        return { nickname: '' };
+    }
+}
+
+// ✨ NEW: 儲存使用者暱稱
+export async function saveNickname(uid, nickname) {
+    if (!uid) throw new Error("User not signed in.");
+    const userRef = doc(db, dbCollectionNames.users, uid);
+    // 使用 merge: true 來確保我們只更新 nickname 欄位，而不會覆蓋掉其他資料
+    await setDoc(userRef, { nickname: nickname }, { merge: true });
+}
+
+
 function getResizedImageUrl(originalUrl) {
     if (!originalUrl) return '';
     try {

@@ -1,11 +1,13 @@
 import { appInfo, serviceKeys } from './app-config.js';
 import { uiSettings, uiMessages } from './game-config.js';
-import { initFirebase, handleAuthentication, getCurrentUserId, getDbInstance, listenToFavorites, getRandomGoddessesFromDB } from './gfirebase.js';
+// ✨ NEW: 匯入 getUserData
+import { initFirebase, handleAuthentication, getCurrentUserId, getDbInstance, listenToFavorites, getRandomGoddessesFromDB, getUserData } from './gfirebase.js';
 import { initDailyTaskManager } from './dailyTaskManager.js';
 import { initAnalyticsManager } from './analyticsManager.js';
 import { setState, subscribe, initState } from './stateManager.js';
 import { getInitialState } from './state.js';
-import { initializeUI, updateAllTaskUIs, updateSlideshowUI, openAnnouncementModal } from './uiManager.js';
+// ✨ NEW: 匯入 updateUserInfo
+import { initializeUI, updateAllTaskUIs, updateSlideshowUI, openAnnouncementModal, updateUserInfo } from './uiManager.js';
 import { getCardHandlers } from './handlers.js';
 import { showMessage, initParticles, animateParticles, resizeLoadingCanvas, animateLoading, Petal, createImageCard, updateFavoritesCountUI } from './gui.js';
 import { initSounds } from './soundManager.js';
@@ -61,11 +63,24 @@ function setupStateSubscriptions() {
             generateInitialImages(favorites);
         }
     });
+
+    // ✨ NEW: 訂閱暱稱變化，自動更新 UI
+    subscribe('userNickname', (nickname) => {
+        updateUserInfo(getCurrentUserId(), nickname);
+    });
 }
 
 async function onUserSignedIn(uid, error) {
     if (uid) {
-        document.getElementById('user-info').textContent = `雲端使用者 ID: ${uid}`;
+        // ✨ NEW: 獲取使用者資料
+        const userData = await getUserData(uid);
+        if (userData && userData.nickname) {
+            // ✨ NEW: 更新本地狀態
+            setState({ userNickname: userData.nickname });
+            localStorage.setItem('userNickname', userData.nickname);
+        }
+        updateUserInfo(uid, getState('userNickname'));
+
         const db = getDbInstance();
         
         await Promise.all([
@@ -74,14 +89,13 @@ async function onUserSignedIn(uid, error) {
         ]);
         
         listenToFavorites(onFavoritesUpdate);
-
-        // ✨ FIX: 在這裡將 App 狀態設定為已初始化
+        
         setState({ isAppInitialized: true });
+        
         updateAllTaskUIs();
     } else {
         showMessage(uiMessages.errors.cloudConnect, true);
         console.error("Authentication Error:", error);
-        // ✨ FIX: 即使認證失敗，也標記為已初始化，以允許非登入功能繼續
         setState({ isAppInitialized: true });
     }
 }
@@ -128,7 +142,6 @@ function startLoadingSequence() {
             if (!getCurrentUserId()) {
                 updateAllTaskUIs();
             }
-            // ✨ NEW: 在載入畫面結束後，呼叫函式來顯示公告
             openAnnouncementModal();
         }, 500);
     }, uiSettings.loadingScreenDuration);

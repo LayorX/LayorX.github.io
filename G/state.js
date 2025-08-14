@@ -5,12 +5,10 @@ import { styles } from './game-config.js';
 
 export function getInitialState() {
     const storedApiKey = localStorage.getItem('userGeminiApiKey');
-    
-    // ✨ FIX: 修正判斷邏輯。`hasUserApiKey` 應該只在使用者明確儲存了自己的 key 時才為 true。
-    // 系統預設的 key 不應被視為使用者自己的 key。
     const hasUserApiKey = !!storedApiKey;
-
     const storedImageQuality = localStorage.getItem('userImageQuality');
+    // ✨ NEW: 從 localStorage 讀取已儲存的暱稱
+    const storedNickname = localStorage.getItem('userNickname');
 
     return {
         isGenerating: false,
@@ -23,11 +21,11 @@ export function getInitialState() {
         touchEndX: 0,
         currentSlideshowIndex: 0,
         currentTheme: 'night',
-        // `userApiKey` 的邏輯不變：優先使用使用者的，若無則用預設的
         userApiKey: storedApiKey || serviceKeys.defaultApiKey,
-        // `hasUserApiKey` 的邏輯修正：只根據使用者是否儲存過來判斷
         hasUserApiKey: hasUserApiKey,
-        imageQuality: storedImageQuality || 'thumbnail', // 'thumbnail' 或 'original'
-        isAppInitialized: false, // ✨ NEW: 新增 App 是否初始化完成的狀態旗標
+        imageQuality: storedImageQuality || 'thumbnail',
+        isAppInitialized: false,
+        // ✨ NEW: 新增使用者暱稱狀態
+        userNickname: storedNickname || '', 
     };
 }
