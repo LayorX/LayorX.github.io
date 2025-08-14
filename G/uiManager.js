@@ -64,6 +64,8 @@ export function initializeUI() {
         announcementModal: document.getElementById('announcement-modal'),
         announcementModalContent: document.getElementById('announcement-modal-content'),
         userInfo: document.getElementById('user-info'), // ✨ NEW: 新增 user-info DOM 元素
+        rankingBtn: document.getElementById('ranking-btn'), // ✨ NEW: 新增排行榜按鈕
+        
     };
 
     setupUIText();
@@ -88,6 +90,8 @@ function setupUIText() {
     DOMElements.favoritesEmptyState.querySelector('p:nth-child(3)').textContent = uiMessages.favorites.emptySubtitle;
     document.querySelector('.gacha-placeholder p:nth-child(2)').textContent = uiMessages.gacha.placeholder;
 
+    // ✨ FIX: 將排行榜按鈕的文字設定移回 gmain.js，此處只設定下拉選單的內容
+    DOMElements.settingsBtn.textContent = uiMessages.moreOptions.settings;
     DOMElements.settingsBtn.textContent = uiMessages.moreOptions.settings;
     DOMElements.aboutBtn.textContent = uiMessages.moreOptions.about;
     DOMElements.contactBtn.textContent = uiMessages.moreOptions.contact;
@@ -140,7 +144,12 @@ function addEventListeners() {
             setState({ activeStyleId: button.dataset.styleId });
         });
     });
-    
+        // ✨ FIX: 在此處為排行榜按鈕加上事件監聽
+    if (DOMElements.rankingBtn) {
+        DOMElements.rankingBtn.addEventListener('click', () => {
+            window.location.href = 'ranking.html';
+        });
+    }
     DOMElements.generateOneBtn.addEventListener('click', () => handleImageGeneration(1));
     DOMElements.generateFourBtn.addEventListener('click', () => handleImageGeneration(4));
     DOMElements.favoritesBtn.addEventListener('click', openSlideshow);

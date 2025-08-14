@@ -91,7 +91,6 @@
     <!-- TTS 播放器 -->
     <audio id="tts-audio"></audio>
 
-    <!-- ✨ NEW: 新增緊急公告視窗的容器 -->
     <div id="announcement-modal" class="modal">
         <div id="announcement-modal-content" class="modal-content"></div>
     </div>
@@ -125,6 +124,8 @@
                     <button id="generate-four-btn" class="btn-base btn-secondary text-white font-bold py-2 px-6 rounded-full text-lg"></button>
                     <button id="favorites-btn" class="btn-base btn-primary text-white font-bold py-2 px-6 rounded-full text-lg"><span id="favorites-btn-text"></span> ❤️ <span id="favorites-count">0</span></button>
                     <button id="gacha-btn" class="btn-base btn-secondary text-white font-bold py-2 px-6 rounded-full text-lg"></button>
+                    <!-- ✨ MODIFIED: 將排行榜按鈕移至此處 -->
+                    <button id="ranking-btn" class="btn-base btn-secondary text-white font-bold py-2 px-6 rounded-full text-lg"></button>
                     
                     <div class="relative" id="more-options-container">
                         <button id="more-options-btn" class="btn-base btn-secondary text-white font-bold py-2 px-4 rounded-full text-lg flex items-center">
@@ -132,11 +133,12 @@
                         </button>
                         <div id="more-options-menu" class="absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-gray-800 ring-1 ring-black ring-opacity-5 z-50 hidden">
                             <div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="options-menu">
-                                <a href="#" id="settings-btn" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700" role="menuitem">⚙️ 個人化設定</a>
-                                <a href="#" id="about-btn" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700" role="menuitem">關於作品</a>
-                                <a href="#" id="contact-btn" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700" role="menuitem">聯絡我 (報錯/建議)</a>
-                                <a href="#" id="apikey-btn" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700" role="menuitem">匯入 Gemini API Key</a>
-                                <a href="#" id="extra-gacha-btn" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700" role="menuitem">💝公告👄</a>
+                                <!-- ✨ MODIFIED: 從下拉選單中移除排行榜連結 -->
+                                <a href="#" id="settings-btn" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700" role="menuitem"></a>
+                                <a href="#" id="about-btn" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700" role="menuitem"></a>
+                                <a href="#" id="contact-btn" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700" role="menuitem"></a>
+                                <a href="#" id="apikey-btn" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700" role="menuitem"></a>
+                                <a href="#" id="extra-gacha-btn" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700" role="menuitem"></a>
                             </div>
                         </div>
                     </div>

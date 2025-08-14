@@ -103,6 +103,7 @@ export const uiMessages = {
         settingSaved: "設定已儲存！"
     },
     moreOptions: {
+        ranking: "🏆 排行榜",
         settings: "⚙️ 個人化設定",
         about: "關於作品",
         contact: "聯絡我 (報錯、建議)",

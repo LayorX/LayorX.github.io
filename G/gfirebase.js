@@ -1,4 +1,4 @@
-import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, getDoc, getDocs, query, limit, runTransaction, increment } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, getDoc, getDocs, query, limit, runTransaction, increment, collectionGroup, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getStorage, ref, uploadString, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
@@ -46,7 +46,6 @@ export function getDbInstance() {
     return db;
 }
 
-// ✨ NEW: 獲取使用者完整資料 (包含暱稱)
 export async function getUserData(uid) {
     if (!uid) return null;
     const userRef = doc(db, dbCollectionNames.users, uid);
@@ -54,20 +53,18 @@ export async function getUserData(uid) {
     if (docSnap.exists()) {
         return docSnap.data();
     } else {
-        // 如果使用者文件不存在，可以建立一個預設的
         await setDoc(userRef, { nickname: '' });
         return { nickname: '' };
     }
 }
 
-// ✨ NEW: 儲存使用者暱稱
 export async function saveNickname(uid, nickname) {
     if (!uid) throw new Error("User not signed in.");
     const userRef = doc(db, dbCollectionNames.users, uid);
-    // 使用 merge: true 來確保我們只更新 nickname 欄位，而不會覆蓋掉其他資料
     await setDoc(userRef, { nickname: nickname }, { merge: true });
 }
 
+// --- 以下為既有函式，保持不變 ---
 
 function getResizedImageUrl(originalUrl) {
     if (!originalUrl) return '';
@@ -261,4 +258,48 @@ export async function getRandomGoddessesFromDB(count) {
     });
     const shuffled = allDocs.sort(() => 0.5 - Math.random());
     return shuffled.slice(0, count);
+}
+
+// --- ✨ NEW: 排行榜查詢函式 ---
+
+/**
+ * 獲取頂尖使用者排名
+ * @param {string} statField - 要排序的統計欄位 (例如 'shares', 'generateOne')
+ * @param {number} count - 要獲取的數量
+ * @returns {Array} - 包含使用者 ID 和統計數值的陣列
+ */
+export async function getTopUsersByStat(statField, count) {
+    const statsCollection = collectionGroup(db, dbCollectionNames.userStats);
+    const q = query(statsCollection, orderBy(statField, 'desc'), limit(count));
+    
+    const querySnapshot = await getDocs(q);
+    const topUsers = [];
+    querySnapshot.forEach(doc => {
+        // user ID 在父文件的路徑中
+        const userId = doc.ref.parent.parent.id;
+        topUsers.push({
+            id: userId,
+            statValue: doc.data()[statField] || 0
+        });
+    });
+    return topUsers;
+}
+
+/**
+ * 獲取頂尖女神排名
+ * @param {string} orderByField - 'likes' 或 'dislikes'
+ * @param {number} count - 要獲取的數量
+ * @returns {Array} - 包含女神完整資料的陣列
+ */
+export async function getTopGoddesses(orderByField, count) {
+    const goddessesCollection = collection(db, dbCollectionNames.publicGoddesses);
+    const field = orderByField === 'likes' ? 'likeCount' : 'dislikeCount';
+    const q = query(goddessesCollection, orderBy(field, 'desc'), limit(count));
+
+    const querySnapshot = await getDocs(q);
+    const topGoddesses = [];
+    querySnapshot.forEach(doc => {
+        topGoddesses.push(doc.data());
+    });
+    return topGoddesses;
 }

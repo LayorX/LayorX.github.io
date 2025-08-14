@@ -1,12 +1,10 @@
 import { appInfo, serviceKeys } from './app-config.js';
 import { uiSettings, uiMessages } from './game-config.js';
-// ✨ NEW: 匯入 getUserData
 import { initFirebase, handleAuthentication, getCurrentUserId, getDbInstance, listenToFavorites, getRandomGoddessesFromDB, getUserData } from './gfirebase.js';
 import { initDailyTaskManager } from './dailyTaskManager.js';
 import { initAnalyticsManager } from './analyticsManager.js';
-import { setState, subscribe, initState } from './stateManager.js';
+import { setState, subscribe, initState, getState } from './stateManager.js';
 import { getInitialState } from './state.js';
-// ✨ NEW: 匯入 updateUserInfo
 import { initializeUI, updateAllTaskUIs, updateSlideshowUI, openAnnouncementModal, updateUserInfo } from './uiManager.js';
 import { getCardHandlers } from './handlers.js';
 import { showMessage, initParticles, animateParticles, resizeLoadingCanvas, animateLoading, Petal, createImageCard, updateFavoritesCountUI } from './gui.js';
@@ -64,7 +62,6 @@ function setupStateSubscriptions() {
         }
     });
 
-    // ✨ NEW: 訂閱暱稱變化，自動更新 UI
     subscribe('userNickname', (nickname) => {
         updateUserInfo(getCurrentUserId(), nickname);
     });
@@ -72,10 +69,8 @@ function setupStateSubscriptions() {
 
 async function onUserSignedIn(uid, error) {
     if (uid) {
-        // ✨ NEW: 獲取使用者資料
         const userData = await getUserData(uid);
         if (userData && userData.nickname) {
-            // ✨ NEW: 更新本地狀態
             setState({ userNickname: userData.nickname });
             localStorage.setItem('userNickname', userData.nickname);
         }
@@ -190,10 +185,16 @@ async function generateInitialImages(favorites) {
 function setupAppInfo() {
     const headerTitleEl = document.getElementById('header-title');
     const appFooter = document.getElementById('app-footer');
+    // ✨ FIX: 獲取排行榜按鈕
+    const rankingBtn = document.getElementById('ranking-btn');
     document.title = `${appInfo.title} v${appInfo.version}`;
     
     headerTitleEl.innerHTML = `${appInfo.title} <span class="text-base align-middle text-gray-400 font-medium">v${appInfo.version}</span>`;
     
+    // ✨ FIX: 在此處設定排行榜按鈕的文字
+    if (rankingBtn) {
+        rankingBtn.innerHTML = uiMessages.moreOptions.ranking;
+    }
 
     const { copyrightYear, authorName, authorLink } = appInfo.footer;
     appFooter.innerHTML = `
