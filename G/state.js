@@ -28,5 +28,6 @@ export function getInitialState() {
         // `hasUserApiKey` 的邏輯修正：只根據使用者是否儲存過來判斷
         hasUserApiKey: hasUserApiKey,
         imageQuality: storedImageQuality || 'thumbnail', // 'thumbnail' 或 'original'
+        isAppInitialized: false, // ✨ NEW: 新增 App 是否初始化完成的狀態旗標
     };
 }

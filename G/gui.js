@@ -21,8 +21,12 @@ export function updateFavoritesCountUI(count) {
 
 export function createImageCard(imageData, handlers, options = {}) {
     const { withAnimation = true, withButtons = true } = options;
-    // ✨ FIX: 確保 isGachaCard 被正確解構
-    const { style, id, isLiked, isShared, isShareable = true, isGachaCard = false } = imageData;
+    
+    // ✨ NEW: 解構新的屬性，用於統計和使用者倒讚狀態，並提供預設值
+    const { 
+        style, id, isLiked, isShared, isShareable = true, isGachaCard = false,
+        likeCount = 0, dislikeCount = 0, userHasDisliked = false 
+    } = imageData;
 
     const displaySrc = imageData.resizedUrl || imageData.imageUrl || imageData.src;
     const originalSrc = imageData.imageUrl || imageData.src;
@@ -32,20 +36,40 @@ export function createImageCard(imageData, handlers, options = {}) {
     imageCard.dataset.id = id;
     imageCard.dataset.originalSrc = originalSrc;
 
-    // ✨ FIX: 根據 isGachaCard 決定顯示哪個按鈕
+    // ✨ NEW: 根據使用者是否已倒讚，決定按鈕的文字和禁用狀態
+    const dislikeButtonText = userHasDisliked ? '已評價 ✅' : '我覺得不行!...👎';
+    const dislikeButtonDisabled = userHasDisliked ? 'disabled' : '';
+
+    // ✨ NEW: 動態生成統計數據標籤的 HTML
+    let statsTagsHTML = '';
+    if (isGachaCard && (likeCount > 0 || dislikeCount > 0)) {
+        statsTagsHTML = `
+            <div class="stats-tags-container">
+                ${likeCount > 0 ? `<span class="stat-tag like-tag">❤️ ${likeCount}</span>` : ''}
+                ${dislikeCount > 0 ? `<span class="stat-tag dislike-tag">👎 ${dislikeCount}</span>` : ''}
+            </div>
+        `;
+    }
+
     const mainButtonHTML = isGachaCard
-        ? `<button class="dislike-btn story-btn">我覺得不行!...👎</button>`
+        ? `<button class="dislike-btn story-btn" ${dislikeButtonDisabled}>${dislikeButtonText}</button>`
         : `<button class="story-btn">生成故事 ✨</button>`;
 
     const footerHTML = withButtons ? `
         <div class="card-footer">
              ${mainButtonHTML}
              <div class="card-actions">
-                ${isShareable ? `<button class="share-btn ${isShared ? 'shared' : ''}" title="分享至公開殿堂">🌐</button>` : ''}
+                ${isShareable && !isGachaCard ? `<button class="share-btn ${isShared ? 'shared' : ''}" title="分享至公開殿堂">🌐</button>` : ''}
                 <button class="like-btn ${isLiked ? 'liked' : ''}" title="收藏至私人殿堂">♥</button>
              </div>
         </div>
     ` : '';
+
+    // 將統計標籤的 HTML 放入圖片包裝容器中，使其疊加在圖片上
+    const imageWrapperContent = `
+        <img alt="${style ? style.title : 'Gacha Image'}" loading="lazy">
+        ${statsTagsHTML} 
+    `;
 
     if (withAnimation) {
         imageCard.innerHTML = `
@@ -53,7 +77,7 @@ export function createImageCard(imageData, handlers, options = {}) {
                 <div class="card-face card-front"><div class="loader"></div></div>
                 <div class="card-face card-back">
                     <div class="image-card-img-wrapper">
-                        <img alt="${style.title} AI 生成圖片" loading="lazy">
+                        ${imageWrapperContent}
                     </div>
                     ${footerHTML}
                 </div>
@@ -66,6 +90,7 @@ export function createImageCard(imageData, handlers, options = {}) {
         imageCard.innerHTML = `
             <div class="image-card-img-wrapper" style="width: 100%; height: 100%;">
                  <img alt="${style ? style.title : 'Gacha Image'}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 0.5s;">
+                 ${statsTagsHTML}
             </div>
             ${footerHTML}
         `;
@@ -113,7 +138,6 @@ export function createImageCard(imageData, handlers, options = {}) {
                 }
                 handlers.onStory(style);
             } else if (e.target.closest('.dislike-btn')) {
-                // ✨ FIX: 新增倒讚按鈕的事件處理
                 e.stopPropagation();
                 handlers.onDislike(imageData, e.target.closest('.dislike-btn'));
             } else if (e.target.closest('.like-btn')) {

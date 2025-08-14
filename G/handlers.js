@@ -370,14 +370,12 @@ export async function unfavoriteCurrentSlide() {
 }
 
 export async function drawGacha() {
-    // ✨ FIX: 移除 hasUserApiKey 的判斷。扭蛋功能不消耗 API，應始終檢查並扣除自身次數。
     const canUse = await useTask('gacha');
     if (!canUse) {
         showMessage("今日扭蛋次數已用完！", true);
-        updateAllTaskUIs(); // 確保 UI 顯示正確
+        updateAllTaskUIs();
         return;
     }
-    // 使用後立即更新 UI
     updateAllTaskUIs();
     
     incrementStat({ gachaDraws: 1 });
@@ -409,6 +407,9 @@ export async function drawGacha() {
         }
         setState({ ownGoddessStreak });
 
+        // ✨ NEW: 檢查目前使用者是否已經倒讚過這張卡片
+        const userHasDisliked = randomGoddess.dislikedBy && randomGoddess.dislikedBy.includes(currentUid);
+
         const imageData = {
             src: randomGoddess.imageUrl,
             imageUrl: randomGoddess.imageUrl,
@@ -416,7 +417,11 @@ export async function drawGacha() {
             style: randomGoddess.style,
             id: randomGoddess.id,
             isLiked: Array.isArray(favorites) && favorites.some(fav => fav.id === randomGoddess.id),
-            isGachaCard: true
+            isGachaCard: true,
+            // ✨ NEW: 將統計數據和使用者倒讚狀態傳遞到 UI 層
+            likeCount: randomGoddess.likeCount || 0,
+            dislikeCount: randomGoddess.dislikeCount || 0,
+            userHasDisliked: userHasDisliked
         };
         
         const gachaCard = createImageCard(imageData, getCardHandlers(), { withAnimation: false, withButtons: true });
@@ -428,7 +433,6 @@ export async function drawGacha() {
         showMessage(`${uiMessages.gacha.drawFailed}: ${error.message}`, true);
         gachaResultContainer.innerHTML = `<div class="gacha-placeholder"><p>${uiMessages.gacha.drawFailed}...</p><p class="text-xs text-gray-400 mt-2">${error.message}</p></div>`;
     } finally {
-        // ✨ FIX: 確保在抽完卡後，按鈕狀態能被重新啟用 (如果還有次數)
         updateAllTaskUIs();
     }
 }

@@ -74,10 +74,15 @@ async function onUserSignedIn(uid, error) {
         ]);
         
         listenToFavorites(onFavoritesUpdate);
+
+        // ✨ FIX: 在這裡將 App 狀態設定為已初始化
+        setState({ isAppInitialized: true });
         updateAllTaskUIs();
     } else {
         showMessage(uiMessages.errors.cloudConnect, true);
         console.error("Authentication Error:", error);
+        // ✨ FIX: 即使認證失敗，也標記為已初始化，以允許非登入功能繼續
+        setState({ isAppInitialized: true });
     }
 }
 

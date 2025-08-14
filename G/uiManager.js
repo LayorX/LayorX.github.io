@@ -224,12 +224,19 @@ function setupSubscriptions() {
 }
 
 export async function updateAllTaskUIs() {
+    // ✨ FIX: 在這裡加入防衛，確保 App 初始化後才執行
+    if (!getState('isAppInitialized')) {
+        console.log("App not initialized, skipping UI updates.");
+        return;
+    }
     await updateGenerateButtonsState();
     await updateGachaUI();
     await updateTtsUi();
 }
 
 export async function updateGenerateButtonsState() {
+    // ✨ FIX: 在這裡也加入防衛，更加保險
+    if (!getState('isAppInitialized')) return;
     const { activeStyleId, isGenerating, hasUserApiKey } = getState('activeStyleId', 'isGenerating', 'hasUserApiKey');
     const isVip = activeStyleId === 'vip-exclusive';
     
@@ -253,6 +260,8 @@ export async function updateGenerateButtonsState() {
 }
 
 export async function updateGachaUI() {
+    // ✨ FIX: 加入防衛
+    if (!getState('isAppInitialized')) return;
     const count = await getTaskCount('gacha');
     
     if (count <= 0) {
@@ -267,6 +276,9 @@ export async function updateGachaUI() {
 }
 
 export async function updateTtsUi() {
+    // ✨ FIX: 加入防衛
+    if (!getState('isAppInitialized')) return;
+    
     const { hasUserApiKey, isStoryGenerating } = getState('hasUserApiKey', 'isStoryGenerating');
     
     if (isStoryGenerating) {

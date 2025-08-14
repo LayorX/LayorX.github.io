@@ -762,3 +762,46 @@ body.theme-day .modal-close-btn {
         aspect-ratio: 2 / 3;
     }
 }
+
+/* ✨ NEW: Gacha Card Stats Tags */
+.stats-tags-container {
+    position: absolute;
+    top: 0.75rem; /* 12px */
+    right: 0.75rem; /* 12px */
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem; /* 8px */
+    align-items: flex-end;
+    z-index: 6; /* 確保在圖片之上 */
+}
+
+.stat-tag {
+    color: white;
+    padding: 0.25rem 0.625rem; /* 4px 10px */
+    border-radius: 9999px;
+    font-size: 0.875rem; /* 14px */
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem; /* 4px */
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.stat-tag.like-tag {
+    background-color: rgba(236, 72, 153, 0.7); /* Pink */
+}
+
+.stat-tag.dislike-tag {
+    background-color: rgba(107, 114, 128, 0.7); /* Gray */
+}
+
+/* ✨ NEW: Style for disabled dislike button */
+.dislike-btn:disabled {
+    background-color: rgba(55, 65, 81, 0.8) !important;
+    border-color: rgba(107, 114, 128, 0.5) !important;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
