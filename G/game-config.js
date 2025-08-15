@@ -1,5 +1,19 @@
 // game-config.js - 存放遊戲性、內容、UI 等經常調整的設定
 
+// ✨ NEW: 新增隨機暱稱列表
+export const randomNicknames = [
+  "D槽女神官", "波多野結冰", "吉澤明步兵", "搖桿不是這樣用的", "三上悠亞力山大",
+  "單手玩輔助", "奇怪的知識增加了", "本斥但大", "天使萌新", "專業補魔師",
+  "河北彩花錢", "一鍵繳械", "聖光也治不了你", "楓可憐了", "橋本有碼",
+  "明日花騎兵", "全服我最婆", "顯卡在燃燒", "時間管理大師", "多人運動",
+  "你老婆真好用", "相澤南波灣", "大橋未久等了", "櫻空桃太郎", "神宮寺助我",
+  "這題我會", "不可以色色", "小孩子才做選擇", "人類高品質女性", "身體很誠實",
+  "輸出全靠抖", "進擊的巨乳", "法杖不是那樣用", "奶量即是正義", "坐騎給妳騎",
+  "敗犬女神", "異世界轉生女神", "肥宅快樂姬", "我的很大你忍一下", "絕對領域",
+  "求佛不如求我", "紗倉真痛", "涼森玲夢遊", "我先繳械投降", "壞了，我裝的",
+  "老司姬帶帶我", "電子雞女神", "觀音兵收容所", "女神也會芭比Q", "上上下下左右左右"
+];
+
 // ✨ MODIFIED: 升級為多頁公告系統
 export const announcementSettings = {
     enabled: true, // 設為 true 來啟用公告，false 來停用
@@ -15,7 +29,7 @@ export const announcementSettings = {
             `
         },
         {
-            title: "🔧 版本 v1.6.1 更新資訊 🔧",
+            title: "🔧 版本 v1.6.2 更新資訊 🔧",
             message: `
                 <p class="mb-3">我們很高興帶來這次的更新，主要新增了社群互動功能：</p>
                 <ul class="list-disc list-inside space-y-2">
@@ -34,9 +48,9 @@ export const announcementSettings = {
 // --- 遊戲數值設定 ---
 export const gameSettings = {
     dailyLimits: {
-        generateOne: 10,
+        generateOne: 20,
         generateFour: 2,
-        gacha: 20,//5,
+        gacha: 10,//5,
         tts: 3,
     },
     gachaStreakGoal: 2,
@@ -60,6 +74,7 @@ export const userStatsStructure = {
     apiImports: 0,
     storyGenerations: 0,
     ttsGenerations: 0,
+    totalGenerations: 0, // ✨ NEW: 新增總製造數欄位
 };
 
 // --- 圖片與 API 設定 ---

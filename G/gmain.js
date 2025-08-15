@@ -67,22 +67,26 @@ function setupStateSubscriptions() {
     });
 }
 
+// ✨ FIX: 調整函式執行順序並修正參數傳遞
 async function onUserSignedIn(uid, error) {
     if (uid) {
-        const userData = await getUserData(uid);
-        if (userData && userData.nickname) {
-            setState({ userNickname: userData.nickname });
-            localStorage.setItem('userNickname', userData.nickname);
-        }
-        updateUserInfo(uid, getState('userNickname'));
-
         const db = getDbInstance();
         
+        // 1. 先執行初始化，這一步會為新用戶建立含隨機暱稱的文件
         await Promise.all([
             initDailyTaskManager(db, uid),
             initAnalyticsManager(db, uid)
         ]);
         
+        // 2. 然後再去讀取剛剛可能被建立的使用者資料，並【正確傳入 db 參數】
+        const userData = await getUserData(db, uid);
+        if (userData && userData.nickname) {
+            // 3. 將從資料庫讀取到的暱稱同步到 App 狀態和本地儲存
+            setState({ userNickname: userData.nickname });
+            localStorage.setItem('userNickname', userData.nickname);
+        }
+        
+        // 4. 監聽後續變化並更新 UI
         listenToFavorites(onFavoritesUpdate);
         
         setState({ isAppInitialized: true });
@@ -94,6 +98,7 @@ async function onUserSignedIn(uid, error) {
         setState({ isAppInitialized: true });
     }
 }
+
 
 function onFavoritesUpdate(newFavorites, err) {
     if (err) {
@@ -185,13 +190,11 @@ async function generateInitialImages(favorites) {
 function setupAppInfo() {
     const headerTitleEl = document.getElementById('header-title');
     const appFooter = document.getElementById('app-footer');
-    // ✨ FIX: 獲取排行榜按鈕
     const rankingBtn = document.getElementById('ranking-btn');
     document.title = `${appInfo.title} v${appInfo.version}`;
     
     headerTitleEl.innerHTML = `${appInfo.title} <span class="text-base align-middle text-gray-400 font-medium">v${appInfo.version}</span>`;
     
-    // ✨ FIX: 在此處設定排行榜按鈕的文字
     if (rankingBtn) {
         rankingBtn.innerHTML = uiMessages.moreOptions.ranking;
     }
