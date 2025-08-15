@@ -19,7 +19,7 @@ window.onload = () => {
     initializeUI();
     setupStateSubscriptions();
 
-    // ✨ FIX: 在驗證前，先顯示一個初始的連線中狀態
+    // 在驗證前，先顯示一個初始的連線中狀態
     updateUserInfo(null, null, true);
     startLoadingSequence();
     
@@ -64,7 +64,8 @@ function setupStateSubscriptions() {
         }
     });
 
-    // ✨ FIX: 讓暱稱訂閱只在 UID 存在時才更新 UI，避免初始閃爍
+    // 讓暱稱訂閱只在 UID 存在時才更新 UI，避免初始閃爍
+    // 這個訂閱仍然有用，例如當使用者在設定中更改暱稱時，可以即時更新
     subscribe('userNickname', (nickname) => {
         const uid = getCurrentUserId();
         if (uid) {
@@ -85,6 +86,12 @@ async function onUserSignedIn(uid, error) {
         const userData = await getUserData(db, uid);
         const nickname = userData?.nickname || '';
         
+        // --- ✨ 修正點 ✨ ---
+        // 在這裡直接更新 UI，因為我們已經取得了 UID 和暱稱
+        // 這確保了無論暱稱是否改變，UI 都會從「連線中」更新為正確的資訊
+        updateUserInfo(uid, nickname);
+        // --- 修正結束 ---
+
         setState({ userNickname: nickname });
         if (nickname) {
             localStorage.setItem('userNickname', nickname);
@@ -99,7 +106,7 @@ async function onUserSignedIn(uid, error) {
         showMessage(uiMessages.errors.cloudConnect, true);
         console.error("Authentication Error:", error);
         setState({ isAppInitialized: true });
-        // ✨ FIX: 登入失敗時，明確顯示未登入狀態
+        // 登入失敗時，明確顯示未登入狀態
         updateUserInfo(null, null, false);
     }
 }

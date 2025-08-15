@@ -6,7 +6,6 @@ import { getState, setState, subscribe } from './stateManager.js';
 import { getTaskCount } from './dailyTaskManager.js';
 import { getCardHandlers, handleImageGeneration, drawGacha, unfavoriteCurrentSlide } from './handlers.js';
 import { incrementStat } from './analyticsManager.js';
-// ✨ NEW: 匯入 saveNickname
 import { getCurrentUserId, saveNickname } from './gfirebase.js';
 import { createImageCard, showMessage, initParticles, updateFavoritesCountUI } from './gui.js';
 import { sounds } from './soundManager.js';
@@ -63,8 +62,8 @@ export function initializeUI() {
         settingsModalContent: document.getElementById('settings-modal-content'),
         announcementModal: document.getElementById('announcement-modal'),
         announcementModalContent: document.getElementById('announcement-modal-content'),
-        userInfo: document.getElementById('user-info'), // ✨ NEW: 新增 user-info DOM 元素
-        rankingBtn: document.getElementById('ranking-btn'), // ✨ NEW: 新增排行榜按鈕
+        userInfo: document.getElementById('user-info'), 
+        rankingBtn: document.getElementById('ranking-btn'), 
         
     };
 
@@ -90,7 +89,6 @@ function setupUIText() {
     DOMElements.favoritesEmptyState.querySelector('p:nth-child(3)').textContent = uiMessages.favorites.emptySubtitle;
     document.querySelector('.gacha-placeholder p:nth-child(2)').textContent = uiMessages.gacha.placeholder;
 
-    // ✨ FIX: 將排行榜按鈕的文字設定移回 gmain.js，此處只設定下拉選單的內容
     DOMElements.settingsBtn.textContent = uiMessages.moreOptions.settings;
     DOMElements.settingsBtn.textContent = uiMessages.moreOptions.settings;
     DOMElements.aboutBtn.textContent = uiMessages.moreOptions.about;
@@ -144,7 +142,6 @@ function addEventListeners() {
             setState({ activeStyleId: button.dataset.styleId });
         });
     });
-        // ✨ FIX: 在此處為排行榜按鈕加上事件監聽
     if (DOMElements.rankingBtn) {
         DOMElements.rankingBtn.addEventListener('click', () => {
             window.location.href = 'ranking.html';
@@ -585,7 +582,6 @@ function handleTouchEnd() {
     setState({ touchStartX: 0, touchEndX: 0 });
 }
 
-// ✨ NEW: 更新函式，加入暱稱設定
 function openSettingsModal() {
     const { title, imageQualityTitle, qualityThumbnail, qualityThumbnailDesc, qualityOriginal, qualityOriginalDesc, nicknameTitle, nicknamePlaceholder, nicknameSave } = uiMessages.settingsModal;
     const currentQuality = getState('imageQuality');
@@ -638,7 +634,6 @@ function openSettingsModal() {
         });
     });
 
-    // ✨ NEW: 儲存暱稱的事件監聽
     document.getElementById('save-nickname-btn').addEventListener('click', async () => {
         const input = document.getElementById('nickname-input');
         const newNickname = input.value.trim();
@@ -661,10 +656,12 @@ function openSettingsModal() {
     });
 }
 
-// ✨ NEW: 更新使用者資訊顯示的函式
-export function updateUserInfo(uid, nickname) {
+// ✨ FIX: 增加 isConnecting 參數來處理初始狀態
+export function updateUserInfo(uid, nickname, isConnecting = false) {
     if (DOMElements.userInfo) {
-        if (uid) {
+        if (isConnecting) {
+            DOMElements.userInfo.innerHTML = `雲端連線中...`;
+        } else if (uid) {
             const nicknameHTML = nickname ? `<span class="user-nickname">(${nickname})</span>` : '';
             DOMElements.userInfo.innerHTML = `雲端使用者 ${nicknameHTML} ID: ${uid}`;
         } else {
@@ -673,15 +670,7 @@ export function updateUserInfo(uid, nickname) {
     }
 }
 
-// ✨ MODIFIED: 重寫整個公告系統以支援多頁面
-
-/**
- * 渲染特定頁碼的公告內容和導覽按鈕
- * @param {number} pageIndex - 要顯示的頁面索引
- */
-
-// 這是【正確】的版本
-let currentAnnouncementPage = 0; // 需要一個變數來追蹤頁碼
+let currentAnnouncementPage = 0; 
 
 function renderAnnouncementPage(pageIndex) {
     const pages = announcementSettings.pages;
