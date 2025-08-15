@@ -13,9 +13,21 @@ let state = {
     authReady: false,
 };
 
+// --- ✨ NEW: 更新使用者資訊 UI 的函式 ---
+function updateUserInfoUI(uid, nickname) {
+    if (DOMElements.userInfo) {
+        if (uid) {
+            const nicknameHTML = nickname ? `<span class="user-nickname">(${nickname})</span>` : '';
+            DOMElements.userInfo.innerHTML = `雲端使用者 ${nicknameHTML} ID: ${uid}`;
+        } else {
+            DOMElements.userInfo.innerHTML = `雲端使用者 ID: 尚未登入`;
+        }
+    }
+}
+
 // --- 初始化 ---
 window.onload = () => {
-    // 應用儲存的主題
+    // 應用儲存的主題   
     const savedTheme = localStorage.getItem('theme') || 'night';
     document.body.classList.add(savedTheme === 'day' ? 'theme-day' : 'theme-night');
 
@@ -29,16 +41,23 @@ window.onload = () => {
         creatorList: document.getElementById('creator-list'),
         goddessList: document.getElementById('goddess-list'),
         loadingIndicator: document.getElementById('loading-indicator'),
+        userInfo: document.getElementById('user-info'), // ✨ NEW: 獲取 user-info 元素
     };
 
     // 監聽 Firebase 認證狀態
     onAuthStateChanged(window.auth, (user) => {
         if (user) {
             state.authReady = true;
+            
+            // ✨ NEW: 顯示使用者資訊
+            const storedNickname = localStorage.getItem('userNickname') || '無名氏';
+            updateUserInfoUI(user.uid, storedNickname);
+
             // 認證成功後，載入預設的排行榜
             fetchAndDisplayRankings();
         } else {
             // 如果需要，可以處理未登入的情況
+            updateUserInfoUI(null, null);
             console.log("User is not signed in.");
         }
     });
@@ -106,17 +125,16 @@ async function renderCreatorRankings() {
     const currentStat = statMap[state.currentCreatorSubTab];
 
     try {
-        const topUsersStats = await getTopUsersByStat(currentStat.field, 10);
+        const topUsersStats = await getTopUsersByStat(window.db, currentStat.field, 10);
 
         if (topUsersStats.length === 0) {
             DOMElements.creatorList.innerHTML = renderEmptyState("此榜單暫無英雄，快來成為第一人！");
             return;
         }
 
-        // 並行獲取所有上榜者的暱稱
         const usersWithNicknames = await Promise.all(
             topUsersStats.map(async (userStat) => {
-                const userData = await getUserData(userStat.id);
+                const userData = await getUserData(window.db, userStat.id);
                 return { ...userStat, nickname: userData?.nickname || '無名氏' };
             })
         );
@@ -134,7 +152,7 @@ async function renderCreatorRankings() {
 async function renderGoddessRankings() {
     const orderByField = state.currentGoddessSubTab; // 'likes' or 'dislikes'
     try {
-        const topGoddesses = await getTopGoddesses(orderByField, 12);
+        const topGoddesses = await getTopGoddesses(window.db, orderByField, 12);
 
         if (topGoddesses.length === 0) {
             DOMElements.goddessList.innerHTML = renderEmptyState("還沒有女神上榜喔！");

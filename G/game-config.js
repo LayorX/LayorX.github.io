@@ -1,25 +1,40 @@
 // game-config.js - 存放遊戲性、內容、UI 等經常調整的設定
 
-// ✨ NEW: 緊急公告設定
+// ✨ MODIFIED: 升級為多頁公告系統
 export const announcementSettings = {
     enabled: true, // 設為 true 來啟用公告，false 來停用
-    // 使用 sessionStorage 來確保使用者每次開啟分頁只看到一次
-    // 如果要每次重整都看到，可以將此設為 false
     checkSessionStorage: false, 
-    title: "🎉 扭蛋狂歡 & 懸賞獵人計畫開跑！ 🎉",
-    message: `
-        <p class="mb-4">Hey！各位神級製造師！準備好迎接一場靈魂的風暴了嗎？</p>
-        <p class="mb-3"><strong>【限時扭蛋大放送！】</strong><br>這幾天，我們偷偷把扭蛋機的馬力開到最大！每日扭蛋次數從 5 次瘋狂飆升到 <strong>20 次</strong>！是的，你沒看錯，就是 20 次！快來看看誰是真正的天選之人！</p>
-        <p class="mb-3"><strong>【Bug 懸賞令！】</strong><br>你是火眼金睛的抓蟲大師嗎？發現任何 Bug 或鬼點子，馬上回報，至少 <strong>5 次</strong> 扭蛋機會直接入帳！</p>
-        <p><strong>【女神星探計畫！】</strong><br>你手上有壓箱寶的絕美女神嗎？或是成功把你的女神分享到各大社群？快來填寫<a href="https://forms.gle/JXdobEdAa8is2wyR6" target="_blank" class="font-bold text-amber-300 hover:underline">>>>這個神秘表單<<<</a>，用截圖證明你的貢獻，我們將用至少 <strong>30 次</strong> 扭蛋機會淹沒你！</p>
-    `
+    pages: [
+        {
+            title: "🎉 扭蛋狂歡 & 懸賞獵人計畫！ 🎉",
+            message: `
+                <p class="mb-4">Hey！各位神級製造師！準備好迎接一場靈魂的風暴了嗎？</p>
+                <p class="mb-3"><strong>【限時扭蛋大放送！】</strong><br>每日扭蛋次數瘋狂飆升到 <strong>10 次</strong>！快來看看誰是真正的天選之人！</p>
+                <p class="mb-3"><strong>【Bug 懸賞令！】</strong><br>發現任何 Bug 或鬼點子，馬上回報，至少 <strong>5 次</strong> 扭蛋機會直接入帳！</p>
+                <p><strong>【女神星探計畫！】</strong><br>成功分享你的女神到各大社群？快來填寫<a href="https://forms.gle/JXdobEdAa8is2wyR6" target="_blank" class="font-bold text-amber-300 hover:underline">>>>這個神秘表單<<<</a>，證明你的貢獻，我們將用至少 <strong>20 次</strong> 扭蛋機會淹沒你！</p>
+            `
+        },
+        {
+            title: "🔧 版本 v1.6.0 更新資訊 🔧",
+            message: `
+                <p class="mb-3">我們很高興帶來這次的更新，主要新增了社群互動功能：</p>
+                <ul class="list-disc list-inside space-y-2">
+                    <li><strong>全新「排行榜」頁面：</strong>現在你可以從主頁進入榮譽殿堂，查看各路好手的排名！</li>
+                    <li><strong>扭蛋卡片優化：</strong>現在抽卡時會直接顯示該女神的受歡迎程度（讚/倒讚數）。</li>
+                    <li><strong>暱稱系統實裝：</strong>你可以在「個人化設定」中設定你的專屬暱稱，它將會顯示在排行榜和主頁上。</li>
+                    <li><strong>UI/UX 優化：</strong>修復了數個已知的 Bug，並對介面進行了微調，提升整體使用體驗。</li>
+                </ul>
+                <p class="mt-4">感謝您的支持，祝您遊戲愉快！</p>
+            `
+        }
+    ]
 };
 
 
 // --- 遊戲數值設定 ---
 export const gameSettings = {
     dailyLimits: {
-        generateOne: 20,
+        generateOne: 10,
         generateFour: 2,
         gacha: 20,//5,
         tts: 3,
@@ -76,7 +91,8 @@ export const uiSettings = {
     loadingSilhouettes: [
         'gimages/g/g1.jpg', 'gimages/g/g2.jpg', 'gimages/g/g3.jpg',
         'gimages/g/g4.jpg', 'gimages/g/g5.jpg', 'gimages/g/g6.jpg',
-        'gimages/g/g7.png', 'gimages/g/g8.png', 'gimages/g/g9.png'
+        'gimages/g/g7.png', 'gimages/g/g8.png', 'gimages/g/g9.png',
+        'gimages/g/g10.png'
     ],
     loadingPetalCount: 60,
     cardRevealDelay: 1,
@@ -88,7 +104,6 @@ export const uiSettings = {
 
 // UI 介面文字
 export const uiMessages = {
-    // ✨ NEW: 新增設定視窗的文字
     settingsModal: {
         title: "個人化設定",
         imageQualityTitle: "圖片顯示品質",
@@ -96,11 +111,10 @@ export const uiMessages = {
         qualityThumbnailDesc: "優先載入縮圖，點擊後顯示原圖，速度最快。",
         qualityOriginal: "原圖優先",
         qualityOriginalDesc: "所有圖片直接載入高解析度原圖，畫質最佳但較耗流量。",
-        // ✨ NEW: 新增暱稱相關文字
+        settingSaved: "設定已儲存！",
         nicknameTitle: "您的暱稱",
         nicknamePlaceholder: "請輸入您喜歡的暱稱...",
         nicknameSave: "儲存",
-        settingSaved: "設定已儲存！"
     },
     moreOptions: {
         ranking: "🏆 排行榜",
@@ -127,7 +141,6 @@ export const uiMessages = {
         ttsStop: "停止播放",
         ttsLimit: "明日再來"
     },
-    // ✨ NEW: 新增次數用盡的提示訊息
     generateLimit: {
         title: "今日靈感已耗盡",
         message: "免費生成次數已用完。您可以點擊「更多選項」匯入自己的 Gemini API Key 來繼續無限暢遊！"
@@ -175,7 +188,7 @@ export const styles = [
     { id: 'cyberpunk-warrior', title: '🤖 賽博龐克戰姬', description: '未來、科技、堅毅眼神中的致命吸引力', prompt: "Cyberpunk style. A female Asian warrior in glowing mechanical armor, holding an energy sword. The background is a futuristic city with flying vehicles and towering skyscrapers." }
 ];
 
-// ✨ NEW: AI 算圖用的隨機關鍵字 (區分日夜)
+// AI 算圖用的隨機關鍵字 (區分日夜)
 export const randomKeywords_day = {
     hair: [
         'long wavy brown hair', 'silver bob cut', 'messy bun', 'sleek ponytail','long flowing hair', 'braided hair', 'casual ponytail', 'a few loose strands of hair'
@@ -220,9 +233,8 @@ export const randomKeywords_normal = {
     expression: ['blushing shyly', 'seductive gaze', 'a playful wink', 'a mysterious smile', 'a look of longing', 'a shy glance'],
     mood: ['alluring', 'charming', 'enchanting', 'sultry', 'innocent but tempting', 'sun-kissed and radiant', 'captivating men\'s gaze']
 };
-
-// AI 生成圖片的基本設定2 av封面版本
-export const randomKeywords = { // av 封面風格的隨機關鍵字
+// av 封面風格的隨機關鍵字
+export const randomKeywords = { 
   // hair: 髮型
   hair: [
     '烏黑長直髮', '金色大波浪捲髮', '俏麗短髮', '可愛的雙馬尾', '學生風的妹妹頭', 
@@ -276,4 +288,3 @@ export const randomKeywords = { // av 封面風格的隨機關鍵字
   ]
 
 };
-

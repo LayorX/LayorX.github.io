@@ -673,25 +673,77 @@ export function updateUserInfo(uid, nickname) {
     }
 }
 
+// ✨ MODIFIED: 重寫整個公告系統以支援多頁面
+
+/**
+ * 渲染特定頁碼的公告內容和導覽按鈕
+ * @param {number} pageIndex - 要顯示的頁面索引
+ */
+
+// 這是【正確】的版本
+let currentAnnouncementPage = 0; // 需要一個變數來追蹤頁碼
+
+function renderAnnouncementPage(pageIndex) {
+    const pages = announcementSettings.pages;
+    if (!pages || pageIndex < 0 || pageIndex >= pages.length) return;
+
+    const currentPage = pages[pageIndex];
+    const isFirstPage = pageIndex === 0;
+    const isLastPage = pageIndex === pages.length - 1;
+
+    const navButtonsHTML = `
+        <div class="flex justify-between items-center mt-6">
+            <button id="announcement-prev-btn" class="btn-base btn-secondary text-white font-bold py-2 px-6 rounded-full ${isFirstPage ? 'opacity-50 cursor-not-allowed' : ''}" ${isFirstPage ? 'disabled' : ''}>
+                上一頁
+            </button>
+            <span class="text-sm text-gray-400">${pageIndex + 1} / ${pages.length}</span>
+            ${isLastPage ? `
+                <button id="announcement-close-btn" class="btn-base btn-primary text-white font-bold py-2 px-6 rounded-full">
+                    關閉
+                </button>
+            ` : `
+                <button id="announcement-next-btn" class="btn-base btn-primary text-white font-bold py-2 px-6 rounded-full">
+                    下一頁
+                </button>
+            `}
+        </div>
+    `;
+
+    DOMElements.announcementModalContent.innerHTML = `
+        <h2 class="text-3xl font-bold text-center mb-6">${currentPage.title}</h2>
+        <div class="text-left leading-relaxed">${currentPage.message}</div>
+        ${navButtonsHTML}
+    `;
+
+    if (!isFirstPage) {
+        document.getElementById('announcement-prev-btn').addEventListener('click', () => {
+            currentAnnouncementPage--;
+            renderAnnouncementPage(currentAnnouncementPage);
+        });
+    }
+
+    if (isLastPage) {
+        document.getElementById('announcement-close-btn').addEventListener('click', () => {
+            DOMElements.announcementModal.classList.remove('show');
+        });
+    } else {
+        document.getElementById('announcement-next-btn').addEventListener('click', () => {
+            currentAnnouncementPage++;
+            renderAnnouncementPage(currentAnnouncementPage);
+        });
+    }
+}
 
 export function openAnnouncementModal() {
-    if (!announcementSettings.enabled) return;
+    if (!announcementSettings.enabled || !announcementSettings.pages || announcementSettings.pages.length === 0) return;
     if (announcementSettings.checkSessionStorage && sessionStorage.getItem('announcementShown')) {
         return;
     }
 
-    const { title, message } = announcementSettings;
-
-    DOMElements.announcementModalContent.innerHTML = `
-        <button class="modal-close-btn">&times;</button>
-        <h2 class="text-3xl font-bold text-center mb-6">${title}</h2>
-        <div class="text-left leading-relaxed">${message}</div>
-    `;
+    currentAnnouncementPage = 0;
+    renderAnnouncementPage(currentAnnouncementPage);
 
     DOMElements.announcementModal.classList.add('show');
-    DOMElements.announcementModalContent.querySelector('.modal-close-btn').addEventListener('click', () => {
-        DOMElements.announcementModal.classList.remove('show');
-    });
 
     if (announcementSettings.checkSessionStorage) {
         sessionStorage.setItem('announcementShown', 'true');

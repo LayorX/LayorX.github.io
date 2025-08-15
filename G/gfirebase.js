@@ -46,25 +46,29 @@ export function getDbInstance() {
     return db;
 }
 
-export async function getUserData(uid) {
+// --- ✨ 最終修正 ✨ ---
+// 將 getUserData 改為純粹的唯讀函式
+export async function getUserData(db, uid) {
     if (!uid) return null;
     const userRef = doc(db, dbCollectionNames.users, uid);
-    const docSnap = await getDoc(userRef);
+    const docSnap = await getDoc(userRef); // 執行讀取操作
+    
     if (docSnap.exists()) {
+        // 如果文件存在，回傳資料
         return docSnap.data();
     } else {
-        await setDoc(userRef, { nickname: '' });
-        return { nickname: '' };
+        // 如果文件不存在，直接回傳預設值，【不要】執行寫入操作
+        console.warn(`User document for UID ${uid} not found. Returning default nickname.`);
+        return { nickname: '無名氏' };
     }
 }
+
 
 export async function saveNickname(uid, nickname) {
     if (!uid) throw new Error("User not signed in.");
     const userRef = doc(db, dbCollectionNames.users, uid);
     await setDoc(userRef, { nickname: nickname }, { merge: true });
 }
-
-// --- 以下為既有函式，保持不變 ---
 
 function getResizedImageUrl(originalUrl) {
     if (!originalUrl) return '';
@@ -260,22 +264,14 @@ export async function getRandomGoddessesFromDB(count) {
     return shuffled.slice(0, count);
 }
 
-// --- ✨ NEW: 排行榜查詢函式 ---
-
-/**
- * 獲取頂尖使用者排名
- * @param {string} statField - 要排序的統計欄位 (例如 'shares', 'generateOne')
- * @param {number} count - 要獲取的數量
- * @returns {Array} - 包含使用者 ID 和統計數值的陣列
- */
-export async function getTopUsersByStat(statField, count) {
-    const statsCollection = collectionGroup(db, dbCollectionNames.userStats);
+// --- 排行榜查詢函式 (伺服器端排序) ---
+export async function getTopUsersByStat(db, statField, count) {
+    const statsCollection = collectionGroup(db, dbCollectionNames.statistics);
     const q = query(statsCollection, orderBy(statField, 'desc'), limit(count));
     
     const querySnapshot = await getDocs(q);
     const topUsers = [];
     querySnapshot.forEach(doc => {
-        // user ID 在父文件的路徑中
         const userId = doc.ref.parent.parent.id;
         topUsers.push({
             id: userId,
@@ -285,13 +281,7 @@ export async function getTopUsersByStat(statField, count) {
     return topUsers;
 }
 
-/**
- * 獲取頂尖女神排名
- * @param {string} orderByField - 'likes' 或 'dislikes'
- * @param {number} count - 要獲取的數量
- * @returns {Array} - 包含女神完整資料的陣列
- */
-export async function getTopGoddesses(orderByField, count) {
+export async function getTopGoddesses(db, orderByField, count) {
     const goddessesCollection = collection(db, dbCollectionNames.publicGoddesses);
     const field = orderByField === 'likes' ? 'likeCount' : 'dislikeCount';
     const q = query(goddessesCollection, orderBy(field, 'desc'), limit(count));
