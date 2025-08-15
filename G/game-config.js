@@ -15,7 +15,7 @@ export const announcementSettings = {
             `
         },
         {
-            title: "🔧 版本 v1.6.0 更新資訊 🔧",
+            title: "🔧 版本 v1.6.1 更新資訊 🔧",
             message: `
                 <p class="mb-3">我們很高興帶來這次的更新，主要新增了社群互動功能：</p>
                 <ul class="list-disc list-inside space-y-2">

@@ -41,7 +41,7 @@ window.onload = () => {
         creatorList: document.getElementById('creator-list'),
         goddessList: document.getElementById('goddess-list'),
         loadingIndicator: document.getElementById('loading-indicator'),
-        userInfo: document.getElementById('user-info'), // ✨ NEW: 獲取 user-info 元素
+        userInfo: document.getElementById('user-info'), 
     };
 
     // 監聽 Firebase 認證狀態
@@ -49,20 +49,16 @@ window.onload = () => {
         if (user) {
             state.authReady = true;
             
-            // ✨ NEW: 顯示使用者資訊
             const storedNickname = localStorage.getItem('userNickname') || '無名氏';
             updateUserInfoUI(user.uid, storedNickname);
 
-            // 認證成功後，載入預設的排行榜
             fetchAndDisplayRankings();
         } else {
-            // 如果需要，可以處理未登入的情況
             updateUserInfoUI(null, null);
             console.log("User is not signed in.");
         }
     });
 
-    // 綁定事件監聽
     setupEventListeners();
 };
 
@@ -119,7 +115,8 @@ async function fetchAndDisplayRankings() {
 async function renderCreatorRankings() {
     const statMap = {
         shares: { field: 'shares', unit: '次分享' },
-        generations: { field: 'generateOne', unit: '次製造' },
+        // ✨ FIX: 將查詢欄位從 generateOne 改為 totalGenerations
+        generations: { field: 'totalGenerations', unit: '次製造' },
         gacha: { field: 'gachaDraws', unit: '次扭蛋' },
     };
     const currentStat = statMap[state.currentCreatorSubTab];
@@ -150,7 +147,7 @@ async function renderCreatorRankings() {
 }
 
 async function renderGoddessRankings() {
-    const orderByField = state.currentGoddessSubTab; // 'likes' or 'dislikes'
+    const orderByField = state.currentGoddessSubTab; 
     try {
         const topGoddesses = await getTopGoddesses(window.db, orderByField, 12);
 

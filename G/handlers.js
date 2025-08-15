@@ -78,7 +78,17 @@ export async function handleImageGeneration(count = 1) {
         updateAllTaskUIs();
     }
     
-    incrementStat({ [taskName]: count });
+    // ✨ FIX: 採用更清晰的統計邏輯
+    const statsToUpdate = {
+        totalGenerations: count // 無論如何，總製造數都增加圖片的數量 (1 或 4)
+    };
+    if (count === 1) {
+        statsToUpdate.generateOne = 1; // 記錄「遇見一位」的點擊次數
+    } else { // count === 4
+        statsToUpdate.generateFour = 1; // 記錄「遇見四位」的點擊次數
+    }
+    incrementStat(statsToUpdate);
+
 
     sounds.start();
     setState({ isGenerating: true });
@@ -122,6 +132,7 @@ export async function handleImageGeneration(count = 1) {
     setState({ isGenerating: false });
 }
 
+// ... (其他函式保持不變) ...
 async function handleDislike(imageData, btn) {
     const currentUserId = getCurrentUserId();
     if (!currentUserId) {
@@ -407,7 +418,6 @@ export async function drawGacha() {
         }
         setState({ ownGoddessStreak });
 
-        // ✨ NEW: 檢查目前使用者是否已經倒讚過這張卡片
         const userHasDisliked = randomGoddess.dislikedBy && randomGoddess.dislikedBy.includes(currentUid);
 
         const imageData = {
@@ -418,7 +428,6 @@ export async function drawGacha() {
             id: randomGoddess.id,
             isLiked: Array.isArray(favorites) && favorites.some(fav => fav.id === randomGoddess.id),
             isGachaCard: true,
-            // ✨ NEW: 將統計數據和使用者倒讚狀態傳遞到 UI 層
             likeCount: randomGoddess.likeCount || 0,
             dislikeCount: randomGoddess.dislikeCount || 0,
             userHasDisliked: userHasDisliked
