@@ -11,6 +11,7 @@ import { createImageCard, showMessage, initParticles, updateFavoritesCountUI } f
 import { sounds } from './soundManager.js';
 
 let DOMElements = {};
+let currentAnnouncementPage = 0;
 
 export function initializeUI() {
     DOMElements = {
@@ -47,7 +48,6 @@ export function initializeUI() {
         aboutBtn: document.getElementById('about-btn'),
         contactBtn: document.getElementById('contact-btn'),
         apikeyBtn: document.getElementById('apikey-btn'),
-        extraGachaBtn: document.getElementById('extra-gacha-btn'),
         gachaModal: document.getElementById('gacha-modal'),
         gachaCloseBtn: document.getElementById('gacha-close-btn'),
         storyModal: document.getElementById('story-modal'),
@@ -63,8 +63,8 @@ export function initializeUI() {
         announcementModal: document.getElementById('announcement-modal'),
         announcementModalContent: document.getElementById('announcement-modal-content'),
         userInfo: document.getElementById('user-info'), 
-        rankingBtn: document.getElementById('ranking-btn'), 
-        
+        rankingBtn: document.getElementById('ranking-btn'),
+        announcementOpenBtn: document.getElementById('announcement-open-btn'),
     };
 
     setupUIText();
@@ -90,11 +90,10 @@ function setupUIText() {
     document.querySelector('.gacha-placeholder p:nth-child(2)').textContent = uiMessages.gacha.placeholder;
 
     DOMElements.settingsBtn.textContent = uiMessages.moreOptions.settings;
-    DOMElements.settingsBtn.textContent = uiMessages.moreOptions.settings;
     DOMElements.aboutBtn.textContent = uiMessages.moreOptions.about;
     DOMElements.contactBtn.textContent = uiMessages.moreOptions.contact;
     DOMElements.apikeyBtn.textContent = uiMessages.moreOptions.apiKey;
-    DOMElements.extraGachaBtn.textContent = uiMessages.moreOptions.extraGacha;
+    DOMElements.announcementOpenBtn.textContent = uiMessages.moreOptions.announcement;
 }
 
 
@@ -179,10 +178,14 @@ function addEventListeners() {
         openSettingsModal();
         DOMElements.moreOptionsMenu.classList.add('hidden');
     });
+    DOMElements.announcementOpenBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        openAnnouncementModal(true); // `true` forces the modal to open
+        DOMElements.moreOptionsMenu.classList.add('hidden');
+    });
     DOMElements.aboutBtn.addEventListener('click', (e) => { e.preventDefault(); window.open('GoddeSpark.html', '_blank'); DOMElements.moreOptionsMenu.classList.add('hidden'); });
     DOMElements.contactBtn.addEventListener('click', (e) => { e.preventDefault(); openContactModal(); DOMElements.moreOptionsMenu.classList.add('hidden'); });
     DOMElements.apikeyBtn.addEventListener('click', (e) => { e.preventDefault(); openApiKeyModal(); DOMElements.moreOptionsMenu.classList.add('hidden'); });
-    DOMElements.extraGachaBtn.addEventListener('click', (e) => { e.preventDefault(); openComingSoonModal(); DOMElements.moreOptionsMenu.classList.add('hidden'); });
 
     DOMElements.slideshowModal.addEventListener('click', (e) => { if(e.target === DOMElements.slideshowModal) DOMElements.slideshowModal.classList.remove('show'); });
     document.getElementById('slideshow-close').addEventListener('click', () => DOMElements.slideshowModal.classList.remove('show'));
@@ -656,7 +659,6 @@ function openSettingsModal() {
     });
 }
 
-// ✨ FIX: 增加 isConnecting 參數來處理初始狀態
 export function updateUserInfo(uid, nickname, isConnecting = false) {
     if (DOMElements.userInfo) {
         if (isConnecting) {
@@ -670,8 +672,7 @@ export function updateUserInfo(uid, nickname, isConnecting = false) {
     }
 }
 
-let currentAnnouncementPage = 0; 
-
+// ✨ MODIFIED: Logic for announcement modal
 function renderAnnouncementPage(pageIndex) {
     const pages = announcementSettings.pages;
     if (!pages || pageIndex < 0 || pageIndex >= pages.length) return;
@@ -680,27 +681,31 @@ function renderAnnouncementPage(pageIndex) {
     const isFirstPage = pageIndex === 0;
     const isLastPage = pageIndex === pages.length - 1;
 
+    const checkboxHTML = `
+        <div class="mt-4 text-center">
+            <label class="inline-flex items-center cursor-pointer">
+                <input type="checkbox" id="dont-show-announcement-today" class="form-checkbox h-4 w-4 text-pink-600 bg-gray-700 border-gray-600 rounded focus:ring-pink-500">
+                <span class="ml-2 text-sm text-gray-400">${uiMessages.announcement.dontShowToday}</span>
+            </label>
+        </div>
+    `;
+
     const navButtonsHTML = `
         <div class="flex justify-between items-center mt-6">
             <button id="announcement-prev-btn" class="btn-base btn-secondary text-white font-bold py-2 px-6 rounded-full ${isFirstPage ? 'opacity-50 cursor-not-allowed' : ''}" ${isFirstPage ? 'disabled' : ''}>
                 上一頁
             </button>
             <span class="text-sm text-gray-400">${pageIndex + 1} / ${pages.length}</span>
-            ${isLastPage ? `
-                <button id="announcement-close-btn" class="btn-base btn-primary text-white font-bold py-2 px-6 rounded-full">
-                    關閉
-                </button>
-            ` : `
-                <button id="announcement-next-btn" class="btn-base btn-primary text-white font-bold py-2 px-6 rounded-full">
-                    下一頁
-                </button>
-            `}
+            <button id="announcement-next-btn" class="btn-base btn-primary text-white font-bold py-2 px-6 rounded-full">
+                ${isLastPage ? '關閉' : '下一頁'}
+            </button>
         </div>
     `;
 
     DOMElements.announcementModalContent.innerHTML = `
         <h2 class="text-3xl font-bold text-center mb-6">${currentPage.title}</h2>
         <div class="text-left leading-relaxed">${currentPage.message}</div>
+        ${isLastPage ? checkboxHTML : ''}
         ${navButtonsHTML}
     `;
 
@@ -711,30 +716,33 @@ function renderAnnouncementPage(pageIndex) {
         });
     }
 
-    if (isLastPage) {
-        document.getElementById('announcement-close-btn').addEventListener('click', () => {
+    document.getElementById('announcement-next-btn').addEventListener('click', () => {
+        if (isLastPage) {
+            const checkbox = document.getElementById('dont-show-announcement-today');
+            if (checkbox && checkbox.checked) {
+                const today = new Date().toISOString().split('T')[0]; // Get YYYY-MM-DD
+                localStorage.setItem('announcementLastShown', today);
+            }
             DOMElements.announcementModal.classList.remove('show');
-        });
-    } else {
-        document.getElementById('announcement-next-btn').addEventListener('click', () => {
+        } else {
             currentAnnouncementPage++;
             renderAnnouncementPage(currentAnnouncementPage);
-        });
-    }
+        }
+    });
 }
 
-export function openAnnouncementModal() {
+// ✨ MODIFIED: Add a `forceShow` parameter and check localStorage
+export function openAnnouncementModal(forceShow = false) {
     if (!announcementSettings.enabled || !announcementSettings.pages || announcementSettings.pages.length === 0) return;
-    if (announcementSettings.checkSessionStorage && sessionStorage.getItem('announcementShown')) {
-        return;
+    
+    if (!forceShow && announcementSettings.checkLocalStorage) {
+        const lastShownDate = localStorage.getItem('announcementLastShown');
+        const today = new Date().toISOString().split('T')[0];
+        if (lastShownDate === today) {
+            return; // Don't show if already shown today and not forced
+        }
     }
 
     currentAnnouncementPage = 0;
     renderAnnouncementPage(currentAnnouncementPage);
-
-    DOMElements.announcementModal.classList.add('show');
-
-    if (announcementSettings.checkSessionStorage) {
-        sessionStorage.setItem('announcementShown', 'true');
-    }
-}
+    DOMElements.announcementModal.classList.add('show')
