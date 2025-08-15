@@ -19,6 +19,8 @@ window.onload = () => {
     initializeUI();
     setupStateSubscriptions();
 
+    // ✨ FIX: 在驗證前，先顯示一個初始的連線中狀態
+    updateUserInfo(null, null, true);
     startLoadingSequence();
     
     if (initFirebase()) {
@@ -62,31 +64,32 @@ function setupStateSubscriptions() {
         }
     });
 
+    // ✨ FIX: 讓暱稱訂閱只在 UID 存在時才更新 UI，避免初始閃爍
     subscribe('userNickname', (nickname) => {
-        updateUserInfo(getCurrentUserId(), nickname);
+        const uid = getCurrentUserId();
+        if (uid) {
+            updateUserInfo(uid, nickname);
+        }
     });
 }
 
-// ✨ FIX: 調整函式執行順序並修正參數傳遞
 async function onUserSignedIn(uid, error) {
     if (uid) {
         const db = getDbInstance();
         
-        // 1. 先執行初始化，這一步會為新用戶建立含隨機暱稱的文件
         await Promise.all([
             initDailyTaskManager(db, uid),
             initAnalyticsManager(db, uid)
         ]);
         
-        // 2. 然後再去讀取剛剛可能被建立的使用者資料，並【正確傳入 db 參數】
         const userData = await getUserData(db, uid);
-        if (userData && userData.nickname) {
-            // 3. 將從資料庫讀取到的暱稱同步到 App 狀態和本地儲存
-            setState({ userNickname: userData.nickname });
-            localStorage.setItem('userNickname', userData.nickname);
+        const nickname = userData?.nickname || '';
+        
+        setState({ userNickname: nickname });
+        if (nickname) {
+            localStorage.setItem('userNickname', nickname);
         }
         
-        // 4. 監聽後續變化並更新 UI
         listenToFavorites(onFavoritesUpdate);
         
         setState({ isAppInitialized: true });
@@ -96,6 +99,8 @@ async function onUserSignedIn(uid, error) {
         showMessage(uiMessages.errors.cloudConnect, true);
         console.error("Authentication Error:", error);
         setState({ isAppInitialized: true });
+        // ✨ FIX: 登入失敗時，明確顯示未登入狀態
+        updateUserInfo(null, null, false);
     }
 }
 

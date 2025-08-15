@@ -177,7 +177,8 @@ export const uiMessages = {
         poolEmpty: "獎池是空的！快去分享一些女神吧！",
         alreadyShared: "這位女神已經在公開殿堂中了！",
         shareSuccess: "分享成功！獲得一次額外召喚機會！",
-        comingSoon: "恭喜你觸發隱藏獎勵，額外扭蛋+10，去更多選項的聯絡那邊說你發現彩蛋，很快就會得到額外扭蛋次數!"//額外功能還在「濕」工中... 敬請期待！"
+        comingSoon: "還在「濕」工中... 敬請期待！",
+        gachaZeroHint: "靈魂石用光了？分享殿堂中的女神、或回報 Bug/建議都能獲得補充，也可以等待明日重置喔！"
     },
     errors: {
         firebaseInit: "Firebase 初始化失敗，請檢查設定",

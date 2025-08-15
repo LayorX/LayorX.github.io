@@ -383,7 +383,7 @@ export async function unfavoriteCurrentSlide() {
 export async function drawGacha() {
     const canUse = await useTask('gacha');
     if (!canUse) {
-        showMessage("今日扭蛋次數已用完！", true);
+        showMessage("uiMessages.gacha.gachaZeroHint", true);
         updateAllTaskUIs();
         return;
     }

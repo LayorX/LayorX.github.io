@@ -98,7 +98,7 @@ const portfolioData = [
                   <li><b>API 整合：</b> 穩定串接 Gemini API，並設計了完整的 API Key 管理與錯誤處理流程。</li>
                   <li><b>音效與狀態管理：</b> 整合 Tone.js 創造豐富的音效回饋，並利用 Local Storage 實現使用者偏好與進度的本地持久化。</li>
               </ul>`,
-    externalLink: 'G/g.html'
+    externalLink: 'https://goddespark.netlify.app/'
 },
     { 
         title: '個人品牌 Logo 設計', 
