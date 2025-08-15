@@ -745,4 +745,5 @@ export function openAnnouncementModal(forceShow = false) {
 
     currentAnnouncementPage = 0;
     renderAnnouncementPage(currentAnnouncementPage);
-    DOMElements.announcementModal.classList.add('show')
+    DOMElements.announcementModal.classList.add('show');
+    }
