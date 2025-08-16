@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>德州撲克戰績追蹤器 (多帳戶版)</title>
+    <title>德州撲克戰績追蹤器 (最終版)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', 'Noto Sans TC', sans-serif; }
@@ -50,13 +51,12 @@
         .modal-backdrop.show { opacity: 1; visibility: visible; }
         .modal-content {
             background-color: #1F2937;
-            padding: 1.5rem; /* Reduced padding for mobile */
+            padding: 1.5rem;
             border-radius: 0.75rem;
             text-align: center;
             width: 90%;
             max-width: 450px;
             border: 1px solid #374151;
-            /* FIX: Ensure modal is scrollable on small screens */
             max-height: 90vh;
             overflow-y: auto;
         }
@@ -78,6 +78,23 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        #ai-result h1, #ai-result h2, #ai-result h3 { font-size: 1.1em; font-weight: bold; margin-top: 0.5em; }
+        #ai-result ul { list-style-type: disc; margin-left: 1.5rem; }
+        #ai-result li { margin-bottom: 0.25rem; }
+        #ai-result p { margin-bottom: 0.5rem; }
+        
+        .luck-indicator { display: flex; justify-content: center; align-items: center; gap: 0.5rem; }
+        .luck-clover {
+            width: 24px; height: 24px;
+            fill: #4B5563; /* Default inactive color */
+            transition: fill 0.3s;
+            opacity: 0.3;
+        }
+        .luck-clover.active { 
+            fill: #FBBF24; /* Active color */
+            opacity: 1;
+        }
+        .luck-label { font-size: 0.9rem; font-weight: 500; }
     </style>
 </head>
 <body class="bg-gray-900 text-gray-100 min-h-screen p-4">
@@ -91,7 +108,7 @@
         <main class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <!-- 左側控制面板 -->
             <div class="lg:col-span-1 flex flex-col gap-8">
-                <!-- NEW: Profile Management -->
+                <!-- Profile Management -->
                 <div class="card">
                     <h2 class="text-xl font-bold mb-4">👤 帳戶管理</h2>
                     <div class="space-y-3">
@@ -131,12 +148,12 @@
                             <input type="number" id="hands" class="input-field" placeholder="例如: 300">
                         </div>
                         <div>
-                            <label for="pre-rake-ev" class="block mb-2 font-medium text-gray-300">不抽水EV ($) (選填)</label>
-                            <input type="number" id="pre-rake-ev" class="input-field" placeholder="從軟體匯出的 Pre-Rake EV" step="any">
+                            <label for="winloss" class="block mb-2 font-medium text-gray-300">Winloss ($) (綠線)</label>
+                            <input type="number" id="winloss" class="input-field" placeholder="不抽水的實際獲利" step="any">
                         </div>
                         <div>
-                            <label for="allin-ev" class="block mb-2 font-medium text-gray-300">All-in EV ($) (選填)</label>
-                            <input type="number" id="allin-ev" class="input-field" placeholder="從軟體匯出的 All-in EV" step="any">
+                            <label for="all-in-ev" class="block mb-2 font-medium text-gray-300">All-in EV ($) (橘線)</label>
+                            <input type="number" id="all-in-ev" class="input-field" placeholder="不抽水的期望獲利" step="any">
                         </div>
                     </form>
                 </div>
@@ -169,11 +186,22 @@
                     <h2 class="text-xl font-bold mb-4">📈 綜合儀表板</h2>
                     <div id="dashboard" class="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-6">
                         <div class="text-center"><p class="text-sm text-gray-400">總盈虧</p><p id="db-total-pl" class="text-2xl font-bold">N/A</p></div>
-                        <div class="text-center"><p class="text-sm text-gray-400">總 All-in EV</p><p id="db-total-allinev" class="text-2xl font-bold">N/A</p></div>
-                        <div class="text-center"><p class="text-sm text-gray-400">總不抽水EV</p><p id="db-pre-rake-ev" class="text-2xl font-bold">N/A</p></div>
-                        <div class="text-center"><p class="text-sm text-gray-400">運氣指數</p><p id="db-ev-diff" class="text-2xl font-bold">N/A</p></div>
                         <div class="text-center"><p class="text-sm text-gray-400">總支付水錢</p><p id="db-total-rake" class="text-2xl font-bold">N/A</p></div>
                         <div class="text-center"><p class="text-sm text-gray-400">平均時薪</p><p id="db-avg-hourly" class="text-2xl font-bold">N/A</p></div>
+                        <div class="text-center"><p class="text-sm text-gray-400">Winloss (bb/100)</p><p id="db-winloss-bb100" class="text-2xl font-bold">N/A</p></div>
+                        <div class="text-center"><p class="text-sm text-gray-400">實際盈虧 (bb/100)</p><p id="db-actual-bb100" class="text-2xl font-bold">N/A</p></div>
+                        <div class="text-center"><p class="text-sm text-gray-400">運氣 (bb/100)</p><p id="db-luck-bb100" class="text-2xl font-bold">N/A</p></div>
+                    </div>
+                    <div class="mt-6 pt-4 border-t border-gray-700">
+                        <p class="text-center text-sm text-gray-400 mb-2">運氣指數</p>
+                        <div id="luck-indicator-visual" class="luck-indicator">
+                            <svg class="luck-clover" viewBox="0 0 24 24"><path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M11,6.5A1.5,1.5 0 0,1 12.5,8A1.5,1.5 0 0,1 11,9.5A1.5,1.5 0 0,1 9.5,8A1.5,1.5 0 0,1 11,6.5M17.5,11A1.5,1.5 0 0,1 16,12.5A1.5,1.5 0 0,1 14.5,11A1.5,1.5 0 0,1 16,9.5A1.5,1.5 0 0,1 17.5,11M13,14.5A1.5,1.5 0 0,1 14.5,16A1.5,1.5 0 0,1 13,17.5A1.5,1.5 0 0,1 11.5,16A1.5,1.5 0 0,1 13,14.5M6.5,11A1.5,1.5 0 0,1 8,12.5A1.5,1.5 0 0,1 6.5,14A1.5,1.5 0 0,1 5,12.5A1.5,1.5 0 0,1 6.5,11Z" /></svg>
+                            <svg class="luck-clover" viewBox="0 0 24 24"><path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M11,6.5A1.5,1.5 0 0,1 12.5,8A1.5,1.5 0 0,1 11,9.5A1.5,1.5 0 0,1 9.5,8A1.5,1.5 0 0,1 11,6.5M17.5,11A1.5,1.5 0 0,1 16,12.5A1.5,1.5 0 0,1 14.5,11A1.5,1.5 0 0,1 16,9.5A1.5,1.5 0 0,1 17.5,11M13,14.5A1.5,1.5 0 0,1 14.5,16A1.5,1.5 0 0,1 13,17.5A1.5,1.5 0 0,1 11.5,16A1.5,1.5 0 0,1 13,14.5M6.5,11A1.5,1.5 0 0,1 8,12.5A1.5,1.5 0 0,1 6.5,14A1.5,1.5 0 0,1 5,12.5A1.5,1.5 0 0,1 6.5,11Z" /></svg>
+                            <svg class="luck-clover" viewBox="0 0 24 24"><path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M11,6.5A1.5,1.5 0 0,1 12.5,8A1.5,1.5 0 0,1 11,9.5A1.5,1.5 0 0,1 9.5,8A1.5,1.5 0 0,1 11,6.5M17.5,11A1.5,1.5 0 0,1 16,12.5A1.5,1.5 0 0,1 14.5,11A1.5,1.5 0 0,1 16,9.5A1.5,1.5 0 0,1 17.5,11M13,14.5A1.5,1.5 0 0,1 14.5,16A1.5,1.5 0 0,1 13,17.5A1.5,1.5 0 0,1 11.5,16A1.5,1.5 0 0,1 13,14.5M6.5,11A1.5,1.5 0 0,1 8,12.5A1.5,1.5 0 0,1 6.5,14A1.5,1.5 0 0,1 5,12.5A1.5,1.5 0 0,1 6.5,11Z" /></svg>
+                            <svg class="luck-clover" viewBox="0 0 24 24"><path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M11,6.5A1.5,1.5 0 0,1 12.5,8A1.5,1.5 0 0,1 11,9.5A1.5,1.5 0 0,1 9.5,8A1.5,1.5 0 0,1 11,6.5M17.5,11A1.5,1.5 0 0,1 16,12.5A1.5,1.5 0 0,1 14.5,11A1.5,1.5 0 0,1 16,9.5A1.5,1.5 0 0,1 17.5,11M13,14.5A1.5,1.5 0 0,1 14.5,16A1.5,1.5 0 0,1 13,17.5A1.5,1.5 0 0,1 11.5,16A1.5,1.5 0 0,1 13,14.5M6.5,11A1.5,1.5 0 0,1 8,12.5A1.5,1.5 0 0,1 6.5,14A1.5,1.5 0 0,1 5,12.5A1.5,1.5 0 0,1 6.5,11Z" /></svg>
+                            <svg class="luck-clover" viewBox="0 0 24 24"><path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M11,6.5A1.5,1.5 0 0,1 12.5,8A1.5,1.5 0 0,1 11,9.5A1.5,1.5 0 0,1 9.5,8A1.5,1.5 0 0,1 11,6.5M17.5,11A1.5,1.5 0 0,1 16,12.5A1.5,1.5 0 0,1 14.5,11A1.5,1.5 0 0,1 16,9.5A1.5,1.5 0 0,1 17.5,11M13,14.5A1.5,1.5 0 0,1 14.5,16A1.5,1.5 0 0,1 13,17.5A1.5,1.5 0 0,1 11.5,16A1.5,1.5 0 0,1 13,14.5M6.5,11A1.5,1.5 0 0,1 8,12.5A1.5,1.5 0 0,1 6.5,14A1.5,1.5 0 0,1 5,12.5A1.5,1.5 0 0,1 6.5,11Z" /></svg>
+                        </div>
+                         <p id="luck-label" class="text-center luck-label mt-2">--</p>
                     </div>
                 </div>
                 
@@ -183,7 +211,7 @@
                         <h2 class="text-xl font-bold">🤖 AI 智慧分析</h2>
                         <button id="ai-analysis-btn" class="btn btn-primary" style="width: auto;">開始分析</button>
                     </div>
-                    <div id="ai-result-wrapper">
+                    <div id="ai-result-wrapper" class="text-left">
                         <div id="ai-loader" class="loader hidden"></div>
                         <div id="ai-result" class="text-gray-300 whitespace-pre-wrap">點擊按鈕，讓 AI 為您分析戰績。</div>
                     </div>
@@ -203,7 +231,7 @@
                     <div id="history-table-wrapper" class="table-wrapper">
                         <table id="history-table">
                             <thead>
-                                <tr><th>日期</th><th>盈虧($)</th><th>All-in EV($)</th><th>運氣($)</th><th>操作</th></tr>
+                                <tr><th>日期</th><th>盈虧($)</th><th>Winloss($)</th><th>水錢($)</th><th>運氣($)</th><th>操作</th></tr>
                             </thead>
                             <tbody>
                                 <!-- JS動態生成 -->
@@ -235,6 +263,11 @@
                     <label for="edit-date" class="block mb-2 font-medium text-gray-300">日期</label>
                     <input type="datetime-local" id="edit-date" class="input-field">
                 </div>
+                 <!-- FIX: Added duration input -->
+                <div>
+                    <label for="edit-duration" class="block mb-2 font-medium text-gray-300">時長 (秒)</label>
+                    <input type="number" id="edit-duration" class="input-field">
+                </div>
                 <div>
                     <label for="edit-big-blind" class="block mb-2 font-medium text-gray-300">大盲注 (BB)</label>
                     <input type="number" id="edit-big-blind" class="input-field" step="any">
@@ -252,12 +285,12 @@
                     <input type="number" id="edit-hands" class="input-field">
                 </div>
                 <div>
-                    <label for="edit-pre-rake-ev" class="block mb-2 font-medium text-gray-300">不抽水EV ($)</label>
-                    <input type="number" id="edit-pre-rake-ev" class="input-field" step="any">
+                    <label for="edit-winloss" class="block mb-2 font-medium text-gray-300">Winloss ($)</label>
+                    <input type="number" id="edit-winloss" class="input-field" step="any">
                 </div>
                 <div>
-                    <label for="edit-allin-ev" class="block mb-2 font-medium text-gray-300">All-in EV ($)</label>
-                    <input type="number" id="edit-allin-ev" class="input-field" step="any">
+                    <label for="edit-all-in-ev" class="block mb-2 font-medium text-gray-300">All-in EV ($)</label>
+                    <input type="number" id="edit-all-in-ev" class="input-field" step="any">
                 </div>
             </form>
             <div class="flex justify-center gap-4 mt-6">
@@ -303,8 +336,8 @@
         const platformStartCashInput = document.getElementById('platform-start-cash');
         const platformEndCashInput = document.getElementById('platform-end-cash');
         const handsInput = document.getElementById('hands');
-        const allinEvInput = document.getElementById('allin-ev');
-        const preRakeEvInput = document.getElementById('pre-rake-ev');
+        const winlossInput = document.getElementById('winloss');
+        const allInEvInput = document.getElementById('all-in-ev');
 
         const modalBackdrop = document.getElementById('modal-backdrop');
         const modalTitle = document.getElementById('modal-title');
@@ -331,8 +364,8 @@
         // --- Profile Management ---
         const PROFILE_LIST_KEY = 'pokerProfileList';
         const LAST_PROFILE_KEY = 'pokerLastActiveProfile';
-        const getHistoryKey = (profile) => `pokerHistory_v6_${profile}`;
-        const getBankrollKey = (profile) => `pokerBankroll_v6_${profile}`;
+        const getHistoryKey = (profile) => `pokerHistory_v8_${profile}`;
+        const getBankrollKey = (profile) => `pokerBankroll_v8_${profile}`;
         
         const loadProfiles = () => {
             let profiles = JSON.parse(localStorage.getItem(PROFILE_LIST_KEY) || '["Default"]');
@@ -474,13 +507,33 @@
         const saveHistory = (history) => localStorage.setItem(getHistoryKey(currentProfile), JSON.stringify(history));
 
         const calculateMetrics = (record) => {
-            const plCash = record.platformEndCash - record.platformStartCash;
-            const plBb = record.bb > 0 ? plCash / record.bb : 0;
-            const hourlyRate = record.duration > 0 ? (plCash / (record.duration / 3600)) : 0;
-            const bbPer100 = record.hands > 0 && record.bb > 0 ? (plBb / record.hands) * 100 : null;
-            const evDifference = record.allinEV !== null ? plCash - record.allinEV : null;
-            const rakePaid = (record.preRakeEV !== null && record.allinEV !== null) ? record.preRakeEV - record.allinEV : null;
-            return { plCash, plBb, hourlyRate, bbPer100, evDifference, rakePaid };
+            const actualProfit = record.platformEndCash - record.platformStartCash;
+            const hourlyRate = record.duration > 0 ? (actualProfit / (record.duration / 3600)) : 0;
+            
+            let rakePaid = null;
+            let luckIndex = null;
+            let winlossBB100 = null;
+            let actualProfitBB100 = null;
+            let luckBB100 = null;
+
+            if (record.winloss !== null) {
+                rakePaid = record.winloss - actualProfit;
+                if (record.allinEV !== null) {
+                    luckIndex = record.winloss - record.allinEV;
+                }
+            }
+            
+            if (record.hands > 0 && record.bb > 0) {
+                if (record.winloss !== null) {
+                    winlossBB100 = (record.winloss / record.bb / record.hands) * 100;
+                }
+                actualProfitBB100 = (actualProfit / record.bb / record.hands) * 100;
+                if (luckIndex !== null) {
+                    luckBB100 = (luckIndex / record.bb / record.hands) * 100;
+                }
+            }
+            
+            return { actualProfit, hourlyRate, rakePaid, luckIndex, winlossBB100, actualProfitBB100, luckBB100 };
         };
         
         // --- Core Logic ---
@@ -506,16 +559,17 @@
             fullHistory.sort((a, b) => new Date(b.date) - new Date(a.date));
 
             fullHistory.forEach(record => {
-                const { plCash, evDifference } = record.metrics;
+                const { actualProfit, rakePaid, luckIndex } = record.metrics;
                 const row = document.createElement('tr');
-                const plCashClass = plCash > 0 ? 'profit' : plCash < 0 ? 'loss' : 'neutral';
-                const evDiffClass = evDifference > 0 ? 'profit' : evDifference < 0 ? 'loss' : 'neutral';
+                const plClass = actualProfit > 0 ? 'profit' : actualProfit < 0 ? 'loss' : 'neutral';
+                const luckClass = luckIndex > 0 ? 'profit' : luckIndex < 0 ? 'loss' : 'neutral';
 
                 row.innerHTML = `
                     <td>${new Date(record.date).toLocaleDateString()}</td>
-                    <td class="${plCashClass}">${plCash > 0 ? '+' : ''}${plCash.toFixed(2)}</td>
-                    <td class="neutral">${record.allinEV !== null ? record.allinEV.toFixed(2) : 'N/A'}</td>
-                    <td class="${evDiffClass}">${evDifference !== null ? (evDifference > 0 ? '+' : '') + evDifference.toFixed(2) : 'N/A'}</td>
+                    <td class="${plClass}">${actualProfit > 0 ? '+' : ''}${actualProfit.toFixed(2)}</td>
+                    <td class="neutral">${record.winloss !== null ? record.winloss.toFixed(2) : 'N/A'}</td>
+                    <td class="loss">${rakePaid !== null ? rakePaid.toFixed(2) : 'N/A'}</td>
+                    <td class="${luckClass}">${luckIndex !== null ? (luckIndex > 0 ? '+' : '') + luckIndex.toFixed(2) : 'N/A'}</td>
                     <td class="flex gap-2">
                         <button class="edit-btn btn btn-secondary btn-sm" data-id="${record.id}" style="padding: 0.25rem 0.5rem; width: auto; font-size: 0.8rem;">編輯</button>
                         <button class="delete-btn btn btn-danger btn-sm" data-id="${record.id}" style="padding: 0.25rem 0.5rem; width: auto; font-size: 0.8rem;">刪除</button>
@@ -539,12 +593,14 @@
             localDate.setMinutes(localDate.getMinutes() - localDate.getTimezoneOffset());
             document.getElementById('edit-date').value = localDate.toISOString().slice(0, 16);
             
+            // FIX: Populate duration field
+            document.getElementById('edit-duration').value = record.duration;
             document.getElementById('edit-big-blind').value = record.bb;
             document.getElementById('edit-platform-start-cash').value = record.platformStartCash;
             document.getElementById('edit-platform-end-cash').value = record.platformEndCash;
             document.getElementById('edit-hands').value = record.hands || '';
-            document.getElementById('edit-pre-rake-ev').value = record.preRakeEV || '';
-            document.getElementById('edit-allin-ev').value = record.allinEV || '';
+            document.getElementById('edit-winloss').value = record.winloss || '';
+            document.getElementById('edit-all-in-ev').value = record.allinEV || '';
 
             editModalBackdrop.classList.add('show');
         };
@@ -570,13 +626,16 @@
             const recordIndex = history.findIndex(r => r.id == recordId);
             if (recordIndex === -1) return;
 
+            // FIX: Correctly parse local datetime-local input back to UTC ISO string
             const newDate = new Date(document.getElementById('edit-date').value).toISOString();
+            // FIX: Read and save duration
+            const newDuration = parseInt(document.getElementById('edit-duration').value) || 0;
             const newBb = parseFloat(document.getElementById('edit-big-blind').value);
             const newStartCash = parseFloat(document.getElementById('edit-platform-start-cash').value);
             const newEndCash = parseFloat(document.getElementById('edit-platform-end-cash').value);
             const newHands = document.getElementById('edit-hands').value ? parseInt(document.getElementById('edit-hands').value) : null;
-            const newPreRakeEv = document.getElementById('edit-pre-rake-ev').value ? parseFloat(document.getElementById('edit-pre-rake-ev').value) : null;
-            const newAllinEv = document.getElementById('edit-allin-ev').value ? parseFloat(document.getElementById('edit-allin-ev').value) : null;
+            const newWinloss = document.getElementById('edit-winloss').value ? parseFloat(document.getElementById('edit-winloss').value) : null;
+            const newAllinEv = document.getElementById('edit-all-in-ev').value ? parseFloat(document.getElementById('edit-all-in-ev').value) : null;
             
             if (isNaN(newBb) || isNaN(newStartCash) || isNaN(newEndCash)) {
                 showModal("錯誤", "大盲注與平台資金為必填項目。");
@@ -586,17 +645,20 @@
             history[recordIndex] = {
                 ...history[recordIndex],
                 date: newDate,
+                duration: newDuration,
                 bb: newBb,
                 platformStartCash: newStartCash,
                 platformEndCash: newEndCash,
                 hands: newHands,
-                preRakeEV: newPreRakeEv,
+                winloss: newWinloss,
                 allinEV: newAllinEv
             };
             
             saveHistory(history);
             renderAll();
+            // FIX: Close modal and show success message
             editModalBackdrop.classList.remove('show');
+            showModal("成功", "紀錄已成功更新！");
         };
         
         cancelEditBtn.addEventListener('click', () => editModalBackdrop.classList.remove('show'));
@@ -605,46 +667,94 @@
 
         const updateDashboard = (fullHistory) => {
             const dbTotalPl = document.getElementById('db-total-pl');
-            const dbTotalAllinEv = document.getElementById('db-total-allinev');
-            const dbPreRakeEv = document.getElementById('db-pre-rake-ev');
-            const dbEvDiff = document.getElementById('db-ev-diff');
             const dbTotalRake = document.getElementById('db-total-rake');
             const dbAvgHourly = document.getElementById('db-avg-hourly');
+            const dbWinlossBB100 = document.getElementById('db-winloss-bb100');
+            const dbActualBB100 = document.getElementById('db-actual-bb100');
+            const dbLuckBB100 = document.getElementById('db-luck-bb100');
 
             if (fullHistory.length === 0) {
-                ['db-total-pl', 'db-total-allinev', 'db-pre-rake-ev', 'db-ev-diff', 'db-total-rake', 'db-avg-hourly'].forEach(id => {
-                    document.getElementById(id).textContent = 'N/A';
-                    document.getElementById(id).className = 'text-2xl font-bold neutral';
+                ['db-total-pl', 'db-total-rake', 'db-avg-hourly', 'db-winloss-bb100', 'db-actual-bb100', 'db-luck-bb100'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if(el) {
+                        el.textContent = 'N/A';
+                        el.className = 'text-2xl font-bold neutral';
+                    }
                 });
+                updateLuckIndicator(null);
                 return;
             }
 
-            const totalPl = fullHistory.reduce((sum, r) => sum + r.metrics.plCash, 0);
+            const totalPl = fullHistory.reduce((sum, r) => sum + r.metrics.actualProfit, 0);
             const totalDuration = fullHistory.reduce((sum, r) => sum + r.duration, 0);
             const avgHourly = totalDuration > 0 ? (totalPl / (totalDuration / 3600)) : 0;
             
-            const totalAllinEv = fullHistory.filter(r => r.allinEV !== null).reduce((sum, r) => sum + r.allinEV, 0);
-            const totalEvDiff = fullHistory.filter(r => r.metrics.evDifference !== null).reduce((sum, r) => sum + r.metrics.evDifference, 0);
-            const totalPreRakeEv = fullHistory.filter(r => r.preRakeEV !== null).reduce((sum, r) => sum + r.preRakeEV, 0);
             const totalRakePaid = fullHistory.filter(r => r.metrics.rakePaid !== null).reduce((sum, r) => sum + r.metrics.rakePaid, 0);
+            
+            const sessionsWithHands = fullHistory.filter(r => r.hands > 0 && r.bb > 0);
+            const totalHands = sessionsWithHands.reduce((sum, r) => sum + r.hands, 0);
+            
+            let totalWinlossBB100 = null, totalActualProfitBB100 = null, totalLuckBB100 = null;
+            
+            if (totalHands > 0) {
+                const totalWinlossInBB = sessionsWithHands.reduce((sum, r) => sum + ((r.winloss || 0) / r.bb), 0);
+                const totalActualProfitInBB = sessionsWithHands.reduce((sum, r) => sum + (r.metrics.actualProfit / r.bb), 0);
+                const totalLuckInBB = sessionsWithHands.reduce((sum, r) => sum + ((r.metrics.luckIndex || 0) / r.bb), 0);
+
+                totalWinlossBB100 = (totalWinlossInBB / totalHands) * 100;
+                totalActualProfitBB100 = (totalActualProfitInBB / totalHands) * 100;
+                totalLuckBB100 = (totalLuckInBB / totalHands) * 100;
+            }
             
             const plClass = totalPl > 0 ? 'profit' : totalPl < 0 ? 'loss' : 'neutral';
             dbTotalPl.textContent = `${totalPl > 0 ? '+' : ''}$${totalPl.toFixed(2)}`;
             dbTotalPl.className = `text-2xl font-bold ${plClass}`;
 
-            const evDiffClass = totalEvDiff > 0 ? 'profit' : totalEvDiff < 0 ? 'loss' : 'neutral';
-            dbTotalAllinEv.textContent = `$${totalAllinEv.toFixed(2)}`;
-            dbTotalAllinEv.className = `text-2xl font-bold ${totalAllinEv > 0 ? 'profit' : 'loss'}`;
-            dbEvDiff.textContent = `${totalEvDiff > 0 ? '+' : ''}$${totalEvDiff.toFixed(2)}`;
-            dbEvDiff.className = `text-2xl font-bold ${evDiffClass}`;
-
-            dbPreRakeEv.textContent = `$${totalPreRakeEv.toFixed(2)}`;
-            dbPreRakeEv.className = `text-2xl font-bold ${totalPreRakeEv > 0 ? 'profit' : 'loss'}`;
             dbTotalRake.textContent = `$${totalRakePaid.toFixed(2)}`;
             dbTotalRake.className = 'text-2xl font-bold loss';
 
             dbAvgHourly.textContent = `$${avgHourly.toFixed(2)}`;
             dbAvgHourly.className = `text-2xl font-bold ${plClass}`;
+            
+            const winlossBB100Class = totalWinlossBB100 === null ? 'neutral' : (totalWinlossBB100 > 0 ? 'profit' : 'loss');
+            dbWinlossBB100.textContent = totalWinlossBB100 !== null ? totalWinlossBB100.toFixed(2) : 'N/A';
+            dbWinlossBB100.className = `text-2xl font-bold ${winlossBB100Class}`;
+
+            const actualBB100Class = totalActualProfitBB100 === null ? 'neutral' : (totalActualProfitBB100 > 0 ? 'profit' : 'loss');
+            dbActualBB100.textContent = totalActualProfitBB100 !== null ? totalActualProfitBB100.toFixed(2) : 'N/A';
+            dbActualBB100.className = `text-2xl font-bold ${actualBB100Class}`;
+            
+            const luckBB100Class = totalLuckBB100 === null ? 'neutral' : (totalLuckBB100 > 0 ? 'profit' : 'loss');
+            dbLuckBB100.textContent = totalLuckBB100 !== null ? totalLuckBB100.toFixed(2) : 'N/A';
+            dbLuckBB100.className = `text-2xl font-bold ${luckBB100Class}`;
+            
+            updateLuckIndicator(totalLuckBB100);
+        };
+        
+        const updateLuckIndicator = (luckBB100) => {
+            const clovers = document.querySelectorAll('.luck-clover');
+            const label = document.getElementById('luck-label');
+            
+            clovers.forEach(c => c.classList.remove('active'));
+
+            if (luckBB100 === null) {
+                label.textContent = '數據不足';
+                return;
+            }
+            
+            let level = 0;
+            let labelText = '';
+
+            if (luckBB100 > 15) { level = 5; labelText = '極度幸運'; } 
+            else if (luckBB100 > 5) { level = 4; labelText = '幸運'; } 
+            else if (luckBB100 > -5) { level = 3; labelText = '普通'; } 
+            else if (luckBB100 > -15) { level = 2; labelText = '運氣不佳'; } 
+            else { level = 1; labelText = '極度倒楣'; }
+            
+            label.textContent = labelText;
+            for (let i = 0; i < level; i++) {
+                clovers[i].classList.add('active');
+            }
         };
         
         const renderProfitChart = (fullHistory) => {
@@ -661,21 +771,21 @@
             
             let cumulativeProfit = 0;
             let cumulativeAllinEv = 0;
-            let cumulativePreRakeEv = 0;
+            let cumulativeWinloss = 0;
 
             const labels = ['Start', ...fullHistory.map(r => new Date(r.date).toLocaleDateString())];
             
             const profitData = [0, ...fullHistory.map(r => {
-                cumulativeProfit += r.metrics.plCash;
+                cumulativeProfit += r.metrics.actualProfit;
                 return cumulativeProfit;
             })];
             const allinEvData = [0, ...fullHistory.map(r => {
-                cumulativeAllinEv += (r.allinEV !== null ? r.allinEV : r.metrics.plCash);
+                cumulativeAllinEv += (r.allinEV !== null ? r.allinEV : r.metrics.actualProfit);
                 return cumulativeAllinEv;
             })];
-            const preRakeEvData = [0, ...fullHistory.map(r => {
-                cumulativePreRakeEv += (r.preRakeEV !== null ? r.preRakeEV : r.metrics.plCash);
-                return cumulativePreRakeEv;
+            const winlossData = [0, ...fullHistory.map(r => {
+                cumulativeWinloss += (r.winloss !== null ? r.winloss : r.metrics.actualProfit);
+                return cumulativeWinloss;
             })];
 
             const ctx = profitChartCanvas.getContext('2d');
@@ -684,25 +794,25 @@
                 data: {
                     labels: labels,
                     datasets: [{
-                        label: '累積盈虧 ($)',
+                        label: '累積盈虧 ($)', // Actual Profit
                         data: profitData,
-                        borderColor: '#3B82F6',
+                        borderColor: '#3B82F6', // Blue
                         backgroundColor: 'rgba(59, 130, 246, 0.1)',
                         fill: true,
                         tension: 0.1
                     },
                     {
-                        label: '累積 All-in EV ($)',
-                        data: allinEvData,
-                        borderColor: '#F97316',
-                        borderDash: [5, 5],
+                        label: '累積Winloss ($)', // Pre-Rake, With Luck
+                        data: winlossData,
+                        borderColor: '#22C55E', // Green
                         fill: false,
                         tension: 0.1
                     },
                     {
-                        label: '累積不抽水EV ($)',
-                        data: preRakeEvData,
-                        borderColor: '#22C55E',
+                        label: '累積All-in EV ($)', // Pre-Rake, No Luck
+                        data: allinEvData,
+                        borderColor: '#F97316', // Orange
+                        borderDash: [5, 5],
                         fill: false,
                         tension: 0.1
                     }]
@@ -774,8 +884,8 @@
             const platformStartCash = parseFloat(platformStartCashInput.value);
             const platformEndCash = parseFloat(platformEndCashInput.value);
             const hands = handsInput.value ? parseInt(handsInput.value) : null;
-            const allinEV = allinEvInput.value ? parseFloat(allinEvInput.value) : null;
-            const preRakeEV = preRakeEvInput.value ? parseFloat(preRakeEvInput.value) : null;
+            const winloss = winlossInput.value ? parseFloat(winlossInput.value) : null;
+            const allinEV = allInEvInput.value ? parseFloat(allInEvInput.value) : null;
 
             if (isNaN(bigBlind) || bigBlind <= 0) {
                 showModal("操作錯誤", "大盲注必須是個大於0的數字。"); return;
@@ -795,8 +905,8 @@
                 platformStartCash,
                 platformEndCash,
                 hands,
-                allinEV,
-                preRakeEV
+                winloss,
+                allinEV
             };
             const history = getHistory();
             history.push(record);
@@ -819,9 +929,9 @@
                 showModal("提示", "沒有可匯出的歷史紀錄。");
                 return;
             }
-            const headers = "date,duration,bb,platformStartCash,platformEndCash,hands,allinEV,preRakeEV\n";
+            const headers = "date,duration,bb,platformStartCash,platformEndCash,hands,winloss,allinEV\n";
             const csvContent = history.map(r => 
-                [r.date, r.duration, r.bb, r.platformStartCash, r.platformEndCash, r.hands || '', r.allinEV || '', r.preRakeEV || ''].join(',')
+                [r.date, r.duration, r.bb, r.platformStartCash, r.platformEndCash, r.hands || '', r.winloss || '', r.allinEV || ''].join(',')
             ).join('\n');
             
             const blob = new Blob([headers + csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -855,8 +965,8 @@
                                     platformStartCash: parseFloat(cols[3]), 
                                     platformEndCash: parseFloat(cols[4]),
                                     hands: cols[5] ? parseInt(cols[5]) : null,
-                                    allinEV: cols[6] ? parseFloat(cols[6]) : null,
-                                    preRakeEV: cols[7] ? parseFloat(cols[7]) : null,
+                                    winloss: cols[6] ? parseFloat(cols[6]) : null,
+                                    allinEV: cols[7] ? parseFloat(cols[7]) : null,
                                     id: new Date(cols[0]).getTime() + Math.random(),
                                 };
                                 for (const key in record) {
@@ -900,37 +1010,42 @@
 
             const dashboardData = {
                 totalPl: document.getElementById('db-total-pl').textContent,
-                totalAllinEv: document.getElementById('db-total-allinev').textContent,
-                totalPreRakeEv: document.getElementById('db-pre-rake-ev').textContent,
-                totalEvDiff: document.getElementById('db-ev-diff').textContent,
+                totalWinloss: document.getElementById('db-total-winloss') ? document.getElementById('db-total-winloss').textContent : 'N/A',
+                totalAllinEv: document.getElementById('db-total-allinev') ? document.getElementById('db-total-allinev').textContent : 'N/A',
+                totalLuckIndex: document.getElementById('db-luck-index') ? document.getElementById('db-luck-index').textContent : 'N/A',
                 totalRake: document.getElementById('db-total-rake').textContent,
                 avgHourly: document.getElementById('db-avg-hourly').textContent,
             };
 
             const recentSessions = history.slice(0, 5).map(r => {
                 const metrics = calculateMetrics(r);
-                return `日期: ${new Date(r.date).toLocaleDateString()}, 盈虧: $${metrics.plCash.toFixed(2)}, All-in EV: $${r.allinEV ? r.allinEV.toFixed(2) : 'N/A'}, 不抽水EV: $${r.preRakeEV ? r.preRakeEV.toFixed(2) : 'N/A'}`;
+                return `日期: ${new Date(r.date).toLocaleDateString()}, 盈虧: $${metrics.actualProfit.toFixed(2)}, Winloss: $${r.winloss ? r.winloss.toFixed(2) : 'N/A'}, All-in EV: $${r.allinEV ? r.allinEV.toFixed(2) : 'N/A'}`;
             }).join('\n');
 
             const prompt = `
-你是一位頂尖的德州撲克數據分析教練。請根據以下數據，為這位玩家提供一份專業、深入且客製化的分析報告。
+你是一位頂尖的德州撲克數據分析教練。請根據以下數據，為這位玩家提供一份專業、深入且客製化的分析報告。這些數據來自玩家的追蹤軟體。
+
+**數據定義:**
+-   **實際盈虧:** 玩家最終口袋裡的錢的變化。
+-   **Winloss (綠線):** 不抽水的「實際」獲利。這條線已經包含了運氣成分。
+-   **All-in EV (橘線):** 不抽水的「期望」獲利。這條線代表玩家的純技術實力，撇除了運氣。
 
 **總體數據儀表板:**
--   **總盈虧:** ${dashboardData.totalPl} (玩家實際到手的錢)
--   **總 All-in EV:** ${dashboardData.totalAllinEv} (撇除全下運氣後，應有的盈利)
--   **總不抽水EV:** ${dashboardData.totalPreRakeEv} (在不被抽水的情況下，玩家的理論最大盈利)
--   **運氣指數 (EV差異):** ${dashboardData.totalEvDiff} (實際盈利與All-in EV的差距。正數代表運氣好，負數代表運氣差)
--   **總支付水錢:** ${dashboardData.totalRake} (被撲克室抽走的錢，等於 不抽水EV - All-in EV)
+-   **總盈虧:** ${dashboardData.totalPl}
+-   **總Winloss:** ${dashboardData.totalWinloss}
+-   **總All-in EV:** ${dashboardData.totalAllinEv}
+-   **總支付水錢 (Winloss - 總盈虧):** ${dashboardData.totalRake}
+-   **總運氣指數 (Winloss - 總All-in EV):** ${dashboardData.totalLuckIndex} (正數代表運氣好，負數代表運氣差)
 -   **平均時薪:** ${dashboardData.avgHourly}
 
 **最近 5 場牌局紀錄:**
 ${recentSessions}
 
 **分析要求 (請嚴格遵照此結構，並使用繁體中文):**
-1.  **⭐ 核心結論:** 根據三條曲線 (實際盈利, All-in EV, 不抽水EV) 的關係，給出最核心的結論。例如：「你的技術盈利能力（不抽水EV）非常強，但撲克室抽水和短期運氣顯著影響了你的實際收益。」
-2.  **💪 技術實力 (不抽水EV vs All-in EV):** 分析這兩條線的差距，也就是被抽走的水錢。這直接反映了玩家的技術是否能克服抽水。
-3.  **🎲 運氣因素 (All-in EV vs 實際盈虧):** 分析這兩條線的差距，也就是運氣指數。明確告訴玩家他近期是運氣好還是差，並提醒他應專注於打出正確的EV決策，而非被短期結果影響。
-4.  **💡 actionable建議:** 提供 2-3 個具體的、可執行的改進建議。例如：「你的『不抽水EV』和『All-in EV』差距巨大，說明你被抽了高額的水錢。建議你評估當前牌局的Rake結構，或尋找Rakeback更高的平台。」或是「你的『All-in EV』遠高於『實際盈虧』，證明你處於下風期。請務必堅持你目前的正確打法，不要因為運氣差而改變策略，回報終將到來。」
+1.  **⭐ 核心結論:** 根據三條曲線 (實際盈虧, Winloss, All-in EV) 的關係，給出最核心的結論。例如：「你的技術實力 (All-in EV) 顯示你是長期贏家，但近期運氣 (Winloss vs All-in EV) 和高額抽水 (Winloss vs 實際盈虧) 共同影響了你的最終收益。」
+2.  **🎲 運氣因素 (Winloss vs All-in EV):** 這是最純粹的運氣指標。分析這兩條線的差距，明確告訴玩家他近期是運氣好還是差。提醒他應專注於打出高的 All-in EV，因為長期來看 Winloss 會趨近於 All-in EV。
+3.  **💸 抽水影響 (Winloss vs 實際盈虧):** 這是最純粹的水錢指標。分析這兩條線的差距，告訴玩家撲克室抽水對他盈利的實際影響有多大。
+4.  **💡 actionable建議:** 提供 2-3 個具體的、可執行的改進建議。例如：「你的 All-in EV 曲線穩定上升，這是最重要的。但 Winloss 曲線遠低於它，證明你處於下風期。請務必堅持你目前的正確打法，不要因為運氣差而改變策略，回報終將到來。」或「你的 Winloss 和實際盈虧差距巨大，說明你被抽了高額的水錢。建議你評估當前牌局的Rake結構，或尋找Rakeback更高的平台。」
 
 請以鼓勵和專業的語氣撰寫，使用 markdown 格式和表情符號讓報告更清晰易讀。
 `;
@@ -939,7 +1054,7 @@ ${recentSessions}
                 let chatHistory = [];
                 chatHistory.push({ role: "user", parts: [{ text: prompt }] });
                 const payload = { contents: chatHistory };
-                const apiKey = "AIzaSyBasaBU3srwcOqVQoyT7uZmtXPa4NRi6gU"; 
+                const apiKey = "AIzaSyBasaBU3srwcOqVQoyT7uZmtXPa4NRi6gU"; // API Key will be injected by the environment
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
                 
                 let response;
@@ -973,7 +1088,7 @@ ${recentSessions}
                     result.candidates[0].content && result.candidates[0].content.parts &&
                     result.candidates[0].content.parts.length > 0) {
                     const text = result.candidates[0].content.parts[0].text;
-                    aiResult.textContent = text;
+                    aiResult.innerHTML = marked.parse(text);
                 } else {
                     throw new Error("AI 未能生成有效的分析報告，請稍後再試。");
                 }
@@ -1015,14 +1130,4 @@ ${recentSessions}
     });
     </script>
 </body>
-<footer class="bg-gray-900 border-t border-gray-800 mt-20">
-    <div class="container mx-auto px-6 py-6 text-center text-gray-500">
-        <p>&copy; 2025 <a href="https://layorx.github.io" target="_blank" class="hover:underline">LayorX</a>. All Rights
-            Reserved.
-            <span class="mx-2">|</span>
-            <a href="https://layorx.github.io/#contact" target="_blank" id="contact-link"
-                class="hover:underline">聯絡我們</a>
-        </p>
-    </div>
-</footer>
 </html>
