@@ -12,8 +12,26 @@ export async function generateImageWithRetry(prompt) {
     
     const currentTheme = getState('currentTheme');
     const keywords = currentTheme === 'day' ? randomKeywords_day : randomKeywords_night;
+    const style = getState('activeStyleId');
+    let keywords_items='';
     
-    const enhancedPrompt = `${prompt}, ${getRandomItems(keywords.hair, 1)}, ${getRandomItems(keywords.outfit, 2).join(', ')}, ${getRandomItems(keywords.setting, 1)}, ${getRandomItems(keywords.artStyle, 1)}, ${getRandomItems(keywords.bodyDetails, 2).join(', ')}, ${getRandomItems(keywords.expression, 1)}, ${getRandomItems(keywords.mood, 1)}.`;
+    const keywords_style = keywords[style];
+    if (keywords_style) {
+        console.log(`Using '${style}' style for image generation.`);
+        if(keywords_style === 'vip-exclusive') {
+            console.log("Using VIP Exclusive style for image generation.");
+            keywords_items="VIP Exclusive, luxurious, elegant, high-class, sophisticated, exclusive, premium, opulent, lavish, refined, exquisite, top-tier, elite, prestigious, upscale, classy, stylish, fashionable.";
+        }else{
+            keywords_items=`${getRandomItems(keywords_style.hair, 1)}, ${getRandomItems(keywords_style.outfit, 2).join(', ')}, ${getRandomItems(keywords_style.setting, 1)}, ${getRandomItems(keywords_style.artStyle, 1)}, ${getRandomItems(keywords_style.bodyDetails, 2).join(', ')}, ${getRandomItems(keywords_style.expression, 1)}, ${getRandomItems(keywords_style.mood, 1)}, ${getRandomItems(keywords_style.cameraAngles, 1)}.`;
+            // console.log("Generated keywords_items for image:", keywords_items);
+        }
+    }else{
+        console.warn("Unknown style for image generation:", style,"keywords_style:" , keywords_style, );  
+    }
+
+
+
+    const enhancedPrompt = `${prompt}, ${keywords_items}`;
     const fullPrompt = `${apiSettings.prompts.imagePrefix} ${enhancedPrompt} ${apiSettings.prompts.imageSuffix} Negative prompt: ${apiSettings.prompts.negativePrompt}`;
 
     for (let i = 0; i < retries; i++) {

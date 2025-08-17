@@ -9,7 +9,28 @@ import { initializeUI, updateAllTaskUIs, updateSlideshowUI, openAnnouncementModa
 import { getCardHandlers } from './handlers.js';
 import { showMessage, initParticles, animateParticles, resizeLoadingCanvas, animateLoading, Petal, createImageCard, updateFavoritesCountUI } from './gui.js';
 import { initSounds } from './soundManager.js';
+// ✨ NEW: 建立一個全域變數，防止重複隱藏 Loading 畫面
+let isLoadingOverlayHidden = false;
 
+// ✨ NEW: 建立一個共用的函式來隱藏 Loading 畫面
+function hideLoadingOverlay() {
+    // 如果已經隱藏了，就直接返回，不做任何事
+    if (isLoadingOverlayHidden) return; 
+    
+    const loadingOverlay = document.getElementById('loading-overlay');
+    if (loadingOverlay) {
+        loadingOverlay.classList.add('hidden');
+    }
+    
+    // 執行原本在 Loading 結束後才做的事情
+    if (!getCurrentUserId()) {
+        updateAllTaskUIs();
+    }
+    openAnnouncementModal();
+
+    // 標記為已隱藏
+    isLoadingOverlayHidden = true;
+}
 window.onload = () => {
     initState(getInitialState()); 
 
@@ -19,7 +40,33 @@ window.onload = () => {
     initializeUI();
     setupStateSubscriptions();
 
+    updateUserInfo(null, null, true);
+    // ✨ MODIFIED: 修改過的啟動流程
+    // 檢查設定檔中的開關
+    if (!uiSettings.enableLoadingAnimation) {
+        // 如果開關是關閉的，立刻隱藏 Loading 畫面
+        hideLoadingOverlay();
+        // 然後才開始初始化 Firebase
+        if (initFirebase()) {
+            handleAuthentication(onUserSignedIn);
+        } else {
+            showMessage(uiMessages.errors.firebaseInit, true);
+        }
+    } else {
+        // 如果開關是開啟的，就照常啟動 Loading 動畫
+        startLoadingSequence();
+        if (initFirebase()) {
+            handleAuthentication(onUserSignedIn);
+        } else {
+            showMessage(uiMessages.errors.firebaseInit, true);
+            // 如果 Firebase 初始化失敗，也要隱藏 Loading 畫面
+            hideLoadingOverlay();
+        }
+    }
+
+    //////
     // 在驗證前，先顯示一個初始的連線中狀態
+    /*
     updateUserInfo(null, null, true);
     startLoadingSequence();
     
@@ -28,7 +75,7 @@ window.onload = () => {
     } else {
         showMessage(uiMessages.errors.firebaseInit, true);
         document.getElementById('loading-overlay').classList.add('hidden');
-    }
+    }*/
     
     initParticles('night');
     animateParticles();
@@ -102,12 +149,20 @@ async function onUserSignedIn(uid, error) {
         setState({ isAppInitialized: true });
         
         updateAllTaskUIs();
+        // ✨ NEW: 在使用者登入成功後，檢查是否要提早結束 Loading
+        if (uiSettings.hideLoadingOnConnect) {
+            hideLoadingOverlay();
+        }
     } else {
         showMessage(uiMessages.errors.cloudConnect, true);
         console.error("Authentication Error:", error);
         setState({ isAppInitialized: true });
         // 登入失敗時，明確顯示未登入狀態
         updateUserInfo(null, null, false);
+        // ✨ NEW: 如果登入失敗，也檢查是否要提早結束 Loading
+        if (uiSettings.hideLoadingOnConnect) {
+            hideLoadingOverlay();
+        }
     }
 }
 
@@ -147,10 +202,26 @@ function startLoadingSequence() {
     let petals = Array.from({ length: uiSettings.loadingPetalCount }, () => new Petal(loadingCanvas));
     animateLoading(loadingCanvas, petals, loadingOverlay);
 
+    /*
     setTimeout(() => {
         if(loadingText) loadingText.textContent = uiMessages.loading.starting;
         setTimeout(() => {
             loadingOverlay.classList.add('hidden');
+            if (!getCurrentUserId()) {
+                updateAllTaskUIs();
+            }
+            openAnnouncementModal();
+        }, 500);
+    }, uiSettings.loadingScreenDuration);*/
+
+    
+    // ✨ MODIFIED: 這個計時器現在變成一個「保險」
+    // 如果連線太慢，它會確保 Loading 畫面在最長時間到達後依然會被關閉
+    setTimeout(() => {
+        if(loadingText) loadingText.textContent = uiMessages.loading.starting;
+        // 等待一小段淡出時間
+        setTimeout(() => {
+            hideLoadingOverlay();
             if (!getCurrentUserId()) {
                 updateAllTaskUIs();
             }

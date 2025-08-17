@@ -3,7 +3,7 @@
 // 應用程式資訊
 export const appInfo = {
     title: "女神慾見GoddeSpark",
-    version: "1.6.2", // 版本更新
+    version: "1.6.5", // 版本更新
     footer: {
         copyrightYear: "2025",
         authorName: "LayorX",
