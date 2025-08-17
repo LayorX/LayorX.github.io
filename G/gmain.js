@@ -125,12 +125,12 @@ async function onUserSignedIn(uid, error) {
     if (uid) {
         const db = getDbInstance();
         
-        await Promise.all([
+        // 將 getUserData 也放入 Promise.all，讓所有初始化非同步操作並行執行
+        const [_, __, userData] = await Promise.all([
             initDailyTaskManager(db, uid),
-            initAnalyticsManager(db, uid)
+            initAnalyticsManager(db, uid),
+            getUserData(db, uid) // 直接在這裡獲取使用者資料
         ]);
-        
-        const userData = await getUserData(db, uid);
         const nickname = userData?.nickname || '';
         
         // --- ✨ 修正點 ✨ ---
