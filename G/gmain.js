@@ -41,25 +41,34 @@ window.onload = () => {
     setupStateSubscriptions();
 
     updateUserInfo(null, null, true);
-    
-    // ✨ FIX: 直接隱藏載入畫面，並停用所有動畫與音效來進行測試
-    hideLoadingOverlay();
-
-    if (initFirebase()) {
-        handleAuthentication(onUserSignedIn);
+    // ✨ MODIFIED: 修改過的啟動流程
+    // 檢查設定檔中的開關
+    if (!uiSettings.enableLoadingAnimation) {
+        // 如果開關是關閉的，立刻隱藏 Loading 畫面
+        hideLoadingOverlay();
+        // 然後才開始初始化 Firebase
+        if (initFirebase()) {
+            handleAuthentication(onUserSignedIn);
+        } else {
+            showMessage(uiMessages.errors.firebaseInit, true);
+        }
     } else {
-        showMessage(uiMessages.errors.firebaseInit, true);
-        hideLoadingOverlay(); // 確保即使 Firebase 失敗也隱藏
+        // 如果開關是開啟的，就照常啟動 Loading 動畫
+        startLoadingSequence();
+        if (initFirebase()) {
+            handleAuthentication(onUserSignedIn);
+        } else {
+            showMessage(uiMessages.errors.firebaseInit, true);
+            // 如果 Firebase 初始化失敗，也要隱藏 Loading 畫面
+            hideLoadingOverlay();
+        }
     }
-
-    // ✨ FIX: 停用粒子動畫
-    // initParticles('night');
-    // animateParticles();
+    
+    initParticles('night');
+    animateParticles();
     
     const startAudioOnce = async () => {
-        // ✨ FIX: 停用音效初始化
-        // await initSounds(); 
-        console.log("音效已停用以進行相容性測試。");
+        await initSounds();
         document.body.removeEventListener('click', startAudioOnce);
         document.body.removeEventListener('touchend', startAudioOnce);
     };
@@ -89,6 +98,8 @@ function setupStateSubscriptions() {
         }
     });
 
+    // 讓暱稱訂閱只在 UID 存在時才更新 UI，避免初始閃爍
+    // 這個訂閱仍然有用，例如當使用者在設定中更改暱稱時，可以即時更新
     subscribe('userNickname', (nickname) => {
         const uid = getCurrentUserId();
         if (uid) {
@@ -101,14 +112,19 @@ async function onUserSignedIn(uid, error) {
     if (uid) {
         const db = getDbInstance();
         
+        // 將 getUserData 也放入 Promise.all，讓所有初始化非同步操作並行執行
         const [_, __, userData] = await Promise.all([
             initDailyTaskManager(db, uid),
             initAnalyticsManager(db, uid),
-            getUserData(db, uid)
+            getUserData(db, uid) // 直接在這裡獲取使用者資料
         ]);
         const nickname = userData?.nickname || '';
         
+        // --- ✨ 修正點 ✨ ---
+        // 在這裡直接更新 UI，因為我們已經取得了 UID 和暱稱
+        // 這確保了無論暱稱是否改變，UI 都會從「連線中」更新為正確的資訊
         updateUserInfo(uid, nickname);
+        // --- 修正結束 ---
 
         setState({ userNickname: nickname });
         if (nickname) {
@@ -120,18 +136,20 @@ async function onUserSignedIn(uid, error) {
         setState({ isAppInitialized: true });
         
         updateAllTaskUIs();
-        
-        // 登入成功後，確保載入畫面是隱藏的
-        hideLoadingOverlay();
-        
+        // ✨ NEW: 在使用者登入成功後，檢查是否要提早結束 Loading
+        if (uiSettings.hideLoadingOnConnect) {
+            hideLoadingOverlay();
+        }
     } else {
         showMessage(uiMessages.errors.cloudConnect, true);
         console.error("Authentication Error:", error);
         setState({ isAppInitialized: true });
+        // 登入失敗時，明確顯示未登入狀態
         updateUserInfo(null, null, false);
-        
-        // 登入失敗後，也確保載入畫面是隱藏的
-        hideLoadingOverlay();
+        // ✨ NEW: 如果登入失敗，也檢查是否要提早結束 Loading
+        if (uiSettings.hideLoadingOnConnect) {
+            hideLoadingOverlay();
+        }
     }
 }
 
@@ -145,8 +163,6 @@ function onFavoritesUpdate(newFavorites, err) {
     setState({ favorites: newFavorites });
 }
 
-// ✨ FIX: 整個 startLoadingSequence 函式可以被 window.onload 中的 hideLoadingOverlay() 取代，
-// 但我們先保留它，以防之後需要恢復。
 function startLoadingSequence() {
     const loadingOverlay = document.getElementById('loading-overlay');
     const loadingText = document.getElementById('loading-text');
@@ -155,6 +171,13 @@ function startLoadingSequence() {
 
     if(loadingText) loadingText.textContent = uiMessages.loading.connecting;
 
+    // ✨ FIX: 暫時停用複雜的載入動畫，以測試舊裝置的相容性
+    console.log("相容性測試：已停用複雜的載入動畫。");
+    if (silhouetteContainer) silhouetteContainer.style.display = 'none'; // 隱藏剪影容器
+    if (loadingCanvas) loadingCanvas.style.display = 'none'; // 隱藏花瓣 Canvas
+
+    /*
+    // --- 原本的複雜動畫邏輯 (暫時註解掉) ---
     const silhouettes = [...uiSettings.loadingSilhouettes].sort(() => Math.random() - 0.5);
     silhouetteContainer.innerHTML = silhouettes.map(src => `<img src="${src}" class="loading-silhouette" alt="Loading Muse">`).join('');
     
@@ -172,9 +195,13 @@ function startLoadingSequence() {
     resizeLoadingCanvas(loadingCanvas);
     let petals = Array.from({ length: uiSettings.loadingPetalCount }, () => new Petal(loadingCanvas));
     animateLoading(loadingCanvas, petals, loadingOverlay);
+    */
     
+    // ✨ MODIFIED: 這個計時器現在變成一個「保險」
+    // 如果連線太慢，它會確保 Loading 畫面在最長時間到達後依然會被關閉
     setTimeout(() => {
         if(loadingText) loadingText.textContent = uiMessages.loading.starting;
+        // 等待一小段淡出時間
         setTimeout(() => {
             hideLoadingOverlay();
             if (!getCurrentUserId()) {
