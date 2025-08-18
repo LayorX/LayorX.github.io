@@ -14,23 +14,29 @@ let isLoadingOverlayHidden = false;
 
 function hideLoadingOverlay() {
     if (isLoadingOverlayHidden) return; 
+    
     const loadingOverlay = document.getElementById('loading-overlay');
     if (loadingOverlay) {
         loadingOverlay.classList.add('hidden');
     }
+    
     if (!getCurrentUserId()) {
         updateAllTaskUIs();
     }
     openAnnouncementModal();
+
     isLoadingOverlayHidden = true;
 }
 
 window.onload = () => {
     initState(getInitialState()); 
+
     setupAppInfo();
     window.firebaseConfig = serviceKeys.firebaseConfig;
+
     initializeUI();
     setupStateSubscriptions();
+
     updateUserInfo(null, null, true);
 
     if (!uiSettings.enableLoadingAnimation) {
@@ -65,6 +71,7 @@ window.onload = () => {
 function setupStateSubscriptions() {
     subscribe('favorites', (favorites) => {
         if (favorites === null) return;
+
         updateFavoritesCountUI(favorites.length);
         updateSlideshowUI(favorites);
 
@@ -77,11 +84,9 @@ function setupStateSubscriptions() {
             }
         });
 
-        // ✨ FIX: 暫時停用初始圖片生成，以降低啟動負擔
         if (!window.hasInitialImagesGenerated) {
             window.hasInitialImagesGenerated = true;
-            console.log("DEBUG: Skipping initial image generation.");
-            // generateInitialImages(favorites); // 停用此呼叫
+            generateInitialImages(favorites);
         }
     });
 
@@ -97,35 +102,27 @@ async function onUserSignedIn(uid, error) {
     if (uid) {
         const db = getDbInstance();
         
-        // ✨ FIX: 暫時關閉所有登入後的初始化程序，只保留最核心的使用者資訊更新
-        console.log("Authentication successful. User ID:", uid);
-        console.log("DEBUG: Skipping DailyTaskManager, AnalyticsManager, and Favorites listener initialization.");
-
-        // --- 為了測試，只執行最簡單的邏輯 ---
-        const userData = await getUserData(db, uid);
-        const nickname = userData?.nickname || '';
-        updateUserInfo(uid, nickname);
-        setState({ userNickname: nickname });
-        
-        // --- 暫時關閉的功能 ---
-        /*
         const [_, __, userData] = await Promise.all([
             initDailyTaskManager(db, uid),
             initAnalyticsManager(db, uid),
             getUserData(db, uid)
         ]);
-        const nickname = userData?.nickname || '';
+        
+        // ✨ FIX: 將不相容的 'userData?.nickname' 語法換成傳統的寫法
+        const nickname = (userData && userData.nickname) ? userData.nickname : '';
+        
         updateUserInfo(uid, nickname);
+
         setState({ userNickname: nickname });
         if (nickname) {
             localStorage.setItem('userNickname', nickname);
         }
+        
         listenToFavorites(onFavoritesUpdate);
-        */
         
         setState({ isAppInitialized: true });
-        // updateAllTaskUIs(); // 因為依賴 TaskManager，所以也先關閉
         
+        updateAllTaskUIs();
         if (uiSettings.hideLoadingOnConnect) {
             hideLoadingOverlay();
         }
@@ -139,6 +136,7 @@ async function onUserSignedIn(uid, error) {
         }
     }
 }
+
 
 function onFavoritesUpdate(newFavorites, err) {
     if (err) {
@@ -190,7 +188,9 @@ function startLoadingSequence() {
 async function generateInitialImages(favorites) {
     for (const fav of favorites) {
         const displayUrl = fav.resizedUrl || fav.imageUrl;
+
         if (!fav || !fav.style || !fav.style.id || !displayUrl) continue;
+        
         const gallery = document.getElementById(`${fav.style.id}-gallery`);
         if (gallery) {
             const imageData = { ...fav, src: displayUrl, isLiked: true };
@@ -204,7 +204,9 @@ async function generateInitialImages(favorites) {
             const randomGoddesses = await getRandomGoddessesFromDB(4);
             for (const goddess of randomGoddesses) {
                 if (document.querySelector(`.image-card[data-id="${goddess.id}"]`)) continue;
+                
                 const displayUrl = goddess.resizedUrl || goddess.imageUrl;
+                
                 const gallery = document.getElementById(`${goddess.style.id}-gallery`);
                 if (gallery) {
                     const imageData = {
