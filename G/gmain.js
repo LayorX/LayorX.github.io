@@ -64,8 +64,9 @@ window.onload = () => {
         }
     }
     
-    initParticles('night');
-    animateParticles();
+    // ✨ FIX: 暫時停用背景粒子動畫，這是效能消耗大戶
+    // initParticles('night');
+    // animateParticles();
     
     const startAudioOnce = async () => {
         await initSounds();
