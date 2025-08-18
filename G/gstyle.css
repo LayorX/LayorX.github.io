@@ -1,11 +1,13 @@
 :root {
     --bg-color-night: #0c0a18;
     --particle-color-night: rgba(139, 92, 246, 0.3);
-    --header-bg-night: rgba(12, 10, 24, 0.8);
+    /* ✨ FIX: 移除 backdrop-filter，改用半透明背景色 */
+    --header-bg-night: rgba(12, 10, 24, 0.85);
 
     --bg-color-day: #fde6e6;
     --particle-color-day: rgba(255, 159, 159, 0.4);
-    --header-bg-day: rgba(255, 240, 240, 0.8);
+    /* ✨ FIX: 移除 backdrop-filter，改用半透明背景色 */
+    --header-bg-day: rgba(255, 240, 240, 0.85);
 }
 
 body {
@@ -109,7 +111,7 @@ body.theme-day {
     top: 0;
     z-index: 100;
     background-color: var(--header-bg-night);
-    backdrop-filter: blur(12px);
+    /* ✨ REMOVED: backdrop-filter: blur(12px); */
     padding-top: 1rem;
     padding-bottom: 0.5rem;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
@@ -130,12 +132,14 @@ body.theme-day .sticky-header {
 
 .image-card {
     background-color: rgba(31, 41, 55, 0.5);
-    backdrop-filter: blur(10px);
+    /* ✨ REMOVED: backdrop-filter: blur(10px); */
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 0.75rem;
     overflow: hidden;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
-    aspect-ratio: 2 / 3;
+    /* ✨ FIX: 使用 padding-bottom trick 替代 aspect-ratio 以支援舊瀏覽器 */
+    height: 0;
+    padding-bottom: 150%; /* 3 / 2 = 1.5 -> 150% */
     display: flex;
     flex-direction: column;
     position: relative;
@@ -146,7 +150,10 @@ body.theme-day .sticky-header {
 
 
 .image-card .flipper {
-    position: relative;
+    /* ✨ FIX: 配合 padding-bottom trick，讓 flipper 填滿整個空間 */
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
     transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
@@ -213,7 +220,7 @@ body.theme-day .sticky-header {
 
 .story-btn {
     background-color: rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(5px);
+    /* ✨ REMOVED: backdrop-filter: blur(5px); */
     border: 1px solid rgba(255, 255, 255, 0.3);
     color: white;
     padding: 0.5rem 1rem;
@@ -341,7 +348,7 @@ body.theme-day .tab-button {
 
 .model-selector {
     background-color: rgba(31, 41, 55, 0.5);
-    backdrop-filter: blur(10px);
+    /* ✨ REMOVED: backdrop-filter: blur(10px); */
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 0.5rem;
     padding: 0.5rem 1rem;
@@ -365,8 +372,8 @@ body.theme-day .model-selector {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.8);
-    backdrop-filter: blur(10px);
+    background-color: rgba(0, 0, 0, 0.85); /* 加深背景替代 blur */
+    /* ✨ REMOVED: backdrop-filter: blur(10px); */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -401,7 +408,7 @@ body.theme-day .model-selector {
 }
 
 #story-modal-content {
-    background-color: rgba(12, 10, 24, 0.9);
+    background-color: rgba(12, 10, 24, 0.95); /* 加深背景替代 blur */
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 0.75rem;
     padding: 2rem;
@@ -535,8 +542,8 @@ body.theme-day .model-selector {
 }
 
 #sound-control {
-    background-color: rgba(31, 41, 55, 0.5);
-    backdrop-filter: blur(10px);
+    background-color: rgba(31, 41, 55, 0.7); /* 加深背景替代 blur */
+    /* ✨ REMOVED: backdrop-filter: blur(10px); */
     border: 1px solid rgba(255, 255, 255, 0.1);
     color: white;
     width: 44px;
@@ -549,7 +556,7 @@ body.theme-day .model-selector {
 }
 
 body.theme-day #sound-control {
-    background-color: rgba(255, 255, 255, 0.5);
+    background-color: rgba(255, 255, 255, 0.7);
     border-color: rgba(0,0,0,0.1);
     color: #1F2937;
 }
@@ -587,7 +594,10 @@ body.theme-day .gacha-content {
 
 .gacha-result-container {
     width: 100%;
-    aspect-ratio: 2 / 3;
+    /* ✨ FIX: 使用 padding-bottom trick 替代 aspect-ratio */
+    height: 0;
+    padding-bottom: 150%;
+    position: relative;
     background-color: rgba(0,0,0,0.3);
     border-radius: 0.5rem;
     margin-bottom: 1.5rem;
@@ -605,8 +615,13 @@ body.theme-day .gacha-content {
 }
 
 .gacha-result-container .image-card {
+    /* ✨ FIX: 配合 padding-bottom trick，讓卡片填滿容器 */
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
+    padding-bottom: 0; /* 覆蓋掉原本的 padding-bottom */
     border-radius: 0;
     border: none;
 }
@@ -616,8 +631,8 @@ body.theme-day .gacha-content {
 }
 
 .theme-switch {
-    background-color: rgba(31, 41, 55, 0.5);
-    backdrop-filter: blur(10px);
+    background-color: rgba(31, 41, 55, 0.7); /* 加深背景替代 blur */
+    /* ✨ REMOVED: backdrop-filter: blur(10px); */
     border: 1px solid rgba(255, 255, 255, 0.1);
     color: #f5d0fe;
     width: 44px;
@@ -634,7 +649,7 @@ body.theme-day .gacha-content {
     color: #f0abfc;
 }
 body.theme-day .theme-switch {
-    background-color: rgba(255, 255, 255, 0.5);
+    background-color: rgba(255, 255, 255, 0.7);
     border-color: rgba(0,0,0,0.1);
     color: #f59e0b;
 }
@@ -759,7 +774,10 @@ body.theme-day .modal-close-btn {
         grid-template-columns: 1fr;
     }
     .image-card {
-        aspect-ratio: 2 / 3;
+        /* 在手機上不需要 aspect-ratio，讓內容自然撐開 */
+        height: auto;
+        padding-bottom: 0;
+        aspect-ratio: 2 / 3; /* 手機瀏覽器較新，可以加回來 */
     }
 }
 
@@ -784,8 +802,9 @@ body.theme-day .modal-close-btn {
     display: flex;
     align-items: center;
     gap: 0.25rem; /* 4px */
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
+    background-color: rgba(0,0,0,0.5); /* 替代 backdrop-filter */
+    /* ✨ REMOVED: backdrop-filter: blur(4px); */
+    /* ✨ REMOVED: -webkit-backdrop-filter: blur(4px); */
     border: 1px solid rgba(255, 255, 255, 0.2);
     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
