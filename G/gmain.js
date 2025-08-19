@@ -7,8 +7,7 @@ import { setState, subscribe, initState, getState } from './stateManager.js';
 import { getInitialState } from './state.js';
 import { initializeUI, updateAllTaskUIs, updateSlideshowUI, openAnnouncementModal, updateUserInfo } from './uiManager.js';
 import { getCardHandlers } from './handlers.js';
-// ✨ FIX: Petal, resizeLoadingCanvas, animateLoading 不再需要，可以移除
-import { showMessage, initParticles, animateParticles, createImageCard, updateFavoritesCountUI } from './gui.js';
+import { showMessage, initParticles, animateParticles, resizeLoadingCanvas, animateLoading, Petal, createImageCard, updateFavoritesCountUI } from './gui.js';
 import { initSounds } from './soundManager.js';
 
 let isLoadingOverlayHidden = false;
@@ -103,6 +102,7 @@ async function onUserSignedIn(uid, error) {
             getUserData(db, uid)
         ]);
         
+        // ✨ FIX: 將不相容的 'userData?.nickname' 語法換成傳統的寫法
         const nickname = (userData && userData.nickname) ? userData.nickname : '';
         
         updateUserInfo(uid, nickname);
@@ -138,21 +138,14 @@ function onFavoritesUpdate(newFavorites, err) {
     setState({ favorites: newFavorites });
 }
 
-// ✨ FIX: 簡化載入動畫，移除 Canvas 部分
 function startLoadingSequence() {
     const loadingOverlay = document.getElementById('loading-overlay');
     const loadingText = document.getElementById('loading-text');
     const silhouetteContainer = document.querySelector('.silhouette-container');
     const loadingCanvas = document.getElementById('loading-canvas');
 
-    // 隱藏不再需要的 Canvas
-    if (loadingCanvas) {
-        loadingCanvas.style.display = 'none';
-    }
-
     if(loadingText) loadingText.textContent = uiMessages.loading.connecting;
 
-    // 只保留 CSS 剪影動畫
     const silhouettes = [...uiSettings.loadingSilhouettes].sort(() => Math.random() - 0.5);
     silhouetteContainer.innerHTML = silhouettes.map(src => `<img src="${src}" class="loading-silhouette" alt="Loading Muse">`).join('');
     
@@ -167,10 +160,9 @@ function startLoadingSequence() {
         });
     }
 
-    // 移除 Canvas 動畫的呼叫
-    // resizeLoadingCanvas(loadingCanvas);
-    // let petals = Array.from({ length: uiSettings.loadingPetalCount }, () => new Petal(loadingCanvas));
-    // animateLoading(loadingCanvas, petals, loadingOverlay);
+    resizeLoadingCanvas(loadingCanvas);
+    let petals = Array.from({ length: uiSettings.loadingPetalCount }, () => new Petal(loadingCanvas));
+    animateLoading(loadingCanvas, petals, loadingOverlay);
 
     setTimeout(() => {
         if(loadingText) loadingText.textContent = uiMessages.loading.starting;
