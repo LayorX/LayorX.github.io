@@ -3,215 +3,117 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MVP 步驟4 - 載入動畫測試</title>
+    <title>MVP 穩固基礎 - 後端初始化測試</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --bg-color-night: #0c0a18;
-            --header-bg-night: rgba(12, 10, 24, 0.85);
-        }
-        body { font-family: 'Noto Sans TC', sans-serif; background-color: var(--bg-color-night); color: #F3F4F6; overflow-x: hidden; }
-        .main-container { position: relative; z-index: 10; }
-        .sticky-header { position: sticky; top: 0; z-index: 100; background-color: var(--header-bg-night); padding-top: 1rem; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
-        .card-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; padding-top: 1.5rem; }
-        .image-card { background-color: rgba(31, 41, 55, 0.5); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 0.75rem; overflow: hidden; position: relative; opacity: 0; animation: fadeIn 0.8s ease-out forwards; aspect-ratio: 2 / 3; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        .loader { width: 60px; height: 60px; border: 5px solid #4B5563; border-bottom-color: #EC4899; border-radius: 50%; display: inline-block; animation: rotation 1s linear infinite; }
-        @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .card-footer { position: absolute; bottom: 0; left: 0; right: 0; padding: 0.75rem; background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); display: flex; justify-content: space-between; align-items: center; z-index: 5; }
-        .like-btn { background: none; border: none; font-size: 1.75rem; cursor: pointer; color: rgba(255, 255, 255, 0.7); }
-        .like-btn.liked { color: #ef4444; }
-        .tab-button { border-bottom: 3px solid transparent; }
-        .tab-button.active { color: #EC4899; border-bottom-color: #EC4899; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-        #message-box { position: fixed; top: 20px; right: 20px; background-color: #EC4899; color: white; padding: 1rem 1.5rem; border-radius: 0.5rem; z-index: 3100; opacity: 0; transform: translateY(-20px); transition: opacity 0.3s ease, transform 0.3s ease; }
-        #message-box.show { opacity: 1; transform: translateY(0); }
-        
-        /* ✨ 新增：載入動畫的 CSS */
-        #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle, rgba(2,0,36,1) 0%, rgba(12,10,24,1) 35%, rgba(46,16,49,1) 100%); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: opacity 1s ease-out; opacity: 1; }
-        #loading-overlay.hidden { opacity: 0; pointer-events: none; }
-        #loading-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
-        #loading-content { z-index: 10; text-align: center; color: white; text-shadow: 0 0 15px rgba(236, 72, 153, 0.7); }
-        .silhouette-container { height: 40vh; max-height: 400px; margin-bottom: 2rem; position: relative; width: 300px; display: flex; justify-content: center; align-items: center; }
-        .loading-silhouette { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 0 15px rgba(236, 72, 153, 0.5)); opacity: 0; animation-timing-function: ease-in-out; animation-iteration-count: infinite; animation-fill-mode: both; }
-        @keyframes silhouette-fade { 0%, 100% { opacity: 0; transform: scale(0.8); } 15% { opacity: 1; transform: scale(1); } }
+        body { background-color: #0c0a18; }
+        .status-log li { transition: all 0.3s ease; }
     </style>
 </head>
-<body>
-    <!-- ✨ 新增：完整的載入畫面 HTML -->
-    <div id="loading-overlay">
-        <canvas id="loading-canvas"></canvas>
-        <div id="loading-content">
-             <div class="silhouette-container"></div>
-            <h2 id="loading-text" class="text-2xl font-bold text-gray-300 mt-4"></h2>
-        </div>
-    </div>
+<body class="flex items-center justify-center min-h-screen p-4">
 
-    <div class="main-container" style="opacity:0; transition: opacity 1s ease;">
-        <header class="sticky-header">
-            <div class="container mx-auto px-4">
-                <h1 id="header-title" class="text-3xl md:text-4xl font-bold text-center bg-clip-text text-transparent bg-gradient-to-r from-pink-500 to-violet-500 mb-2"></h1>
-                <div class="flex flex-wrap justify-center items-center gap-2 md:gap-4 my-4">
-                    <button id="generate-one-btn" class="text-white font-bold py-2 px-6 rounded-full text-lg bg-pink-500"></button>
-                    <button id="generate-four-btn" class="text-white font-bold py-2 px-6 rounded-full text-lg bg-indigo-500"></button>
-                    <button id="favorites-btn" class="text-white font-bold py-2 px-6 rounded-full text-lg bg-pink-500"><span id="favorites-btn-text">女神殿堂</span> ❤️ <span id="favorites-count">0</span></button>
-                </div>
-                <nav id="tab-navigation" class="flex justify-center border-b border-gray-700"></nav>
-                <div id="user-info" class="text-center text-xs text-gray-500 py-1"></div>
-            </div>
-        </header>
-        <main id="style-sections" class="container mx-auto px-4"></main>
+    <div class="text-center p-6 bg-gray-800 rounded-lg shadow-xl max-w-lg mx-auto w-full">
+        <h1 class="text-xl font-bold text-white mb-4">MVP 穩固基礎測試</h1>
+        <ol id="status-log" class="text-left space-y-2 text-gray-300 text-sm">
+            <!-- 測試日誌會顯示在這裡 -->
+        </ol>
     </div>
-    <div id="message-box"></div>
 
     <script type="module">
-        // 匯入 Firebase
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js";
-        import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
+        // --- Firebase CDN Imports ---
+        import { getFirestore, collection, doc, setDoc, getDoc, onSnapshot, serverTimestamp, writeBatch, increment } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-        // --- 整合所有 JS 檔案的邏輯 ---
+        const logList = document.getElementById('status-log');
         
-        // --- 設定檔 ---
-        const appInfo = { title: "女神慾見GoddeSpark" };
-        const serviceKeys = { firebaseConfig: { apiKey: "AIzaSyDbWa8TWru1J048WK8msVBaC9JhhhtuhJw", authDomain: "goddess-chance.firebaseapp.com", projectId: "goddess-chance", storageBucket: "goddess-chance.appspot.com", messagingSenderId: "440990936442", appId: "1:440990936442:web:37d864cd13112f14913ac3" }};
-        const uiMessages = { buttons: { generateOne: "遇見一位", generateFour: "遇見四位" }, errors: { cloudConnect: "無法連接雲端", firebaseInit: "Firebase 初始化失敗" }, loading: { connecting: "正在連接雲端...", starting: "邂逅即將開始..." } };
-        const styles = [{ id: "beach-silhouette", title: "🏖️ 夏日戀曲", prompt: "A sexy Asian model on a sunny beach" }];
-        const uiSettings = {
-            loadingScreenDuration: 3000,
-            loadingSilhouettes: ['https://placehold.co/300x450/1f2937/9ca3af?text=Goddess+1', 'https://placehold.co/300x450/1f2937/9ca3af?text=Goddess+2', 'https://placehold.co/300x450/1f2937/9ca3af?text=Goddess+3'],
-            loadingPetalCount: 60,
-            loadingAnimationStep: 1,
-        };
-
-        // --- 狀態管理器 ---
-        let _state = {};
-        const _subscribers = {};
-        function initState(initialState) { _state = initialState; }
-        function getState(key) { return _state[key]; }
-        function setState(newState) { for (const key in newState) { if (_state[key] !== newState[key]) { _state[key] = newState[key]; if (_subscribers[key]) { _subscribers[key].forEach(cb => cb(_state[key])); } } } }
-        function subscribe(key, callback) { if (!_subscribers[key]) { _subscribers[key] = []; } _subscribers[key].push(callback); if (key in _state) { callback(_state[key]); } }
-        
-        initState({ activeStyleId: styles[0].id, favorites: null });
-
-        // --- UI & 動畫邏輯 ---
-        const messageBox = document.getElementById('message-box');
-        function showMessage(text) { messageBox.textContent = text; messageBox.classList.add('show'); setTimeout(() => messageBox.classList.remove('show'), 3000); }
-        
-        // ✨ 新增：載入動畫的 JS 邏輯
-        class Petal {
-            constructor(c) { this.canvas = c; this.x = Math.random()*c.width; this.y = Math.random()*c.height*2-c.height; this.w = 20+Math.random()*15; this.h = 15+Math.random()*10; this.opacity = this.w/35; this.xSpeed = 1+Math.random(); this.ySpeed = .5+Math.random()*.5; this.flip = Math.random(); this.flipSpeed = Math.random()*.03; }
-            draw() { const ctx = this.canvas.getContext('2d'); if(this.y > this.canvas.height || this.x > this.canvas.width){this.x=-this.w; this.y=Math.random()*this.canvas.height*2-this.canvas.height;} ctx.globalAlpha = this.opacity; ctx.beginPath(); ctx.moveTo(this.x, this.y); ctx.bezierCurveTo(this.x+this.w/2, this.y-this.h/2, this.x+this.w, this.y, this.x+this.w/2, this.y+this.h/2); ctx.closePath(); const grad = ctx.createLinearGradient(this.x, this.y, this.x+this.w, this.y+this.h); grad.addColorStop(0, 'rgba(255,192,203,.8)'); grad.addColorStop(1, 'rgba(236,72,153,.5)'); ctx.fillStyle = grad; ctx.fill(); }
-            animate() { this.x+=this.xSpeed; this.y+=this.ySpeed; this.flip+=this.flipSpeed; this.draw(); }
-        }
-        function resizeLoadingCanvas(c) { if (!c) return; c.width=window.innerWidth; c.height=window.innerHeight; }
-        function animateLoading(c, p, o) { if (!c || !o || o.classList.contains('hidden')) return; const ctx = c.getContext('2d'); ctx.clearRect(0,0,c.width,c.height); p.forEach(petal => petal.animate()); requestAnimationFrame(() => animateLoading(c, p, o)); }
-
-        // --- Firebase 邏輯 ---
-        let db, auth, currentUserId;
-        function initFirebase() { try { const app = initializeApp(serviceKeys.firebaseConfig); auth = getAuth(app); db = getFirestore(app); return true; } catch (e) { return false; } }
-        function handleAuthentication(cb) { onAuthStateChanged(auth, (u) => { if (u) { currentUserId = u.uid; cb(u.uid); } else { signInAnonymously(auth).catch((err) => cb(null, err)); } }); }
-        async function getUserData(uid) { const snap = await getDoc(doc(db, 'users', uid)); return snap.exists() ? snap.data() : { nickname: '無名氏' }; }
-        function listenToFavorites(cb) { onSnapshot(collection(db, 'users', currentUserId, 'favorites'), (s) => cb(s.docs.map(d => d.data()))); }
-
-        // --- UI 管理 ---
-        let DOMElements = {};
-        function initializeUI() {
-            DOMElements = {
-                headerTitle: document.getElementById('header-title'),
-                tabNavigation: document.getElementById('tab-navigation'),
-                styleSectionsContainer: document.getElementById('style-sections'),
-                generateOneBtn: document.getElementById('generate-one-btn'),
-                generateFourBtn: document.getElementById('generate-four-btn'),
-                favoritesCount: document.getElementById('favorites-count'),
-                userInfo: document.getElementById('user-info'),
-            };
-            DOMElements.headerTitle.textContent = appInfo.title;
-            DOMElements.generateOneBtn.textContent = uiMessages.buttons.generateOne;
-            DOMElements.generateFourBtn.textContent = uiMessages.buttons.generateFour;
-            styles.forEach((style, index) => {
-                const tab = document.createElement('button');
-                tab.className = `tab-button text-gray-400 py-2 px-4 ${index === 0 ? 'active' : ''}`;
-                tab.textContent = style.title;
-                tab.onclick = () => setState({ activeStyleId: style.id });
-                DOMElements.tabNavigation.appendChild(tab);
-                const section = document.createElement('section');
-                section.id = `content-${style.id}`;
-                section.className = `tab-content ${index === 0 ? 'active' : ''}`;
-                section.innerHTML = `<div id="${style.id}-gallery" class="card-container"></div>`;
-                DOMElements.styleSectionsContainer.appendChild(section);
-            });
-        }
-        function updateUserInfo(uid, nickname) { DOMElements.userInfo.textContent = `ID: ${uid ? `...${uid.slice(-6)}` : 'N/A'} (${nickname})`; }
-
-        // --- 主程式 ---
-        let isLoadingOverlayHidden = false;
-        function hideLoadingOverlay() {
-            if (isLoadingOverlayHidden) return;
-            const overlay = document.getElementById('loading-overlay');
-            if (overlay) overlay.classList.add('hidden');
-            isLoadingOverlayHidden = true;
-        }
-
-        function startLoadingSequence() {
-            const overlay = document.getElementById('loading-overlay');
-            const textEl = document.getElementById('loading-text');
-            const silhouetteEl = document.querySelector('.silhouette-container');
-            const canvasEl = document.getElementById('loading-canvas');
-            if(textEl) textEl.textContent = uiMessages.loading.connecting;
-
-            silhouetteEl.innerHTML = uiSettings.loadingSilhouettes.map(src => `<img src="${src}" class="loading-silhouette">`).join('');
-            document.querySelectorAll('.loading-silhouette').forEach((el, i) => {
-                el.style.animationDelay = `${i * uiSettings.loadingAnimationStep}s`;
-                el.style.animationDuration = `${uiSettings.loadingSilhouettes.length * uiSettings.loadingAnimationStep}s`;
-                el.style.animationName = 'silhouette-fade';
-            });
-
-            resizeLoadingCanvas(canvasEl);
-            let petals = Array.from({ length: uiSettings.loadingPetalCount }, () => new Petal(canvasEl));
-            animateLoading(canvasEl, petals, overlay);
-
-            setTimeout(() => {
-                if(textEl) textEl.textContent = uiMessages.loading.starting;
-                setTimeout(() => {
-                    hideLoadingOverlay();
-                    document.querySelector('.main-container').style.opacity = '1';
-                }, 500);
-            }, uiSettings.loadingScreenDuration);
-        }
-
-        window.onload = () => {
-            initState(getInitialState());
-            initializeUI();
+        // --- 輔助函式 ---
+        function logStatus(message, isSuccess = null) {
+            const li = document.createElement('li');
+            let statusIcon = '⏳';
+            if (isSuccess === true) statusIcon = '✅';
+            if (isSuccess === false) statusIcon = '❌';
             
-            subscribe('activeStyleId', (id) => {
-                document.querySelectorAll('.tab-button').forEach(b => b.classList.toggle('active', b.textContent === styles.find(s => s.id === id).title));
-                document.querySelectorAll('.tab-content').forEach(c => c.classList.toggle('active', c.id === `content-${id}`));
-            });
-            subscribe('favorites', (favs) => { if(favs) DOMElements.favoritesCount.textContent = favs.length; });
+            li.innerHTML = `${statusIcon} ${message}`;
+            
+            if (isSuccess === true) li.classList.add('text-green-400');
+            if (isSuccess === false) li.classList.add('text-red-400', 'font-bold');
+            
+            logList.appendChild(li);
+        }
 
-            if (initFirebase()) {
-                handleAuthentication(onUserSignedIn);
-            } else {
-                showMessage(uiMessages.errors.firebaseInit);
-            }
-        };
+        // --- 整合所有 JS 檔案的邏輯 (已驗證部分) ---
 
-        async function onUserSignedIn(uid) {
-            if (uid) {
-                // ✨ 改變：不在登入後隱藏，讓 startLoadingSequence 控制
-                startLoadingSequence(); 
-                const userData = await getUserData(uid);
-                updateUserInfo(uid, userData.nickname);
-                listenToFavorites((favs) => setState({ favorites: favs }));
-            } else {
-                showMessage(uiMessages.errors.cloudConnect);
+        // --- 設定檔 (app-config.js & game-config.js) ---
+        const serviceKeys = { firebaseConfig: { apiKey: "AIzaSyDbWa8TWru1J048WK8msVBaC9JhhhtuhJw", authDomain: "goddess-chance.firebaseapp.com", projectId: "goddess-chance", storageBucket: "goddess-chance.appspot.com", messagingSenderId: "440990936442", appId: "1:440990936442:web:37d864cd13112f14913ac3" }};
+        const dbCollectionNames = { users: 'users', dailyTasks: 'dailyTasks', statistics: 'statistics', userStats: 'userStats', favorites: 'favorites' };
+        const gameSettings = { dailyLimits: { generateOne: 20, generateFour: 2, gacha: 20, tts: 3 } };
+        const userStatsStructure = { likes: 0, unlikes: 0, shares: 0 };
+        const randomNicknames = ["D槽女神官", "波多野結冰"];
+
+        // --- DailyTaskManager (已修正語法) ---
+        class DailyTask {
+            constructor(taskName, db, userId) { this.name = taskName; this.db = db; this.userId = userId; this.defaultCount = gameSettings.dailyLimits[taskName]; this.state = { count: this.defaultCount, lastUpdate: null, }; this.docRef = doc(this.db, dbCollectionNames.users, userId, dbCollectionNames.dailyTasks, this.name); this.isInitialized = false; }
+            async _checkAndSync() { if (this.isInitialized && this.state.lastUpdate === new Date().toISOString().split('T')[0]) { return; } const today = new Date().toISOString().split('T')[0]; const docSnap = await getDoc(this.docRef); if (docSnap.exists()) { const dbState = docSnap.data(); if (dbState.lastUpdate === today) { this.state = dbState; } else { this.state.count = Math.max(dbState.count, this.defaultCount); this.state.lastUpdate = today; await this._save(); } } else { this.state.count = this.defaultCount; this.state.lastUpdate = today; await this._save(); } this.isInitialized = true; }
+            async _save() { await setDoc(this.docRef, this.state); }
+            async getCount() { await this._checkAndSync(); return this.state.count; }
+        }
+        const tasks = {};
+        async function initDailyTaskManager(db, uid) { for (const taskName in gameSettings.dailyLimits) { tasks[taskName] = new DailyTask(taskName, db, uid); await tasks[taskName].getCount(); } }
+        
+        // --- AnalyticsManager ---
+        let statsRef;
+        async function initAnalyticsManager(db, uid) { statsRef = doc(db, 'users', uid, 'statistics', 'userStats'); const docSnap = await getDoc(statsRef); if (!docSnap.exists()) { const nickname = randomNicknames[Math.floor(Math.random() * randomNicknames.length)]; const userDocRef = doc(db, 'users', uid); await Promise.all([ setDoc(statsRef, { ...userStatsStructure, firstLogin: serverTimestamp(), lastLogin: serverTimestamp() }), setDoc(userDocRef, { nickname: nickname }) ]); } else { await setDoc(statsRef, { lastLogin: serverTimestamp() }, { merge: true }); } }
+
+        // --- gfirebase (核心部分) ---
+        let currentUserId;
+        function getCurrentUserId() { return currentUserId; }
+        async function getUserData(db, uid) { if (!uid) return null; const userRef = doc(db, dbCollectionNames.users, uid); const docSnap = await getDoc(userRef); return docSnap.exists() ? docSnap.data() : { nickname: '無名氏' }; }
+        function listenToFavorites(db, uid, callback) { const favoritesCol = collection(db, dbCollectionNames.users, uid, dbCollectionNames.favorites); return onSnapshot(favoritesCol, (snapshot) => callback(snapshot.docs.map(d => d.data()), null), (error) => callback([], error)); }
+
+        // --- 主測試流程 ---
+        async function runFullTest() {
+            let app, auth, db, user;
+            try {
+                logStatus("1. 初始化 Firebase...");
+                app = initializeApp(serviceKeys.firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+                logStatus("Firebase 初始化成功。", true);
+
+                logStatus("2. 正在匿名登入...");
+                const userCredential = await signInAnonymously(auth);
+                user = userCredential.user;
+                currentUserId = user.uid;
+                logStatus(`匿名登入成功 (ID: ...${user.uid.slice(-6)})`, true);
+
+                logStatus("3. 初始化每日任務管理器...");
+                await initDailyTaskManager(db, user.uid);
+                logStatus("每日任務管理器初始化成功。", true);
+
+                logStatus("4. 初始化分析管理器...");
+                await initAnalyticsManager(db, user.uid);
+                logStatus("分析管理器初始化成功。", true);
+
+                logStatus("5. 啟動『我的最愛』即時監聽...");
+                const unsubscribe = listenToFavorites(db, user.uid, (favorites, error) => {
+                    if (error) {
+                        logStatus(`監聽『我的最愛』失敗: ${error.message}`, false);
+                    } else {
+                        logStatus(`成功接收到 ${favorites.length} 筆『我的最愛』資料。`, true);
+                        logStatus("🎉 所有後端服務初始化成功！", true);
+                        unsubscribe(); // 收到一次回饋後就停止監聽
+                    }
+                });
+
+            } catch (error) {
+                console.error("測試過程中發生致命錯誤:", error);
+                logStatus(`測試失敗: ${error.message}`, false);
             }
         }
+
+        runFullTest();
     </script>
+
 </body>
 </html>
