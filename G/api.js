@@ -23,13 +23,10 @@ export async function generateImageWithRetry(prompt) {
             keywords_items="VIP Exclusive, luxurious, elegant, high-class, sophisticated, exclusive, premium, opulent, lavish, refined, exquisite, top-tier, elite, prestigious, upscale, classy, stylish, fashionable.";
         }else{
             keywords_items=`${getRandomItems(keywords_style.hair, 1)}, ${getRandomItems(keywords_style.outfit, 2).join(', ')}, ${getRandomItems(keywords_style.setting, 1)}, ${getRandomItems(keywords_style.artStyle, 1)}, ${getRandomItems(keywords_style.bodyDetails, 2).join(', ')}, ${getRandomItems(keywords_style.expression, 1)}, ${getRandomItems(keywords_style.mood, 1)}, ${getRandomItems(keywords_style.cameraAngles, 1)}.`;
-            // console.log("Generated keywords_items for image:", keywords_items);
         }
     }else{
         console.warn("Unknown style for image generation:", style,"keywords_style:" , keywords_style, );  
     }
-
-
 
     const enhancedPrompt = `${prompt}, ${keywords_items}`;
     const fullPrompt = `${apiSettings.prompts.imagePrefix} ${enhancedPrompt} ${apiSettings.prompts.imageSuffix} Negative prompt: ${apiSettings.prompts.negativePrompt}`;
@@ -71,20 +68,25 @@ async function callImageGenerationAPI(userPrompt, model) {
     if (!response.ok) {
         const errorData = await response.json();
         console.error('API Error Response:', errorData);
-        throw new Error(`API 請求失敗: ${errorData?.error?.message || response.statusText}`);
+        // ✨ FIX: Replaced optional chaining for compatibility
+        const errorMessage = errorData && errorData.error ? errorData.error.message : response.statusText;
+        throw new Error(`API 請求失敗: ${errorMessage}`);
     }
 
     const result = await response.json();
     
-    const candidate = result?.candidates?.[0];
     if (isImagen) {
-        const base64Data = result.predictions?.[0]?.bytesBase64Encoded;
+        // ✨ FIX: Replaced optional chaining for compatibility
+        const base64Data = result && result.predictions && result.predictions.length > 0 ? result.predictions[0].bytesBase64Encoded : null;
         if (!base64Data) {
             console.error('Unexpected Imagen API response structure:', result);
             throw new Error("Imagen API 回應中找不到圖片資料。");
         }
         return `data:image/png;base64,${base64Data}`;
     }
+    
+    // ✨ FIX: Replaced optional chaining for compatibility
+    const candidate = result && result.candidates && result.candidates.length > 0 ? result.candidates[0] : null;
 
     if (!candidate) {
         console.error('Unexpected API response: No candidates found.', result);
@@ -96,8 +98,9 @@ async function callImageGenerationAPI(userPrompt, model) {
         throw new Error(`圖片生成因安全限制被阻擋，請嘗試更換提示詞。`);
     }
 
-    const imagePart = candidate.content?.parts?.find(p => p.inlineData);
-    const base64Data = imagePart?.inlineData?.data;
+    // ✨ FIX: Replaced optional chaining for compatibility
+    const imagePart = candidate && candidate.content && candidate.content.parts ? candidate.content.parts.find(p => p.inlineData) : null;
+    const base64Data = imagePart && imagePart.inlineData ? imagePart.inlineData.data : null;
 
     if (!base64Data) {
         console.error('Unexpected API response structure:', result);
@@ -123,11 +126,14 @@ export async function callTextGenerationAPI(prompt) {
 
     if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(`API 請求失敗: ${errorData?.error?.message || response.statusText}`);
+        // ✨ FIX: Replaced optional chaining for compatibility
+        const errorMessage = errorData && errorData.error ? errorData.error.message : response.statusText;
+        throw new Error(`API 請求失敗: ${errorMessage}`);
     }
 
     const result = await response.json();
-    const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+    // ✨ FIX: Replaced optional chaining for compatibility
+    const text = result && result.candidates && result.candidates.length > 0 && result.candidates[0].content && result.candidates[0].content.parts && result.candidates[0].content.parts.length > 0 ? result.candidates[0].content.parts[0].text : null;
 
     if (!text) {
         throw new Error("API 回應中找不到文字資料。");
@@ -159,13 +165,16 @@ export async function callTTSAPI(text) {
 
     if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(`TTS API 請求失敗: ${errorData?.error?.message || response.statusText}`);
+        // ✨ FIX: Replaced optional chaining for compatibility
+        const errorMessage = errorData && errorData.error ? errorData.error.message : response.statusText;
+        throw new Error(`TTS API 請求失敗: ${errorMessage}`);
     }
 
     const result = await response.json();
-    const part = result?.candidates?.[0]?.content?.parts?.[0];
-    const audioData = part?.inlineData?.data;
-    const mimeType = part?.inlineData?.mimeType;
+    // ✨ FIX: Replaced optional chaining for compatibility
+    const part = result && result.candidates && result.candidates.length > 0 && result.candidates[0].content && result.candidates[0].content.parts && result.candidates[0].content.parts.length > 0 ? result.candidates[0].content.parts[0] : null;
+    const audioData = part && part.inlineData ? part.inlineData.data : null;
+    const mimeType = part && part.inlineData ? part.inlineData.mimeType : null;
 
     if (!audioData || !mimeType) {
         throw new Error("TTS API 回應中找不到音訊資料。");
