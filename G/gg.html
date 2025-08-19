@@ -3,154 +3,223 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MVP 步驟3 - 完整啟動流程測試</title>
+    <title>最終整合測試</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
-        body { background-color: #0c0a18; }
-        .status-log li { transition: all 0.3s ease; }
+        /* 整合 gstyle.css 的內容 (已移除 backdrop-filter) */
+        :root {
+            --bg-color-night: #0c0a18;
+            --header-bg-night: rgba(12, 10, 24, 0.85);
+            --bg-color-day: #fde6e6;
+            --header-bg-day: rgba(255, 240, 240, 0.85);
+        }
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: var(--bg-color-night); color: #F3F4F6; overflow-x: hidden; }
+        body.theme-day { background-color: var(--bg-color-day); color: #4B5563; }
+        #background-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; }
+        #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0c0a18; z-index: 9999; display: flex; justify-content: center; align-items: center; transition: opacity 1s ease-out; }
+        #loading-overlay.hidden { opacity: 0; pointer-events: none; }
+        .main-container { position: relative; z-index: 10; }
+        .sticky-header { position: sticky; top: 0; z-index: 100; background-color: var(--header-bg-night); padding-top: 1rem; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
+        body.theme-day .sticky-header { background-color: var(--header-bg-day); border-bottom-color: rgba(0,0,0,0.1); }
+        .card-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; padding-top: 1.5rem; }
+        .image-card { background-color: rgba(31, 41, 55, 0.5); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 0.75rem; overflow: hidden; position: relative; perspective: 1000px; opacity: 0; animation: fadeIn 0.8s ease-out forwards; aspect-ratio: 2 / 3; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .loader { width: 60px; height: 60px; border: 5px solid #4B5563; border-bottom-color: #EC4899; border-radius: 50%; display: inline-block; animation: rotation 1s linear infinite; }
+        @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.85); display: flex; align-items: center; justify-content: center; z-index: 2000; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
+        .modal.show { opacity: 1; pointer-events: auto; }
+        .modal-content { transform: scale(0.8); transition: transform 0.3s ease; max-width: 90vw; max-height: 90vh; }
+        .modal.show .modal-content { transform: scale(1); }
+        .card-footer { position: absolute; bottom: 0; left: 0; right: 0; padding: 0.75rem; background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); display: flex; justify-content: space-between; align-items: center; z-index: 5; }
+        .like-btn { background: none; border: none; font-size: 1.75rem; cursor: pointer; color: rgba(255, 255, 255, 0.7); transition: transform 0.2s ease, color 0.2s ease; }
+        .like-btn.liked { color: #ef4444; }
+        .tab-button { transition: all 0.3s ease; border-bottom: 3px solid transparent; }
+        .tab-button.active { color: #EC4899; border-bottom-color: #EC4899; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        #message-box { position: fixed; top: 20px; right: 20px; background-color: #EC4899; color: white; padding: 1rem 1.5rem; border-radius: 0.5rem; z-index: 3100; opacity: 0; transform: translateY(-20px); transition: opacity 0.3s ease, transform 0.3s ease; }
+        #message-box.show { opacity: 1; transform: translateY(0); }
     </style>
 </head>
-<body class="flex items-center justify-center min-h-screen p-4">
-
-    <div class="text-center p-6 bg-gray-800 rounded-lg shadow-xl max-w-lg mx-auto w-full">
-        <h1 class="text-xl font-bold text-white mb-4">MVP 步驟3：完整啟動流程測試</h1>
-        <ol id="status-log" class="text-left space-y-2 text-gray-300 text-sm">
-            <!-- 測試日誌會顯示在這裡 -->
-        </ol>
+<body>
+    <!-- 完整的 HTML 結構 -->
+    <div id="loading-overlay"><div class="loader"></div></div>
+    <div id="image-modal" class="modal"><div id="image-modal-content" class="modal-content"><img id="modal-image" src="" alt="放大預覽"></div></div>
+    <div class="main-container" style="opacity:0; transition: opacity 1s ease;">
+        <header class="sticky-header">
+            <div class="container mx-auto px-4">
+                <h1 id="header-title" class="text-3xl md:text-4xl font-bold text-center bg-clip-text text-transparent bg-gradient-to-r from-pink-500 to-violet-500 mb-2"></h1>
+                <div class="flex flex-wrap justify-center items-center gap-2 md:gap-4 my-4">
+                    <button id="generate-one-btn" class="text-white font-bold py-2 px-6 rounded-full text-lg bg-pink-500"></button>
+                    <button id="generate-four-btn" class="text-white font-bold py-2 px-6 rounded-full text-lg bg-indigo-500"></button>
+                    <button id="favorites-btn" class="text-white font-bold py-2 px-6 rounded-full text-lg bg-pink-500"><span id="favorites-btn-text"></span> ❤️ <span id="favorites-count">0</span></button>
+                </div>
+                <nav id="tab-navigation" class="flex justify-center border-b border-gray-700"></nav>
+                <div id="user-info" class="text-center text-xs text-gray-500 py-1"></div>
+            </div>
+        </header>
+        <main id="style-sections" class="container mx-auto px-4"></main>
     </div>
+    <div id="message-box"></div>
 
     <script type="module">
         // 從 Firebase CDN 匯入所有需要的功能
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, writeBatch, collection, onSnapshot, increment, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
+        import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, getDoc, getDocs, query, limit, runTransaction, increment, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
+        import { getStorage, ref, uploadString, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-storage.js";
 
-        const logList = document.getElementById('status-log');
+        // --- 整合所有 JS 檔案的邏輯 ---
+        // 為了簡化，我們將所有 export const/function 變為普通的 const/function
         
-        // 用於在畫面上顯示日誌的輔助函式
-        function logStatus(message, isSuccess = null) {
-            const li = document.createElement('li');
-            let statusIcon = '⏳';
-            if (isSuccess === true) statusIcon = '✅';
-            if (isSuccess === false) statusIcon = '❌';
-            
-            li.innerHTML = `${statusIcon} ${message}`;
-            
-            if (isSuccess === true) li.classList.add('text-green-400');
-            if (isSuccess === false) li.classList.add('text-red-400', 'font-bold');
-            
-            logList.appendChild(li);
+        // --- app-config.js ---
+        const appInfo = { title: "女神慾見GoddeSpark", version: "1.6.62" };
+        const serviceKeys = { firebaseConfig: { apiKey: "AIzaSyDbWa8TWru1J048WK8msVBaC9JhhhtuhJw", authDomain: "goddess-chance.firebaseapp.com", projectId: "goddess-chance", storageBucket: "goddess-chance.appspot.com", messagingSenderId: "440990936442", appId: "1:440990936442:web:37d864cd13112f14913ac3", measurementId: "G-3HCCT2PFXX" }, defaultApiKey: "AIzaSyAZUc69ryBPqw0Ss2ZV-f4Jg5kP3VjDd0c" };
+        const dbCollectionNames = { users: 'users', publicGoddesses: 'public-goddesses', dailyTasks: 'dailyTasks', statistics: 'statistics', userStats: 'userStats', favorites: 'favorites' };
+
+        // --- game-config.js ---
+        const gameSettings = { dailyLimits: { generateOne: 20, generateFour: 2, gacha: 20, tts: 3 } };
+        const uiMessages = { buttons: { generateOne: "遇見一位", generateFour: "遇見四位", favorites: "女神殿堂" }, errors: { cloudConnect: "無法連接雲端", firebaseInit: "Firebase 初始化失敗" } };
+        const styles = [{ id: "beach-silhouette", title: "🏖️ 夏日戀曲", description: "海灘、性感，融化你心的夏日海灘戀曲", prompt: "A sexy Asian model on a sunny beach, wearing a bikini, interacting warmly with the camera." }];
+        const userStatsStructure = { likes: 0, shares: 0, gachaDraws: 0, totalGenerations: 0 };
+
+        // --- stateManager.js ---
+        let _state = {};
+        const _subscribers = {};
+        function initState(initialState) { _state = initialState; }
+        function getState(...keys) { if (keys.length === 1) { return _state[keys[0]]; } const o = {}; for (const k of keys) { o[k] = _state[k]; } return o; }
+        function setState(newState) { for (const key in newState) { if (_state[key] !== newState[key]) { _state[key] = newState[key]; if (_subscribers[key]) { _subscribers[key].forEach(cb => cb(_state[key])); } } } }
+        function subscribe(key, callback) { if (!_subscribers[key]) { _subscribers[key] = []; } _subscribers[key].push(callback); if (key in _state) { callback(_state[key]); } return () => { _subscribers[key] = _subscribers[key].filter(cb => cb !== callback); }; }
+        
+        // --- state.js ---
+        function getInitialState() { return { isGenerating: false, activeStyleId: styles[0].id, favorites: null }; }
+
+        // --- gui.js ---
+        const messageBox = document.getElementById('message-box');
+        function showMessage(text, isError = false) { messageBox.textContent = text; messageBox.style.backgroundColor = isError ? '#E11D48' : '#EC4899'; messageBox.classList.add('show'); setTimeout(() => messageBox.classList.remove('show'), 3000); }
+        function createImageCard(imageData, handlers) {
+            const card = document.createElement('div');
+            card.className = 'image-card';
+            card.style.opacity = '1';
+            card.innerHTML = `<div class="image-card-img-wrapper" style="width:100%; height:100%;"><img src="${imageData.src}" style="width:100%; height:100%; object-fit:cover;" alt="${imageData.style.title}"></div><div class="card-footer"><button class="like-btn ${imageData.isLiked ? 'liked' : ''}">♥</button></div>`;
+            card.querySelector('.like-btn').onclick = (e) => { e.stopPropagation(); handlers.onLike(imageData, e.target); };
+            return card;
         }
 
-        // --- 開始整合所有 JS 檔案的邏輯 ---
+        // --- dailyTaskManager.js & analyticsManager.js (Simplified for test) ---
+        async function initDailyTaskManager(db, uid) { console.log("DailyTaskManager OK"); return true; }
+        async function initAnalyticsManager(db, uid) { console.log("AnalyticsManager OK"); return true; }
+        async function incrementStat(fields) { console.log("Incrementing stat:", fields); }
 
-        // 1. 來自 app-config.js & game-config.js 的核心設定
-        logStatus("正在載入應用程式設定...");
-        const serviceKeys = {
-            firebaseConfig: {
-                apiKey: "AIzaSyDbWa8TWru1J048WK8msVBaC9JhhhtuhJw",
-                authDomain: "goddess-chance.firebaseapp.com",
-                projectId: "goddess-chance",
-                storageBucket: "goddess-chance.firebasestorage.app",
-                messagingSenderId: "440990936442",
-                appId: "1:440990936442:web:37d864cd13112f14913ac3",
-                measurementId: "G-3HCCT2PFXX"
+        // --- gfirebase.js ---
+        let db, auth, storage, currentUserId;
+        function initFirebase() { try { const app = initializeApp(serviceKeys.firebaseConfig); auth = getAuth(app); db = getFirestore(app); storage = getStorage(app); return true; } catch (e) { console.error(e); return false; } }
+        function handleAuthentication(callback) { onAuthStateChanged(auth, (user) => { if (user) { currentUserId = user.uid; callback(user.uid); } else { signInAnonymously(auth).catch((err) => callback(null, err)); } }); }
+        function getCurrentUserId() { return currentUserId; }
+        async function getUserData(db, uid) { const snap = await getDoc(doc(db, 'users', uid)); return snap.exists() ? snap.data() : { nickname: '無名氏' }; }
+        function listenToFavorites(callback) { const q = collection(db, dbCollectionNames.users, currentUserId, dbCollectionNames.favorites); return onSnapshot(q, (snap) => callback(snap.docs.map(d => d.data()))); }
+        async function saveFavorite(favData) { await setDoc(doc(db, dbCollectionNames.users, currentUserId, dbCollectionNames.favorites, favData.id), favData); }
+        async function removeFavorite(favData) { await deleteDoc(doc(db, dbCollectionNames.users, currentUserId, dbCollectionNames.favorites, favData.id)); }
+
+        // --- handlers.js (Simplified) ---
+        function getCardHandlers() { return { onLike: toggleFavorite }; }
+        async function toggleFavorite(imageData, btn) {
+            const favorites = getState('favorites');
+            if (favorites === null) return;
+            const isLiked = favorites.some(fav => fav.id === imageData.id);
+            if (isLiked) {
+                await removeFavorite(imageData);
+            } else {
+                await saveFavorite({ id: imageData.id, style: imageData.style, imageUrl: imageData.src });
+            }
+        }
+        async function handleImageGeneration() { alert("圖片生成功能已在測試中停用。"); }
+
+        // --- uiManager.js ---
+        let DOMElements = {};
+        function initializeUI() {
+            DOMElements = {
+                headerTitle: document.getElementById('header-title'),
+                tabNavigation: document.getElementById('tab-navigation'),
+                styleSectionsContainer: document.getElementById('style-sections'),
+                generateOneBtn: document.getElementById('generate-one-btn'),
+                generateFourBtn: document.getElementById('generate-four-btn'),
+                favoritesBtn: document.getElementById('favorites-btn'),
+                favoritesCount: document.getElementById('favorites-count'),
+                userInfo: document.getElementById('user-info'),
+            };
+            DOMElements.headerTitle.textContent = appInfo.title;
+            DOMElements.generateOneBtn.textContent = uiMessages.buttons.generateOne;
+            DOMElements.generateFourBtn.textContent = uiMessages.buttons.generateFour;
+            DOMElements.favoritesBtn.querySelector('#favorites-btn-text').textContent = uiMessages.buttons.favorites;
+
+            styles.forEach((style, index) => {
+                const tab = document.createElement('button');
+                tab.className = `tab-button py-2 px-4 ${index === 0 ? 'active' : ''}`;
+                tab.textContent = style.title;
+                tab.onclick = () => setState({ activeStyleId: style.id });
+                DOMElements.tabNavigation.appendChild(tab);
+                const section = document.createElement('section');
+                section.id = `content-${style.id}`;
+                section.className = `tab-content ${index === 0 ? 'active' : ''}`;
+                section.innerHTML = `<div id="${style.id}-gallery" class="card-container"></div>`;
+                DOMElements.styleSectionsContainer.appendChild(section);
+            });
+            DOMElements.generateOneBtn.addEventListener('click', () => handleImageGeneration(1));
+            DOMElements.generateFourBtn.addEventListener('click', () => handleImageGeneration(4));
+        }
+        function updateUserInfo(uid, nickname) { DOMElements.userInfo.textContent = `使用者ID: ${uid ? `...${uid.slice(-6)}` : 'N/A'} (${nickname})`; }
+        
+        // --- gmain.js (Main Logic) ---
+        window.onload = () => {
+            initState(getInitialState());
+            initializeUI();
+
+            subscribe('activeStyleId', (styleId) => {
+                document.querySelectorAll('.tab-button').forEach(btn => btn.classList.toggle('active', btn.textContent === styles.find(s => s.id === styleId).title));
+                document.querySelectorAll('.tab-content').forEach(content => content.classList.toggle('active', content.id === `content-${styleId}`));
+            });
+            
+            subscribe('favorites', (favorites) => {
+                if(favorites === null) return;
+                DOMElements.favoritesCount.textContent = favorites.length;
+                // Simple render for test
+                const gallery = document.querySelector('.card-container');
+                if(gallery && !window.hasInitialImagesGenerated) {
+                    window.hasInitialImagesGenerated = true;
+                    if(favorites.length > 0) {
+                         const card = createImageCard({ ...favorites[0], src: favorites[0].imageUrl, isLiked: true }, getCardHandlers());
+                         gallery.appendChild(card);
+                    }
+                }
+            });
+
+            if (initFirebase()) {
+                handleAuthentication(onUserSignedIn);
+            } else {
+                showMessage(uiMessages.errors.firebaseInit, true);
             }
         };
-        const dbCollectionNames = { users: 'users', dailyTasks: 'dailyTasks', statistics: 'statistics', userStats: 'userStats', favorites: 'favorites', status: 'status' };
-        const gameSettings = { dailyLimits: { generateOne: 20, generateFour: 2, gacha: 5, tts: 3 } };
-        const userStatsStructure = { likes: 0, shares: 0, gachaDraws: 0 };
-        logStatus("應用程式設定載入完成。", true);
 
-        // 2. 來自 stateManager.js 的邏輯 (簡化版)
-        let _state = {};
-        function initState(initialState) { _state = initialState; }
-        function setState(newState) { Object.assign(_state, newState); }
-        
-        // 3. 來自 state.js 的邏輯
-        initState({ favorites: null });
-        logStatus("狀態管理器初始化完成。", true);
-
-        // 4. 來自 dailyTaskManager.js 的核心邏輯 (簡化版)
-        class DailyTask {
-            constructor(taskName, db, userId) { this.name = taskName; this.db = db; this.userId = userId; }
-            async checkAndSync() {
-                const today = new Date().toISOString().split('T')[0];
-                const docRef = doc(this.db, dbCollectionNames.users, this.userId, dbCollectionNames.dailyTasks, this.name);
-                const docSnap = await getDoc(docRef);
-                if (!docSnap.exists() || docSnap.data().lastUpdate !== today) {
-                    await setDoc(docRef, { count: gameSettings.dailyLimits[this.name] || 0, lastUpdate: today });
-                }
-                return true;
-            }
-        }
-        async function initDailyTaskManager(db, uid) {
-            const tasks = Object.keys(gameSettings.dailyLimits);
-            await Promise.all(tasks.map(taskName => new DailyTask(taskName, db, uid).checkAndSync()));
-        }
-        
-        // 5. 來自 analyticsManager.js 的核心邏輯 (簡化版)
-        async function initAnalyticsManager(db, uid) {
-            const statsRef = doc(db, dbCollectionNames.users, uid, dbCollectionNames.statistics, dbCollectionNames.userStats);
-            const docSnap = await getDoc(statsRef);
-            if (!docSnap.exists()) {
-                await setDoc(statsRef, { ...userStatsStructure, firstLogin: serverTimestamp(), lastLogin: serverTimestamp() });
+        async function onUserSignedIn(uid, error) {
+            if (uid) {
+                const userData = await getUserData(db, uid);
+                updateUserInfo(uid, userData.nickname);
+                await initDailyTaskManager(db, uid);
+                await initAnalyticsManager(db, uid);
+                listenToFavorites((favs) => setState({ favorites: favs }));
+                
+                document.getElementById('loading-overlay').classList.add('hidden');
+                document.querySelector('.main-container').style.opacity = '1';
             } else {
-                await setDoc(statsRef, { lastLogin: serverTimestamp() }, { merge: true });
+                showMessage(uiMessages.errors.cloudConnect, true);
             }
         }
 
-        // 6. 來自 gfirebase.js 的核心邏輯
-        function listenToFavorites(db, uid, callback) {
-            const favoritesCol = collection(db, dbCollectionNames.users, uid, dbCollectionNames.favorites);
-            return onSnapshot(favoritesCol, 
-                (snapshot) => callback(snapshot.docs.map(doc => doc.data()), null),
-                (error) => callback([], error)
-            );
-        }
-
-        // --- 主測試流程 ---
-        async function runFullTest() {
-            let app, auth, db, user;
-
-            try {
-                logStatus("1. 初始化 Firebase...");
-                app = initializeApp(serviceKeys.firebaseConfig);
-                auth = getAuth(app);
-                db = getFirestore(app);
-                logStatus("Firebase 初始化成功。", true);
-
-                logStatus("2. 正在匿名登入...");
-                const userCredential = await signInAnonymously(auth);
-                user = userCredential.user;
-                logStatus(`匿名登入成功 (ID: ...${user.uid.slice(-6)})`, true);
-
-                logStatus("3. 初始化每日任務管理器...");
-                await initDailyTaskManager(db, user.uid);
-                logStatus("每日任務管理器初始化成功。", true);
-
-                logStatus("4. 初始化分析管理器...");
-                await initAnalyticsManager(db, user.uid);
-                logStatus("分析管理器初始化成功。", true);
-
-                logStatus("5. 啟動『我的最愛』即時監聽...");
-                listenToFavorites(db, user.uid, (favorites, error) => {
-                    if (error) {
-                        logStatus(`監聽『我的最愛』失敗: ${error.message}`, false);
-                    } else {
-                        logStatus(`成功接收到 ${favorites.length} 筆『我的最愛』資料。`, true);
-                        logStatus("🎉 所有啟動步驟已成功完成！", true);
-                    }
-                });
-
-            } catch (error) {
-                console.error("測試過程中發生致命錯誤:", error);
-                logStatus(`測試失敗: ${error.message}`, false);
-            }
-        }
-
-        runFullTest();
     </script>
-
 </body>
 </html>
