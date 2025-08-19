@@ -7,7 +7,8 @@ import { setState, subscribe, initState, getState } from './stateManager.js';
 import { getInitialState } from './state.js';
 import { initializeUI, updateAllTaskUIs, updateSlideshowUI, openAnnouncementModal, updateUserInfo } from './uiManager.js';
 import { getCardHandlers } from './handlers.js';
-import { showMessage, initParticles, animateParticles, resizeLoadingCanvas, animateLoading, Petal, createImageCard, updateFavoritesCountUI } from './gui.js';
+// ✨ FIX: Petal, resizeLoadingCanvas, animateLoading 不再需要，可以移除
+import { showMessage, initParticles, animateParticles, createImageCard, updateFavoritesCountUI } from './gui.js';
 import { initSounds } from './soundManager.js';
 
 let isLoadingOverlayHidden = false;
@@ -30,13 +31,10 @@ function hideLoadingOverlay() {
 
 window.onload = () => {
     initState(getInitialState()); 
-
     setupAppInfo();
     window.firebaseConfig = serviceKeys.firebaseConfig;
-
     initializeUI();
     setupStateSubscriptions();
-
     updateUserInfo(null, null, true);
 
     if (!uiSettings.enableLoadingAnimation) {
@@ -71,10 +69,8 @@ window.onload = () => {
 function setupStateSubscriptions() {
     subscribe('favorites', (favorites) => {
         if (favorites === null) return;
-
         updateFavoritesCountUI(favorites.length);
         updateSlideshowUI(favorites);
-
         document.querySelectorAll('.image-card').forEach(card => {
             const cardId = card.dataset.id;
             const likeBtn = card.querySelector('.like-btn');
@@ -83,7 +79,6 @@ function setupStateSubscriptions() {
                 likeBtn.classList.toggle('liked', isLiked);
             }
         });
-
         if (!window.hasInitialImagesGenerated) {
             window.hasInitialImagesGenerated = true;
             generateInitialImages(favorites);
@@ -108,21 +103,18 @@ async function onUserSignedIn(uid, error) {
             getUserData(db, uid)
         ]);
         
-        // ✨ FIX: 將不相容的 'userData?.nickname' 語法換成傳統的寫法
         const nickname = (userData && userData.nickname) ? userData.nickname : '';
         
         updateUserInfo(uid, nickname);
-
         setState({ userNickname: nickname });
         if (nickname) {
             localStorage.setItem('userNickname', nickname);
         }
         
         listenToFavorites(onFavoritesUpdate);
-        
         setState({ isAppInitialized: true });
-        
         updateAllTaskUIs();
+
         if (uiSettings.hideLoadingOnConnect) {
             hideLoadingOverlay();
         }
@@ -137,7 +129,6 @@ async function onUserSignedIn(uid, error) {
     }
 }
 
-
 function onFavoritesUpdate(newFavorites, err) {
     if (err) {
         showMessage(uiMessages.errors.syncFavorites, true);
@@ -147,14 +138,21 @@ function onFavoritesUpdate(newFavorites, err) {
     setState({ favorites: newFavorites });
 }
 
+// ✨ FIX: 簡化載入動畫，移除 Canvas 部分
 function startLoadingSequence() {
     const loadingOverlay = document.getElementById('loading-overlay');
     const loadingText = document.getElementById('loading-text');
     const silhouetteContainer = document.querySelector('.silhouette-container');
     const loadingCanvas = document.getElementById('loading-canvas');
 
+    // 隱藏不再需要的 Canvas
+    if (loadingCanvas) {
+        loadingCanvas.style.display = 'none';
+    }
+
     if(loadingText) loadingText.textContent = uiMessages.loading.connecting;
 
+    // 只保留 CSS 剪影動畫
     const silhouettes = [...uiSettings.loadingSilhouettes].sort(() => Math.random() - 0.5);
     silhouetteContainer.innerHTML = silhouettes.map(src => `<img src="${src}" class="loading-silhouette" alt="Loading Muse">`).join('');
     
@@ -169,9 +167,10 @@ function startLoadingSequence() {
         });
     }
 
-    resizeLoadingCanvas(loadingCanvas);
-    let petals = Array.from({ length: uiSettings.loadingPetalCount }, () => new Petal(loadingCanvas));
-    animateLoading(loadingCanvas, petals, loadingOverlay);
+    // 移除 Canvas 動畫的呼叫
+    // resizeLoadingCanvas(loadingCanvas);
+    // let petals = Array.from({ length: uiSettings.loadingPetalCount }, () => new Petal(loadingCanvas));
+    // animateLoading(loadingCanvas, petals, loadingOverlay);
 
     setTimeout(() => {
         if(loadingText) loadingText.textContent = uiMessages.loading.starting;
@@ -188,9 +187,7 @@ function startLoadingSequence() {
 async function generateInitialImages(favorites) {
     for (const fav of favorites) {
         const displayUrl = fav.resizedUrl || fav.imageUrl;
-
         if (!fav || !fav.style || !fav.style.id || !displayUrl) continue;
-        
         const gallery = document.getElementById(`${fav.style.id}-gallery`);
         if (gallery) {
             const imageData = { ...fav, src: displayUrl, isLiked: true };
@@ -204,16 +201,10 @@ async function generateInitialImages(favorites) {
             const randomGoddesses = await getRandomGoddessesFromDB(4);
             for (const goddess of randomGoddesses) {
                 if (document.querySelector(`.image-card[data-id="${goddess.id}"]`)) continue;
-                
                 const displayUrl = goddess.resizedUrl || goddess.imageUrl;
-                
                 const gallery = document.getElementById(`${goddess.style.id}-gallery`);
                 if (gallery) {
-                    const imageData = {
-                        ...goddess,
-                        src: displayUrl,
-                        isLiked: favorites.some(fav => fav.id === goddess.id)
-                    };
+                    const imageData = { ...goddess, src: displayUrl, isLiked: favorites.some(fav => fav.id === goddess.id) };
                     const imageCard = createImageCard(imageData, getCardHandlers());
                     gallery.appendChild(imageCard);
                 }
@@ -230,17 +221,10 @@ function setupAppInfo() {
     const appFooter = document.getElementById('app-footer');
     const rankingBtn = document.getElementById('ranking-btn');
     document.title = `${appInfo.title} v${appInfo.version}`;
-    
-    headerTitleEl.innerHTML = `${appInfo.title} <span class="text-base align-middle text-gray-400 font-medium">v${appInfo.version}</span>`;
-    
-    if (rankingBtn) {
-        rankingBtn.innerHTML = uiMessages.moreOptions.ranking;
+    if (headerTitleEl) headerTitleEl.innerHTML = `${appInfo.title} <span class="text-base align-middle text-gray-400 font-medium">v${appInfo.version}</span>`;
+    if (rankingBtn) rankingBtn.innerHTML = uiMessages.moreOptions.ranking;
+    if (appFooter) {
+        const { copyrightYear, authorName, authorLink } = appInfo.footer;
+        appFooter.innerHTML = `© ${copyrightYear} <a href="${authorLink}" target="_blank" class="hover:underline">${authorName}</a>. All Rights Reserved. <span class="mx-2">|</span> <a href="#" id="contact-link" class="hover:underline">聯絡我們</a>`;
     }
-
-    const { copyrightYear, authorName, authorLink } = appInfo.footer;
-    appFooter.innerHTML = `
-        © ${copyrightYear} <a href="${authorLink}" target="_blank" class="hover:underline">${authorName}</a>. All Rights Reserved.
-        <span class="mx-2">|</span>
-        <a href="#" id="contact-link" class="hover:underline">聯絡我們</a>
-    `;
 }
