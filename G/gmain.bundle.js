@@ -25,6 +25,9 @@ const styles = [ { "id": "vip-exclusive", "title": "👑 VIP 專屬", "descripti
 const randomKeywords_night = { /* ... Omitted for brevity ... */ };
 const randomKeywords_day = { /* ... Omitted for brevity ... */ };
 
+// --- Start of state.js ---
+function getInitialState() { const storedApiKey = localStorage.getItem('userGeminiApiKey'); const hasUserApiKey = !!storedApiKey; const storedImageQuality = localStorage.getItem('userImageQuality'); const storedNickname = localStorage.getItem('userNickname'); return { isGenerating: false, activeStyleId: styles[0].id, isStoryGenerating: false, isTtsGenerating: false, favorites: null, ownGoddessStreak: 0, touchStartX: 0, touchEndX: 0, currentSlideshowIndex: 0, currentTheme: 'night', userApiKey: storedApiKey || serviceKeys.defaultApiKey, hasUserApiKey: hasUserApiKey, imageQuality: storedImageQuality || 'thumbnail', isAppInitialized: false, userNickname: storedNickname || '', }; }
+
 // --- Start of stateManager.js ---
 let _state = {};
 const _subscribers = {};
@@ -33,19 +36,14 @@ function getState(...keys) { if (keys.length === 1) { return _state[keys[0]]; } 
 function setState(newState) { for (const key in newState) { if (Object.prototype.hasOwnProperty.call(newState, key)) { if (_state[key] !== newState[key]) { _state[key] = newState[key]; if (_subscribers[key]) { _subscribers[key].forEach(callback => { try { callback(_state[key]); } catch (e) { console.error(`[State Manager] Error in subscriber for key "${key}":`, e); } }); } } } } }
 function subscribe(key, callback) { if (!_subscribers[key]) { _subscribers[key] = []; } _subscribers[key].push(callback); if (key in _state) { try { callback(_state[key]); } catch (e) { console.error(`[State Manager] Error in initial callback for key "${key}":`, e); } } return () => { _subscribers[key] = _subscribers[key].filter(cb => cb !== callback); }; }
 
-// --- Start of state.js ---
-function getInitialState() { const storedApiKey = localStorage.getItem('userGeminiApiKey'); const hasUserApiKey = !!storedApiKey; const storedImageQuality = localStorage.getItem('userImageQuality'); const storedNickname = localStorage.getItem('userNickname'); return { isGenerating: false, activeStyleId: styles[0].id, isStoryGenerating: false, isTtsGenerating: false, favorites: null, ownGoddessStreak: 0, touchStartX: 0, touchEndX: 0, currentSlideshowIndex: 0, currentTheme: 'night', userApiKey: storedApiKey || serviceKeys.defaultApiKey, hasUserApiKey: hasUserApiKey, imageQuality: storedImageQuality || 'thumbnail', isAppInitialized: false, userNickname: storedNickname || '', }; }
-
 // --- Start of soundManager.js ---
-const dummySound = () => {};
-const sounds = { start: dummySound, success: dummySound, tab: dummySound, open: dummySound, like: dummySound, gacha: dummySound, toDay: dummySound, toNight: dummySound, };
+const sounds = { start: ()=>{}, success: ()=>{}, tab: ()=>{}, open: ()=>{}, like: ()=>{}, gacha: ()=>{}, toDay: ()=>{}, toNight: ()=>{}, };
 let isSoundInitialized = false;
 async function initSounds() { if (isSoundInitialized) return; try { await Tone.start(); const mainSynth = new Tone.Synth().toDestination(); const fmSynth = new Tone.FMSynth().toDestination(); const tabSynth = new Tone.Synth().toDestination(); sounds.start = () => fmSynth.triggerAttackRelease("C2", "8n"); sounds.success = () => { mainSynth.triggerAttackRelease("C5", "16n", Tone.now()); mainSynth.triggerAttackRelease("E5", "16n", Tone.now() + 0.1); }; sounds.tab = () => tabSynth.triggerAttackRelease("C4", "32n"); sounds.open = () => fmSynth.triggerAttackRelease("A3", "16n"); sounds.like = () => mainSynth.triggerAttackRelease("A5", "32n"); sounds.gacha = () => { const synth = new Tone.PolySynth(Tone.Synth).toDestination(); const now = Tone.now(); synth.triggerAttackRelease(["C4", "E4", "G4", "C5"], "8n", now); synth.triggerAttackRelease(["F4", "A4", "C5", "E5"], "8n", now + 0.2); synth.triggerAttackRelease(["G4", "B4", "D5", "G5"], "4n", now + 0.4); }; sounds.toDay = () => new Tone.AMSynth().toDestination().triggerAttackRelease("C4", "2n"); sounds.toNight = () => new Tone.FMSynth().toDestination().triggerAttackRelease("G5", "8n"); Tone.Master.volume.value = soundSettings.masterVolume; isSoundInitialized = true; console.log("音效引擎已成功初始化。"); } catch (e) { console.error("無法啟動音效引擎:", e); } }
 
 // --- Start of dailyTaskManager.js ---
 class DailyTask {
     constructor(taskName, db, userId) { this.name = taskName; this.db = db; this.userId = userId; this.defaultCount = gameSettings.dailyLimits[taskName]; this.state = { count: this.defaultCount, lastUpdate: null, }; this.docRef = doc(this.db, dbCollectionNames.users, userId, dbCollectionNames.dailyTasks, this.name); this.isInitialized = false; }
-    // ✨ FIX: Replaced private field '#' with '_' for compatibility
     async _checkAndSync() { if (this.isInitialized && this.state.lastUpdate === new Date().toISOString().split('T')[0]) { return; } const today = new Date().toISOString().split('T')[0]; const docSnap = await getDoc(this.docRef); if (docSnap.exists()) { const dbState = docSnap.data(); if (dbState.lastUpdate === today) { this.state = dbState; } else { const newCount = Math.max(dbState.count, this.defaultCount); this.state.count = newCount; this.state.lastUpdate = today; await this._save(); } } else { this.state.count = this.defaultCount; this.state.lastUpdate = today; await this._save(); } this.isInitialized = true; }
     async _save() { await setDoc(this.docRef, this.state); }
     async getCount() { await this._checkAndSync(); return this.state.count; }
@@ -150,7 +148,36 @@ function openAnnouncementModal(forceShow = false) { if (!announcementSettings.en
 let isLoadingOverlayHidden = false;
 function hideLoadingOverlay() { if (isLoadingOverlayHidden) return; const loadingOverlay = document.getElementById('loading-overlay'); if (loadingOverlay) { loadingOverlay.classList.add('hidden'); } if (!getCurrentUserId()) { updateAllTaskUIs(); } openAnnouncementModal(); isLoadingOverlayHidden = true; }
 window.onload = () => { initState(getInitialState()); setupAppInfo(); window.firebaseConfig = serviceKeys.firebaseConfig; initializeUI(); setupStateSubscriptions(); updateUserInfo(null, null, true); if (!uiSettings.enableLoadingAnimation) { hideLoadingOverlay(); if (initFirebase()) { handleAuthentication(onUserSignedIn); } else { showMessage(uiMessages.errors.firebaseInit, true); } } else { startLoadingSequence(); if (initFirebase()) { handleAuthentication(onUserSignedIn); } else { showMessage(uiMessages.errors.firebaseInit, true); hideLoadingOverlay(); } } initParticles(); animateParticles(); const startAudioOnce = async () => { await initSounds(); document.body.removeEventListener('click', startAudioOnce); document.body.removeEventListener('touchend', startAudioOnce); }; document.body.addEventListener('click', startAudioOnce); document.body.addEventListener('touchend', startAudioOnce); };
-async function onUserSignedIn(uid, error) { if (uid) { const db = getFirestore(initializeApp(serviceKeys.firebaseConfig)); const [_, __, userData] = await Promise.all([ initDailyTaskManager(db, uid), initAnalyticsManager(db, uid), getUserData(db, uid) ]); const nickname = (userData && userData.nickname) ? userData.nickname : ''; updateUserInfo(uid, nickname); setState({ userNickname: nickname }); if (nickname) { localStorage.setItem('userNickname', nickname); } listenToFavorites(onFavoritesUpdate); setState({ isAppInitialized: true }); updateAllTaskUIs(); if (uiSettings.hideLoadingOnConnect) { hideLoadingOverlay(); } } else { showMessage(uiMessages.errors.cloudConnect, true); console.error("Authentication Error:", error); setState({ isAppInitialized: true }); updateUserInfo(null, null, false); if (uiSettings.hideLoadingOnConnect) { hideLoadingOverlay(); } } }
+async function onUserSignedIn(uid, error) { 
+    if (uid) {
+        // ✨ FIX: Use the globally initialized 'db' instance instead of re-initializing.
+        const [_, __, userData] = await Promise.all([ 
+            initDailyTaskManager(db, uid), 
+            initAnalyticsManager(db, uid), 
+            getUserData(db, uid) 
+        ]); 
+        const nickname = (userData && userData.nickname) ? userData.nickname : ''; 
+        updateUserInfo(uid, nickname); 
+        setState({ userNickname: nickname }); 
+        if (nickname) { 
+            localStorage.setItem('userNickname', nickname); 
+        } 
+        listenToFavorites(onFavoritesUpdate); 
+        setState({ isAppInitialized: true }); 
+        updateAllTaskUIs(); 
+        if (uiSettings.hideLoadingOnConnect) { 
+            hideLoadingOverlay(); 
+        } 
+    } else { 
+        showMessage(uiMessages.errors.cloudConnect, true); 
+        console.error("Authentication Error:", error); 
+        setState({ isAppInitialized: true }); 
+        updateUserInfo(null, null, false); 
+        if (uiSettings.hideLoadingOnConnect) { 
+            hideLoadingOverlay(); 
+        } 
+    } 
+}
 function onFavoritesUpdate(newFavorites, err) { if (err) { showMessage(uiMessages.errors.syncFavorites, true); setState({ favorites: [] }); return; } setState({ favorites: newFavorites }); }
 function startLoadingSequence() { const loadingOverlay = document.getElementById('loading-overlay'); const loadingText = document.getElementById('loading-text'); const silhouetteContainer = document.querySelector('.silhouette-container'); const loadingCanvas = document.getElementById('loading-canvas'); if (loadingText) loadingText.textContent = uiMessages.loading.connecting; const silhouettes = [...uiSettings.loadingSilhouettes].sort(() => 0.5 - Math.random()); silhouetteContainer.innerHTML = silhouettes.map(src => `<img src="${src}" class="loading-silhouette" alt="Loading Muse">`).join(''); const silhouetteElements = document.querySelectorAll('.loading-silhouette'); if (silhouetteElements.length > 0) { const animationStep = uiSettings.loadingAnimationStep; const totalDuration = silhouetteElements.length * animationStep; silhouetteElements.forEach((el, index) => { el.style.animationDelay = `${index * animationStep}s`; el.style.animationDuration = `${totalDuration}s`; el.style.animationName = 'silhouette-fade'; }); } resizeLoadingCanvas(loadingCanvas); let petals = Array.from({ length: uiSettings.loadingPetalCount }, () => new Petal(loadingCanvas)); animateLoading(loadingCanvas, petals, loadingOverlay); setTimeout(() => { if (loadingText) loadingText.textContent = uiMessages.loading.starting; setTimeout(() => { hideLoadingOverlay(); if (!getCurrentUserId()) { updateAllTaskUIs(); } openAnnouncementModal(); }, 500); }, uiSettings.loadingScreenDuration); }
 async function generateInitialImages(favorites) { for (const fav of favorites) { const displayUrl = fav.resizedUrl || fav.imageUrl; if (!fav || !fav.style || !fav.style.id || !displayUrl) continue; const gallery = document.getElementById(`${fav.style.id}-gallery`); if (gallery) { const imageData = { ...fav, src: displayUrl, isLiked: true }; const imageCard = createImageCard(imageData, getCardHandlers()); gallery.appendChild(imageCard); } } if (favorites.length < 4) { try { const randomGoddesses = await getRandomGoddessesFromDB(4); for (const goddess of randomGoddesses) { if (document.querySelector(`.image-card[data-id="${goddess.id}"]`)) continue; const displayUrl = goddess.resizedUrl || goddess.imageUrl; const gallery = document.getElementById(`${goddess.style.id}-gallery`); if (gallery) { const imageData = { ...goddess, src: displayUrl, isLiked: favorites.some(fav => fav.id === goddess.id) }; const imageCard = createImageCard(imageData, getCardHandlers()); gallery.appendChild(imageCard); } } } catch (error) { console.error("Failed to fetch initial random goddesses:", error); showMessage(error.message, true); } } }
