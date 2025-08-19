@@ -3,100 +3,153 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MVP - Firebase 連線測試</title>
-    <!-- 引入 Tailwind CSS 以便快速美化 -->
+    <title>MVP 步驟3 - 完整啟動流程測試</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body {
-            background-color: #0c0a18; /* 使用專案的紫色背景 */
-        }
+        body { background-color: #0c0a18; }
+        .status-log li { transition: all 0.3s ease; }
     </style>
 </head>
-<body class="flex items-center justify-center min-h-screen">
+<body class="flex items-center justify-center min-h-screen p-4">
 
-    <!-- 用於顯示結果的容器 -->
-    <div id="status-display" class="text-center p-8 bg-gray-800 rounded-lg shadow-xl">
-        <h1 class="text-2xl font-bold text-white mb-4">Firebase 連線測試</h1>
-        <p id="status-text" class="text-lg text-yellow-400">初始化中...</p>
+    <div class="text-center p-6 bg-gray-800 rounded-lg shadow-xl max-w-lg mx-auto w-full">
+        <h1 class="text-xl font-bold text-white mb-4">MVP 步驟3：完整啟動流程測試</h1>
+        <ol id="status-log" class="text-left space-y-2 text-gray-300 text-sm">
+            <!-- 測試日誌會顯示在這裡 -->
+        </ol>
     </div>
 
-    <!-- 
-      直接在此處載入 Firebase SDK，並執行測試腳本。
-      這移除了所有外部檔案依賴，是最小化的測試環境。
-    -->
     <script type="module">
-        // 從 Firebase CDN 匯入必要的功能
+        // 從 Firebase CDN 匯入所有需要的功能
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
-        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, writeBatch, collection, onSnapshot, increment, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
 
-        // 取得狀態顯示的 DOM 元素
-        const statusText = document.getElementById('status-text');
-        const statusDisplay = document.getElementById('status-display');
+        const logList = document.getElementById('status-log');
+        
+        // 用於在畫面上顯示日誌的輔助函式
+        function logStatus(message, isSuccess = null) {
+            const li = document.createElement('li');
+            let statusIcon = '⏳';
+            if (isSuccess === true) statusIcon = '✅';
+            if (isSuccess === false) statusIcon = '❌';
+            
+            li.innerHTML = `${statusIcon} ${message}`;
+            
+            if (isSuccess === true) li.classList.add('text-green-400');
+            if (isSuccess === false) li.classList.add('text-red-400', 'font-bold');
+            
+            logList.appendChild(li);
+        }
 
-        // 您的 Firebase 設定 (從 app-config.js 複製)
-        const firebaseConfig = {
-            apiKey: "AIzaSyDbWa8TWru1J048WK8msVBaC9JhhhtuhJw",
-            authDomain: "goddess-chance.firebaseapp.com",
-            projectId: "goddess-chance",
-            storageBucket: "goddess-chance.firebasestorage.app",
-            messagingSenderId: "440990936442",
-            appId: "1:440990936442:web:37d864cd13112f14913ac3",
-            measurementId: "G-3HCCT2PFXX"
+        // --- 開始整合所有 JS 檔案的邏輯 ---
+
+        // 1. 來自 app-config.js & game-config.js 的核心設定
+        logStatus("正在載入應用程式設定...");
+        const serviceKeys = {
+            firebaseConfig: {
+                apiKey: "AIzaSyDbWa8TWru1J048WK8msVBaC9JhhhtuhJw",
+                authDomain: "goddess-chance.firebaseapp.com",
+                projectId: "goddess-chance",
+                storageBucket: "goddess-chance.firebasestorage.app",
+                messagingSenderId: "440990936442",
+                appId: "1:440990936442:web:37d864cd13112f14913ac3",
+                measurementId: "G-3HCCT2PFXX"
+            }
         };
+        const dbCollectionNames = { users: 'users', dailyTasks: 'dailyTasks', statistics: 'statistics', userStats: 'userStats', favorites: 'favorites', status: 'status' };
+        const gameSettings = { dailyLimits: { generateOne: 20, generateFour: 2, gacha: 5, tts: 3 } };
+        const userStatsStructure = { likes: 0, shares: 0, gachaDraws: 0 };
+        logStatus("應用程式設定載入完成。", true);
 
-        // 使用 try-catch 包裹所有操作，以便捕捉任何可能的錯誤
-        try {
-            statusText.textContent = "正在初始化 Firebase...";
-            
-            // 1. 初始化 Firebase App
-            const app = initializeApp(firebaseConfig);
-            
-            statusText.textContent = "Firebase 初始化成功，正在取得認證...";
-            
-            // 2. 取得認證實體
-            const auth = getAuth(app);
+        // 2. 來自 stateManager.js 的邏輯 (簡化版)
+        let _state = {};
+        function initState(initialState) { _state = initialState; }
+        function setState(newState) { Object.assign(_state, newState); }
+        
+        // 3. 來自 state.js 的邏輯
+        initState({ favorites: null });
+        logStatus("狀態管理器初始化完成。", true);
 
-            statusText.textContent = "認證服務準備就緒，正在嘗試匿名登入...";
+        // 4. 來自 dailyTaskManager.js 的核心邏輯 (簡化版)
+        class DailyTask {
+            constructor(taskName, db, userId) { this.name = taskName; this.db = db; this.userId = userId; }
+            async checkAndSync() {
+                const today = new Date().toISOString().split('T')[0];
+                const docRef = doc(this.db, dbCollectionNames.users, this.userId, dbCollectionNames.dailyTasks, this.name);
+                const docSnap = await getDoc(docRef);
+                if (!docSnap.exists() || docSnap.data().lastUpdate !== today) {
+                    await setDoc(docRef, { count: gameSettings.dailyLimits[this.name] || 0, lastUpdate: today });
+                }
+                return true;
+            }
+        }
+        async function initDailyTaskManager(db, uid) {
+            const tasks = Object.keys(gameSettings.dailyLimits);
+            await Promise.all(tasks.map(taskName => new DailyTask(taskName, db, uid).checkAndSync()));
+        }
+        
+        // 5. 來自 analyticsManager.js 的核心邏輯 (簡化版)
+        async function initAnalyticsManager(db, uid) {
+            const statsRef = doc(db, dbCollectionNames.users, uid, dbCollectionNames.statistics, dbCollectionNames.userStats);
+            const docSnap = await getDoc(statsRef);
+            if (!docSnap.exists()) {
+                await setDoc(statsRef, { ...userStatsStructure, firstLogin: serverTimestamp(), lastLogin: serverTimestamp() });
+            } else {
+                await setDoc(statsRef, { lastLogin: serverTimestamp() }, { merge: true });
+            }
+        }
 
-            // 3. 執行匿名登入
-            signInAnonymously(auth)
-                .then((userCredential) => {
-                    // 登入成功
-                    const user = userCredential.user;
-                    console.log("匿名登入成功！", user);
+        // 6. 來自 gfirebase.js 的核心邏輯
+        function listenToFavorites(db, uid, callback) {
+            const favoritesCol = collection(db, dbCollectionNames.users, uid, dbCollectionNames.favorites);
+            return onSnapshot(favoritesCol, 
+                (snapshot) => callback(snapshot.docs.map(doc => doc.data()), null),
+                (error) => callback([], error)
+            );
+        }
 
-                    // 在畫面上顯示成功訊息和 UID
-                    statusDisplay.classList.remove('bg-gray-800');
-                    statusDisplay.classList.add('bg-green-800');
-                    statusText.classList.remove('text-yellow-400');
-                    statusText.classList.add('text-green-300');
-                    statusText.innerHTML = `連線成功！<br><span class="text-xs text-gray-400 mt-2 block">您的雲端 ID: ${user.uid}</span>`;
-                })
-                .catch((error) => {
-                    // 登入失敗
-                    console.error("匿名登入失敗:", error);
-                    const errorCode = error.code;
-                    const errorMessage = error.message;
+        // --- 主測試流程 ---
+        async function runFullTest() {
+            let app, auth, db, user;
 
-                    // 在畫面上顯示錯誤訊息
-                    statusDisplay.classList.remove('bg-gray-800');
-                    statusDisplay.classList.add('bg-red-800');
-                    statusText.classList.remove('text-yellow-400');
-                    statusText.classList.add('text-red-300');
-                    statusText.innerHTML = `登入失敗！<br><span class="text-xs text-gray-400 mt-2 block">${errorCode}: ${errorMessage}</span>`;
+            try {
+                logStatus("1. 初始化 Firebase...");
+                app = initializeApp(serviceKeys.firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+                logStatus("Firebase 初始化成功。", true);
+
+                logStatus("2. 正在匿名登入...");
+                const userCredential = await signInAnonymously(auth);
+                user = userCredential.user;
+                logStatus(`匿名登入成功 (ID: ...${user.uid.slice(-6)})`, true);
+
+                logStatus("3. 初始化每日任務管理器...");
+                await initDailyTaskManager(db, user.uid);
+                logStatus("每日任務管理器初始化成功。", true);
+
+                logStatus("4. 初始化分析管理器...");
+                await initAnalyticsManager(db, user.uid);
+                logStatus("分析管理器初始化成功。", true);
+
+                logStatus("5. 啟動『我的最愛』即時監聽...");
+                listenToFavorites(db, user.uid, (favorites, error) => {
+                    if (error) {
+                        logStatus(`監聽『我的最愛』失敗: ${error.message}`, false);
+                    } else {
+                        logStatus(`成功接收到 ${favorites.length} 筆『我的最愛』資料。`, true);
+                        logStatus("🎉 所有啟動步驟已成功完成！", true);
+                    }
                 });
 
-        } catch (error) {
-            // 如果在初始化階段就出錯
-            console.error("Firebase 初始化過程中發生致命錯誤:", error);
-            
-            // 在畫面上顯示致命錯誤訊息
-            statusDisplay.classList.remove('bg-gray-800');
-            statusDisplay.classList.add('bg-red-800');
-            statusText.classList.remove('text-yellow-400');
-            statusText.classList.add('text-red-300');
-            statusText.textContent = `初始化失敗: ${error.message}`;
+            } catch (error) {
+                console.error("測試過程中發生致命錯誤:", error);
+                logStatus(`測試失敗: ${error.message}`, false);
+            }
         }
+
+        runFullTest();
     </script>
 
 </body>
