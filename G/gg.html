@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MVP - Firebase 連線測試</title>
+    <!-- 引入 Tailwind CSS 以便快速美化 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #0c0a18; /* 使用專案的紫色背景 */
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen">
+
+    <!-- 用於顯示結果的容器 -->
+    <div id="status-display" class="text-center p-8 bg-gray-800 rounded-lg shadow-xl">
+        <h1 class="text-2xl font-bold text-white mb-4">Firebase 連線測試</h1>
+        <p id="status-text" class="text-lg text-yellow-400">初始化中...</p>
+    </div>
+
+    <!-- 
+      直接在此處載入 Firebase SDK，並執行測試腳本。
+      這移除了所有外部檔案依賴，是最小化的測試環境。
+    -->
+    <script type="module">
+        // 從 Firebase CDN 匯入必要的功能
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js";
+
+        // 取得狀態顯示的 DOM 元素
+        const statusText = document.getElementById('status-text');
+        const statusDisplay = document.getElementById('status-display');
+
+        // 您的 Firebase 設定 (從 app-config.js 複製)
+        const firebaseConfig = {
+            apiKey: "AIzaSyDbWa8TWru1J048WK8msVBaC9JhhhtuhJw",
+            authDomain: "goddess-chance.firebaseapp.com",
+            projectId: "goddess-chance",
+            storageBucket: "goddess-chance.firebasestorage.app",
+            messagingSenderId: "440990936442",
+            appId: "1:440990936442:web:37d864cd13112f14913ac3",
+            measurementId: "G-3HCCT2PFXX"
+        };
+
+        // 使用 try-catch 包裹所有操作，以便捕捉任何可能的錯誤
+        try {
+            statusText.textContent = "正在初始化 Firebase...";
+            
+            // 1. 初始化 Firebase App
+            const app = initializeApp(firebaseConfig);
+            
+            statusText.textContent = "Firebase 初始化成功，正在取得認證...";
+            
+            // 2. 取得認證實體
+            const auth = getAuth(app);
+
+            statusText.textContent = "認證服務準備就緒，正在嘗試匿名登入...";
+
+            // 3. 執行匿名登入
+            signInAnonymously(auth)
+                .then((userCredential) => {
+                    // 登入成功
+                    const user = userCredential.user;
+                    console.log("匿名登入成功！", user);
+
+                    // 在畫面上顯示成功訊息和 UID
+                    statusDisplay.classList.remove('bg-gray-800');
+                    statusDisplay.classList.add('bg-green-800');
+                    statusText.classList.remove('text-yellow-400');
+                    statusText.classList.add('text-green-300');
+                    statusText.innerHTML = `連線成功！<br><span class="text-xs text-gray-400 mt-2 block">您的雲端 ID: ${user.uid}</span>`;
+                })
+                .catch((error) => {
+                    // 登入失敗
+                    console.error("匿名登入失敗:", error);
+                    const errorCode = error.code;
+                    const errorMessage = error.message;
+
+                    // 在畫面上顯示錯誤訊息
+                    statusDisplay.classList.remove('bg-gray-800');
+                    statusDisplay.classList.add('bg-red-800');
+                    statusText.classList.remove('text-yellow-400');
+                    statusText.classList.add('text-red-300');
+                    statusText.innerHTML = `登入失敗！<br><span class="text-xs text-gray-400 mt-2 block">${errorCode}: ${errorMessage}</span>`;
+                });
+
+        } catch (error) {
+            // 如果在初始化階段就出錯
+            console.error("Firebase 初始化過程中發生致命錯誤:", error);
+            
+            // 在畫面上顯示致命錯誤訊息
+            statusDisplay.classList.remove('bg-gray-800');
+            statusDisplay.classList.add('bg-red-800');
+            statusText.classList.remove('text-yellow-400');
+            statusText.classList.add('text-red-300');
+            statusText.textContent = `初始化失敗: ${error.message}`;
+        }
+    </script>
+
+</body>
+</html>
