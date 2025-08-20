@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MVP 步驟4 - UI 框架測試</title>
+    <title>MVP 步驟5 - 完整UI與卡片渲染測試</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
@@ -17,18 +17,26 @@
         .btn-base { transition: all 0.3s ease; }
         .btn-primary { background: linear-gradient(45deg, #EC4899, #8B5CF6); }
         .btn-secondary { background: linear-gradient(45deg, #4f46e5, #8b5cf6); }
+        .card-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; }
+        .image-card { background-color: rgba(31, 41, 55, 0.5); border-radius: 0.75rem; overflow: hidden; position: relative; opacity: 0; animation: fadeIn 0.8s ease-out forwards; aspect-ratio: 2 / 3; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .loader { width: 60px; height: 60px; border: 5px solid #4B5563; border-bottom-color: #EC4899; border-radius: 50%; display: inline-block; animation: rotation 1s linear infinite; }
+        @keyframes rotation { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .card-footer { position: absolute; bottom: 0; left: 0; right: 0; padding: 0.75rem; background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); display: flex; justify-content: space-between; align-items: center; z-index: 5; }
+        .like-btn { background: none; border: none; font-size: 1.75rem; cursor: pointer; color: rgba(255, 255, 255, 0.7); }
+        .like-btn.liked { color: #ef4444; }
     </style>
 </head>
 <body class="p-4">
 
     <!-- 測試日誌 -->
-    <div id="test-log-container" class="fixed top-0 left-0 w-full bg-black bg-opacity-80 text-white p-2 z-50 text-xs font-mono">
+    <div id="test-log-container" class="fixed top-0 left-0 w-full bg-black bg-opacity-80 text-white p-2 z-50 text-xs font-mono max-h-48 overflow-y-auto">
         <h2 class="font-bold">[偵錯日誌]</h2>
         <ol id="status-log" class="space-y-1"></ol>
     </div>
 
     <!-- 完整的 App HTML 結構 -->
-    <div class="main-container">
+    <div class="main-container pt-16">
         <header class="sticky-header">
             <div class="container mx-auto px-4">
                 <h1 id="header-title" class="text-3xl md:text-4xl font-bold text-center bg-clip-text text-transparent bg-gradient-to-r from-pink-500 to-violet-500 mb-2"></h1>
@@ -46,7 +54,7 @@
 
     <script type="module">
         // --- Firebase CDN Imports ---
-        import { getFirestore, collection, doc, setDoc, getDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { getFirestore, collection, doc, setDoc, getDoc, onSnapshot, serverTimestamp, query, limit, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
@@ -60,6 +68,7 @@
             if (isSuccess === true) li.classList.add('text-green-400');
             if (isSuccess === false) li.classList.add('text-red-400', 'font-bold');
             logList.appendChild(li);
+            li.scrollIntoView({ behavior: 'smooth', block: 'end' });
         }
 
         // --- 整合所有 JS 檔案的邏輯 ---
@@ -69,90 +78,145 @@
         const serviceKeys = { firebaseConfig: { apiKey: "AIzaSyDbWa8TWru1J048WK8msVBaC9JhhhtuhJw", authDomain: "goddess-chance.firebaseapp.com", projectId: "goddess-chance", storageBucket: "goddess-chance.appspot.com", messagingSenderId: "440990936442", appId: "1:440990936442:web:37d864cd13112f14913ac3" }};
         const styles = [{ id: "beach-silhouette", title: "🏖️ 夏日戀曲", description: "海灘、性感，融化你心的夏日海灘戀曲" }, { id: "morning-lazy", title: "☀️ 晨光私房", description: "慵懶、私密、屬於你的女友感瞬間" }];
         const uiMessages = { buttons: { generateOne: "遇見一位", generateFour: "遇見四位", favorites: "女神殿堂" } };
+        const gameSettings = { gachaQueryLimit: 100 };
 
         // --- 狀態管理器 ---
         let _state = {};
         const _subscribers = {};
         function initState(initialState) { _state = initialState; }
+        function getState(key) { return _state[key]; }
         function setState(newState) { for (const key in newState) { if (Object.prototype.hasOwnProperty.call(newState, key)) { if (_state[key] !== newState[key]) { _state[key] = newState[key]; if (_subscribers[key]) { _subscribers[key].forEach(callback => callback(_state[key])); } } } } }
         function subscribe(key, callback) { if (!_subscribers[key]) { _subscribers[key] = []; } _subscribers[key].push(callback); if (key in _state) { callback(_state[key]); } }
         function getInitialState() { return { activeStyleId: styles[0].id, favorites: null, userNickname: '' }; }
 
-        // --- UI 管理器 (核心測試部分) ---
-        let DOMElements = {};
-        function initializeUI() {
-            logStatus("UI Manager: 正在抓取 DOM 元素...");
-            DOMElements = {
-                headerTitle: document.getElementById('header-title'),
-                tabNavigation: document.getElementById('tab-navigation'),
-                styleSectionsContainer: document.getElementById('style-sections'),
-                generateOneBtn: document.getElementById('generate-one-btn'),
-                generateFourBtn: document.getElementById('generate-four-btn'),
-                favoritesBtn: document.getElementById('favorites-btn'),
-                favoritesBtnText: document.getElementById('favorites-btn-text'),
-                favoritesCount: document.getElementById('favorites-count'),
-                userInfo: document.getElementById('user-info'),
-            };
-            logStatus("UI Manager: DOM 元素抓取完畢。", true);
+        // --- Firebase 核心 ---
+        let db, auth, currentUserId;
+        async function getUserData(uid) { const userRef = doc(db, 'users', uid); const userDocSnap = await getDoc(userRef); return userDocSnap.exists() ? userDocSnap.data() : { nickname: '無名氏' }; }
+        function listenToFavorites(callback) { onSnapshot(collection(db, 'users', currentUserId, 'favorites'), (snapshot) => { const favs = snapshot.docs.map(d => d.data()); callback(favs); }); }
+        async function getRandomGoddessesFromDB(count) { const q = query(collection(db, "public-goddesses"), limit(gameSettings.gachaQueryLimit)); const snapshot = await getDocs(q); if (snapshot.empty) { return []; } const allDocs = snapshot.docs.map(doc => doc.data()); const shuffled = allDocs.sort(() => 0.5 - Math.random()); return shuffled.slice(0, count); }
+        async function removeFavorite(favoriteToRemove) { const favoriteRef = doc(db, 'users', currentUserId, 'favorites', favoriteToRemove.id); await deleteDoc(favoriteRef); }
+        async function saveFavorite(favoriteData) { const favoriteRef = doc(db, 'users', currentUserId, 'favorites', favoriteData.id); await setDoc(favoriteRef, { id: favoriteData.id, style: favoriteData.style, imageUrl: favoriteData.imageUrl }); }
 
-            logStatus("UI Manager: 正在設定 UI 文字...");
-            DOMElements.headerTitle.innerHTML = `${appInfo.title} <span class="text-base align-middle text-gray-400 font-medium">v${appInfo.version}</span>`;
-            DOMElements.generateOneBtn.textContent = uiMessages.buttons.generateOne;
-            DOMElements.generateFourBtn.textContent = uiMessages.buttons.generateFour;
-            DOMElements.favoritesBtnText.textContent = uiMessages.buttons.favorites;
-            logStatus("UI Manager: UI 文字設定完畢。", true);
-
-            logStatus("UI Manager: 正在建立分頁與區塊...");
-            styles.forEach((style, index) => {
-                const tabButton = document.createElement('button');
-                tabButton.className = `tab-button text-md font-medium py-2 px-4 text-gray-400 ${index === 0 ? 'active' : ''}`;
-                tabButton.textContent = style.title;
-                tabButton.dataset.styleId = style.id;
-                DOMElements.tabNavigation.appendChild(tabButton);
-
-                const section = document.createElement('section');
-                section.id = `content-${style.id}`;
-                section.className = `tab-content ${index === 0 ? 'active' : ''}`;
-                section.innerHTML = `<div class="text-center mb-8 mt-4"><p class="text-gray-400 mt-1">${style.description}</p></div><div id="${style.id}-gallery" class="card-container mb-8"></div>`;
-                DOMElements.styleSectionsContainer.appendChild(section);
-            });
-            logStatus("UI Manager: 分頁與區塊建立完畢。", true);
-
-            logStatus("UI Manager: 正在綁定事件監聽...");
-            document.querySelectorAll('.tab-button').forEach(button => {
-                button.addEventListener('click', () => {
-                    logStatus(`Event: Clicked tab ${button.dataset.styleId}`);
-                    setState({ activeStyleId: button.dataset.styleId });
-                });
-            });
-            logStatus("UI Manager: 事件監聽綁定完畢。", true);
-        }
-        function updateUserInfo(uid, nickname) {
-            if (DOMElements.userInfo) {
-                const uidText = uid ? `...${uid.slice(-6)}` : '尚未登入';
-                DOMElements.userInfo.innerHTML = `雲端使用者 (${nickname}) ID: ${uidText}`;
+        // --- Handlers (互動邏輯) ---
+        async function toggleFavorite(imageData) {
+            logStatus(`Handler: Toggling favorite for image ${imageData.id}`);
+            const favorites = getState('favorites');
+            if (favorites === null) return;
+            const isLiked = favorites.some(fav => fav.id === imageData.id);
+            if (isLiked) {
+                await removeFavorite(imageData);
+            } else {
+                await saveFavorite({ id: imageData.id, style: imageData.style, imageUrl: imageData.imageUrl || imageData.src });
             }
         }
+        function getCardHandlers() { return { onLike: toggleFavorite }; }
+
+        // --- GUI (卡片渲染核心) ---
+        function createImageCard(imageData, handlers) {
+            logStatus(`GUI: Creating image card for ${imageData.id}`);
+            const { style, id, isLiked } = imageData;
+            const displaySrc = imageData.resizedUrl || imageData.imageUrl || imageData.src;
+            const imageCard = document.createElement('div');
+            imageCard.className = 'image-card';
+            imageCard.dataset.id = id;
+            
+            const cardHTML = `
+                <div class="flipper" style="position: relative; width: 100%; height: 100%; transition: transform 0.8s; transform-style: preserve-3d;">
+                    <div class="card-face card-front" style="position: absolute; width: 100%; height: 100%; -webkit-backface-visibility: hidden; backface-visibility: hidden; display: flex; justify-content: center; align-items: center;">
+                        <div class="loader"></div>
+                    </div>
+                    <div class="card-face card-back" style="position: absolute; width: 100%; height: 100%; -webkit-backface-visibility: hidden; backface-visibility: hidden; transform: rotateY(180deg);">
+                        <div class="image-card-img-wrapper" style="width: 100%; height: 100%;">
+                            <img alt="${style ? style.title : 'Gacha Image'}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover;">
+                        </div>
+                        <div class="card-footer">
+                            <button class="like-btn ${isLiked ? 'liked' : ''}">♥</button>
+                        </div>
+                    </div>
+                </div>`;
+            imageCard.innerHTML = cardHTML;
+
+            const img = imageCard.querySelector('img');
+            img.src = displaySrc;
+            img.onload = () => {
+                const flipper = imageCard.querySelector('.flipper');
+                if(flipper) flipper.style.transform = 'rotateY(180deg)';
+            };
+            img.onerror = () => { imageCard.innerHTML = `<p class="p-4 text-red-400">圖片載入失敗</p>`; };
+
+            imageCard.querySelector('.like-btn').addEventListener('click', (e) => {
+                e.stopPropagation();
+                handlers.onLike(imageData);
+            });
+            return imageCard;
+        }
+
+        // --- UI 管理器 ---
+        let DOMElements = {};
+        function initializeUI() { /* ... Same as previous step ... */ DOMElements = { headerTitle: document.getElementById('header-title'), tabNavigation: document.getElementById('tab-navigation'), styleSectionsContainer: document.getElementById('style-sections'), generateOneBtn: document.getElementById('generate-one-btn'), generateFourBtn: document.getElementById('generate-four-btn'), favoritesBtn: document.getElementById('favorites-btn'), favoritesBtnText: document.getElementById('favorites-btn-text'), favoritesCount: document.getElementById('favorites-count'), userInfo: document.getElementById('user-info'), }; DOMElements.headerTitle.innerHTML = `${appInfo.title} <span class="text-base align-middle text-gray-400 font-medium">v${appInfo.version}</span>`; DOMElements.generateOneBtn.textContent = uiMessages.buttons.generateOne; DOMElements.generateFourBtn.textContent = uiMessages.buttons.generateFour; DOMElements.favoritesBtnText.textContent = uiMessages.buttons.favorites; styles.forEach((style, index) => { const tabButton = document.createElement('button'); tabButton.className = `tab-button text-md font-medium py-2 px-4 text-gray-400 ${index === 0 ? 'active' : ''}`; tabButton.textContent = style.title; tabButton.dataset.styleId = style.id; DOMElements.tabNavigation.appendChild(tabButton); const section = document.createElement('section'); section.id = `content-${style.id}`; section.className = `tab-content ${index === 0 ? 'active' : ''}`; section.innerHTML = `<div class="text-center mb-8 mt-4"><p class="text-gray-400 mt-1">${style.description}</p></div><div id="${style.id}-gallery" class="card-container mb-8"></div>`; DOMElements.styleSectionsContainer.appendChild(section); }); document.querySelectorAll('.tab-button').forEach(button => { button.addEventListener('click', () => setState({ activeStyleId: button.dataset.styleId })); }); }
+        function updateUserInfo(uid, nickname) { if (DOMElements.userInfo) { const uidText = uid ? `...${uid.slice(-6)}` : '尚未登入'; DOMElements.userInfo.innerHTML = `雲端使用者 (${nickname}) ID: ${uidText}`; } }
+        
+        // --- 初始圖片載入 ---
+        let hasInitialImagesGenerated = false;
+        async function generateInitialImages(favorites) {
+            if (hasInitialImagesGenerated) return;
+            hasInitialImagesGenerated = true;
+            logStatus("正在載入初始圖片...");
+
+            for (const fav of favorites) {
+                if (!fav || !fav.style || !fav.style.id) continue;
+                const gallery = document.getElementById(`${fav.style.id}-gallery`);
+                if (gallery) {
+                    const imageData = { ...fav, isLiked: true };
+                    const imageCard = createImageCard(imageData, getCardHandlers());
+                    gallery.appendChild(imageCard);
+                }
+            }
+
+            if (favorites.length < 4) {
+                try {
+                    const randomGoddesses = await getRandomGoddessesFromDB(4);
+                    logStatus(`從資料庫抓取了 ${randomGoddesses.length} 張隨機女神。`, true);
+                    for (const goddess of randomGoddesses) {
+                        if (document.querySelector(`.image-card[data-id="${goddess.id}"]`)) continue;
+                        const gallery = document.getElementById(`${goddess.style.id}-gallery`);
+                        if (gallery) {
+                            const imageData = { ...goddess, isLiked: favorites.some(fav => fav.id === goddess.id) };
+                            const imageCard = createImageCard(imageData, getCardHandlers());
+                            gallery.appendChild(imageCard);
+                        }
+                    }
+                } catch (error) {
+                    logStatus(`抓取初始隨機女神失敗: ${error.message}`, false);
+                }
+            }
+            logStatus("初始圖片載入完畢。", true);
+        }
+
         function setupSubscriptions() {
-             logStatus("正在設定狀態訂閱...");
             subscribe('activeStyleId', (styleId) => {
-                logStatus(`State Change: activeStyleId is now ${styleId}`);
                 document.querySelectorAll('.tab-button').forEach(btn => btn.classList.toggle('active', btn.dataset.styleId === styleId));
                 document.querySelectorAll('.tab-content').forEach(content => content.classList.toggle('active', content.id === `content-${styleId}`));
             });
             subscribe('favorites', (favorites) => {
                 if (favorites !== null) {
-                    logStatus(`State Change: Favorites updated with ${favorites.length} items.`);
                     DOMElements.favoritesCount.textContent = favorites.length;
+                    generateInitialImages(favorites); // 當收藏載入後，觸發初始圖片生成
+                    // 更新所有卡片的愛心狀態
+                    document.querySelectorAll('.image-card').forEach(card => {
+                        const likeBtn = card.querySelector('.like-btn');
+                        if (likeBtn) {
+                            const isLiked = favorites.some(fav => fav.id === card.dataset.id);
+                            likeBtn.classList.toggle('liked', isLiked);
+                        }
+                    });
                 }
             });
-             logStatus("狀態訂閱設定完畢。", true);
         }
-
 
         // --- 主測試流程 ---
         async function runFullTest() {
-            let app, auth, db, user;
+            let app, user;
             try {
                 logStatus("1. 初始化 Firebase...");
                 app = initializeApp(serviceKeys.firebaseConfig);
@@ -163,6 +227,7 @@
                 logStatus("2. 正在匿名登入...");
                 const userCredential = await signInAnonymously(auth);
                 user = userCredential.user;
+                currentUserId = user.uid;
                 logStatus(`匿名登入成功 (ID: ...${user.uid.slice(-6)})`, true);
                 
                 logStatus("3. 正在初始化 App 狀態...");
@@ -175,16 +240,12 @@
                 logStatus("UI 介面初始化完畢。", true);
                 
                 logStatus("5. 正在取得使用者資料...");
-                const userDocRef = doc(db, 'users', user.uid);
-                const userDocSnap = await getDoc(userDocRef);
-                const userData = userDocSnap.exists() ? userDocSnap.data() : { nickname: '無名氏' };
+                const userData = await getUserData(user.uid);
                 updateUserInfo(user.uid, userData.nickname);
                 logStatus(`使用者資料取得完畢 (Nickname: ${userData.nickname})`, true);
 
                 logStatus("6. 啟動『我的最愛』即時監聽...");
-                const favoritesCol = collection(db, 'users', user.uid, 'favorites');
-                onSnapshot(favoritesCol, (snapshot) => {
-                    const favs = snapshot.docs.map(d => d.data());
+                listenToFavorites((favs) => {
                     setState({ favorites: favs });
                 });
                 
