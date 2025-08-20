@@ -1,10 +1,12 @@
 :root {
     --bg-color-night: #0c0a18;
     --particle-color-night: rgba(139, 92, 246, 0.3);
+    /* ✨ FIX: 移除 backdrop-filter，改用半透明背景色 */
     --header-bg-night: rgba(12, 10, 24, 0.85);
 
     --bg-color-day: #fde6e6;
     --particle-color-day: rgba(255, 159, 159, 0.4);
+    /* ✨ FIX: 移除 backdrop-filter，改用半透明背景色 */
     --header-bg-day: rgba(255, 240, 240, 0.85);
 }
 
@@ -109,6 +111,7 @@ body.theme-day {
     top: 0;
     z-index: 100;
     background-color: var(--header-bg-night);
+    /* ✨ REMOVED: backdrop-filter: blur(12px); */
     padding-top: 1rem;
     padding-bottom: 0.5rem;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
@@ -129,11 +132,14 @@ body.theme-day .sticky-header {
 
 .image-card {
     background-color: rgba(31, 41, 55, 0.5);
+    /* ✨ REMOVED: backdrop-filter: blur(10px); */
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 0.75rem;
     overflow: hidden;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
-    aspect-ratio: 2 / 3;
+    /* ✨ FIX: 使用 padding-bottom trick 替代 aspect-ratio 以支援舊瀏覽器 */
+    height: 0;
+    padding-bottom: 150%; /* 3 / 2 = 1.5 -> 150% */
     display: flex;
     flex-direction: column;
     position: relative;
@@ -144,7 +150,10 @@ body.theme-day .sticky-header {
 
 
 .image-card .flipper {
-    position: relative;
+    /* ✨ FIX: 配合 padding-bottom trick，讓 flipper 填滿整個空間 */
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
     transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
@@ -211,6 +220,7 @@ body.theme-day .sticky-header {
 
 .story-btn {
     background-color: rgba(255, 255, 255, 0.2);
+    /* ✨ REMOVED: backdrop-filter: blur(5px); */
     border: 1px solid rgba(255, 255, 255, 0.3);
     color: white;
     padding: 0.5rem 1rem;
@@ -260,8 +270,6 @@ body.theme-day .sticky-header {
     from { opacity: 0; transform: translateY(20px); }
     to { opacity: 1; transform: translateY(0); }
 }
-
-/* Other styles remain the same */
 
 .btn-base {
     transition: all 0.3s ease;

@@ -32,7 +32,7 @@ const portfolioData = [
     { 
         title: '夢境時差：七封謎信', 
         category: 'writing', 
-        images: ['data/images/dream-jetlag_cover.png','data/images/dream-jetlag_01.png','data/images/dream-jetlag_02.png','data/images/dream-jetlag_03.png','data/images/dream-jetlag_04.png','data/images/dream-jetlag_05.png','data/images/dream-jetlag_06.png','data/images/dream-jetlag_07.png','data/images/dream-jetlag_08.png'],
+        images: ['data/images/dream-jetlag_cover.jpg','data/images/dream-jetlag_01.jpg','data/images/dream-jetlag_02.jpg','data/images/dream-jetlag_03.jpg','data/images/dream-jetlag_04.jpg','data/images/dream-jetlag_05.jpg','data/images/dream-jetlag_06.jpg','data/images/dream-jetlag_07.jpg','data/images/dream-jetlag_08.jpg'],
         desc: '一部科幻懸疑小說，探索夢境與現實的邊界。',
         details: `<h3>故事簡介</h3><p>你是否曾思考，那些歷史上的「靈光乍現」與「神來一筆」，是否真的只是偶然？如果這一切，都源自於能在夢中加速學習、甚至影響現實的「超能力」？《夢境時差：七封謎信》將帶你進入一個令人屏息的世界，探索這項名為「夢創協同」（Dreaming Co-creation）的神秘力量，以及由此引發的一場悄然展開的「意識戰爭」。</p>`,
         externalLink: 'https://www.kadokado.com.tw/book/54331'
@@ -40,7 +40,7 @@ const portfolioData = [
     { 
         title: 'Kai Cenat Meets Ray In Japan不同風格', 
         category: 'design', 
-        images: ['data/images/KaiRay01.png','data/images/KaiRay02.png','data/images/KaiRay03.png','data/images/KaiRay04.png','data/images/KaiRay05.png'],
+        images: ['data/images/KaiRay01.jpg','data/images/KaiRay02.jpg','data/images/KaiRay03.jpg','data/images/KaiRay04.jpg','data/images/KaiRay05.jpg'],
         desc: '這是一場結合了懷舊與創意的特別企劃！',
         details: `<h3>設計理念</h3><p>我們將 Kai Cenat 和他的粉絲 Ray 在日本相遇的經典場景，用充滿回憶的懷舊畫風重新詮釋。從像素風的遊戲畫面到復古動漫風格，每一幀都帶你回到過去的美好時光。快來看看你最喜歡哪一種風格，並在留言區分享你對這場相遇的看法吧！</p>`,
         externalLink: 'https://www.youtube.com/shorts/OqpmYnVaDeY'
@@ -69,7 +69,7 @@ const portfolioData = [
     { 
         title: 'PuffPaleCloudy角色設計YunBao', 
         category: 'design', 
-        images: ['data/images/PuffPaleCloudy.png','data/images/YunBaoLogo.png', 'data/images/YunBao.png','data/images/YunBao2.png'],
+        images: ['data/images/PuffPaleCloudy.jpg','data/images/YunBaoLogo.jpg', 'data/images/YunBao.jpg','data/images/YunBao2.jpg'],
         desc: '兒童故事PuffPaleCloudy角色設計YunBao。',
         details: `<h3>角色故事</h3><p>雲寶 (YunBao) 是一隻害羞但充滿好奇心的小雲龍，他能吐出各種形狀的雲朵來表達自己的心情。</p>`,
         externalLink: 'https://www.youtube.com/@PuffPalsCloudy' 
@@ -103,7 +103,7 @@ const portfolioData = [
     { 
         title: '個人品牌 Logo 設計', 
         category: 'design', 
-        images: ['data/images/RR頭像.jpg','data/images/RR黑暗.png'],
+        images: ['data/images/RR頭像.jpg','data/images/RR黑暗.jpg'],
         desc: '為個人小說品牌 RR(亞爾)設計的視覺識別。',
         details: `<h3>設計理念</h3><p>標誌以陰陽圖為基礎，左半邊是代表科技與理性的電路板，右半邊是代表文學與感性的書頁。</p>`
     },    {
@@ -170,7 +170,7 @@ const blogData = [
 const novelsData = [
     {
         title: "夢境時差：七封謎信",
-        coverImage: "data/images/dream-jetlag_cover.png",
+        coverImage: "data/images/dream-jetlag_cover.jpg",
         description: "當夢境不再是虛幻，而成為可以學習、探索甚至戰鬥的第二現實，世界的規則將被徹底改寫。一名普通的YouTuber，意外收到七封來自神秘投稿人『RR』的信件，揭開了一個名為『夢創協同』的驚天秘密……這不僅是一個故事，更是一場席捲全球的意識革命。",
         contentList: [
             { type: 'chapter', title: "📖序章：《哇哇哇！奇人異事！》啟動！", subtitle: "#我不知道它是不是真的，但我知道——我忘不了。", file: "data/novels/dream-jetlag/chapter-0.txt" },
