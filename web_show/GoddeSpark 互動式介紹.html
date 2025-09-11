@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="zh-TW" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>專案深度解析：GoddeSpark | 面試儀表板</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <!-- 
+    Chosen Palette: "Developer's Night" - A modern, dark-themed palette common in developer tools and portfolios. It's professional, easy on the eyes, and makes colorful accents pop.
+    - Background: #111827 (Gray-900)
+    - Cards/Sections: #1f2937 (Gray-800)
+    - Text (Primary): #f9fafb (Gray-50)
+    - Text (Secondary): #9ca3af (Gray-400)
+    - Accent (Primary): #38bdf8 (Sky-500) - For interactive elements, titles.
+    - Accent (Secondary): #a78bfa (Violet-400) - For chart and secondary highlights.
+    -->
+
+    <!-- 
+    Application Structure Plan: The application is structured as an interactive developer portfolio page, designed to be presented during an interview. It transforms the linear report into a dynamic, non-linear exploratory experience. The user flow is:
+    1. Hero/Elevator Pitch: Immediately grabs attention with the project's summary.
+    2. Interactive Tech Stack: Allows the interviewer to selectively deep-dive into technologies they are most interested in, using a click-to-reveal card interaction.
+    3. Visualized Blueprint: Translates the complex "Interactive Novel" plan into an easy-to-follow, step-by-step visual diagram, showcasing planning and architectural skills.
+    4. Self-Assessment Dashboard: A data-driven section with a Radar Chart visualizing strengths and a structured list for growth areas. This presents self-reflection in a professional, analytical format.
+    This structure is chosen to highlight project ownership, technical depth, and strategic thinking in a format that is more engaging and impressive than a standard document read-through.
+    -->
+
+    <!-- 
+    Visualization & Content Choices:
+    - Tech Stack: Goal(Organize, Inform) -> Interactive cards with a flip/reveal animation on click. Justification: Encourages engagement and allows for non-linear exploration based on interviewer interest. Method: HTML/Tailwind/JS.
+    - Future Blueprint: Goal(Explain, Organize) -> Visual step-by-step diagram using flexbox. Justification: Simplifies a multi-step technical plan, making it immediately understandable and demonstrating clear architectural thinking. Method: HTML/Tailwind.
+    - Strengths: Goal(Summarize, Compare) -> Radar Chart. Justification: A "wow" factor that synthesizes a list of strengths into a single, memorable "Developer Skill Profile" visualization, showcasing data presentation skills. Library: Chart.js (Canvas).
+    - Growth Areas: Goal(Inform, Organize) -> A clean two-column grid of cards. Justification: Presents reflections in a structured format that is easy to read and demonstrates a professional, proactive attitude towards improvement. Method: HTML/Tailwind Grid.
+    - CONFIRMATION: NO SVG graphics used. NO Mermaid JS used.
+    -->
+
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #111827;
+            color: #f9fafb;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin: auto;
+            height: 400px;
+            max-height: 50vh;
+        }
+        .tech-card-container {
+            perspective: 1000px;
+        }
+        .tech-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+        .tech-card-container.is-flipped .tech-card-inner {
+            transform: rotateY(180deg);
+        }
+        .tech-card-front, .tech-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+        }
+        .tech-card-back {
+            transform: rotateY(180deg);
+            justify-content: flex-start;
+            align-items: flex-start;
+            overflow-y: auto;
+        }
+        .step-connector {
+            flex-grow: 1;
+            height: 2px;
+            background-color: #374151;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-gray-900/50 backdrop-blur-sm sticky top-0 z-50">
+        <nav class="container mx-auto px-6 py-3">
+            <div class="flex items-center justify-between">
+                <div class="text-white font-bold text-xl">GoddeSpark 專案解析</div>
+                <div class="hidden md:flex items-center space-x-4">
+                    <a href="#pitch" class="text-gray-300 hover:text-sky-400">電梯簡報</a>
+                    <a href="#tech-stack" class="text-gray-300 hover:text-sky-400">技術堆疊</a>
+                    <a href="#blueprint" class="text-gray-300 hover:text-sky-400">未來藍圖</a>
+                    <a href="#assessment" class="text-gray-300 hover:text-sky-400">自我評估</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-6 py-12">
+
+        <section id="pitch" class="text-center py-16">
+            <h1 class="text-4xl md:text-5xl font-bold text-white mb-4">專案電梯簡報 (Elevator Pitch)</h1>
+            <p class="text-lg text-gray-400 max-w-4xl mx-auto mb-8">在 60 秒內，快速理解專案核心價值與我的角色。</p>
+            <div class="max-w-4xl mx-auto bg-gray-800 p-8 rounded-lg border border-gray-700 shadow-lg">
+                <blockquote class="text-lg text-gray-200 leading-relaxed italic">
+                    「我獨立開發了一個名為《GoddeSpark》的全端網頁應用，它結合了 AI 圖像生成和遊戲化收集機制。使用者可以透過完成任務來獲得生成次數，並利用 Gemini AI 創造獨一無二的女神角色。整個專案採用了**現代化的無伺服器架構**，前端使用 Vite 和原生 JavaScript 模組，後端則透過 **Netlify Functions** 執行所有敏感操作，例如呼叫 AI API 和操作 **Firestore** 資料庫，確保了金鑰安全與業務邏輯的私密性... 我認為這個專案最大的潛力，在於利用 Gemini 的**文字生成能力**，將其擴展成一個**輕度的 AI 互動小說遊戲**。」
+                </blockquote>
+            </div>
+        </section>
+        
+        <section id="tech-stack" class="py-16">
+            <h2 class="text-3xl md:text-4xl font-bold text-center text-white mb-4">核心技術堆疊與學習成長</h2>
+            <p class="text-lg text-gray-400 text-center max-w-3xl mx-auto mb-12">點擊下方的卡片，查看我在專案中具體應用的技術以及從中獲得的寶貴經驗。</p>
+            <div id="tech-cards-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            </div>
+        </section>
+
+        <section id="blueprint" class="py-16">
+            <h2 class="text-3xl md:text-4xl font-bold text-center text-white mb-4">專案亮點：實現「互動小說」的技術藍圖</h2>
+            <p class="text-lg text-gray-400 text-center max-w-3xl mx-auto mb-12">這是我為專案規劃的未來功能，展現了我將產品想法轉化為具體、可執行技術方案的能力。</p>
+            <div id="blueprint-steps-container" class="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-0">
+            </div>
+        </section>
+
+        <section id="assessment" class="py-16">
+            <h2 class="text-3xl md:text-4xl font-bold text-center text-white mb-12">自我評估儀表板</h2>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                <div class="bg-gray-800 p-6 rounded-lg border border-gray-700">
+                    <h3 class="text-2xl font-bold text-center text-sky-400 mb-4">✅ 10 項技術優勢：技能評分圖</h3>
+                    <p class="text-gray-400 text-center text-sm mb-4">
+                        此圖表將我在本專案中展現的十大核心技術優勢，量化為六個關鍵能力維度的評分，以便更直觀地比較各項能力。
+                    </p>
+                    <div class="chart-container">
+                        <canvas id="strengthsRadarChart"></canvas>
+                    </div>
+                </div>
+                <div class="bg-gray-800 p-6 rounded-lg border border-gray-700">
+                    <h3 class="text-2xl font-bold text-center text-violet-400 mb-4">🌱 10 個成長領域與反思</h3>
+                     <p class="text-gray-400 text-center text-sm mb-6">
+                        透過這個專案，我深刻反思並總結了十個可持續精進的領域，這代表著我的學習態度與成長潛力。
+                    </p>
+                    <div id="growth-areas-container" class="space-y-4 max-h-[400px] overflow-y-auto pr-2">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+
+        const interviewData = {
+            techStack: [
+                { 
+                    icon: '🖥️', 
+                    title: '前端技術', 
+                    subtitle: 'Vite & 原生 JS (ESM)',
+                    content: `<strong>應用:</strong><br>快速建構多頁面應用（MPA），並將前端邏輯模組化 (uiManager, stateManager)。<br><br><strong>學習:</strong><br>我學會了如何在不依賴大型框架的情況下，組織一個可維護、高效能的前端專案。深刻理解了原生 ES Module 的運作方式，這讓我在未來學習任何前端框架時都能更快上手。`
+                },
+                { 
+                    icon: '☁️', 
+                    title: '後端技術', 
+                    subtitle: 'Netlify Functions & BFF',
+                    content: `<strong>應用:</strong><br>所有與 Firebase 和 Gemini API 的互動，都封裝在後端函式中。前端只呼叫這些安全的端點。<br><br><strong>學習:</strong><br>我最大的收穫是理解了 BFF 模式的重要性。它不僅徹底解決了 API 金鑰在前端暴露的風險，也讓我能將複雜的業務邏輯放在伺服器端，防止使用者作弊。`
+                },
+                { 
+                    icon: '💾', 
+                    title: '資料庫與驗證', 
+                    subtitle: 'Firestore & Firebase Auth',
+                    content: `<strong>應用:</strong><br>使用 Firestore 儲存使用者資料，並透過 Firebase Auth 驗證請求的 ID Token 來確保操作的合法性。<br><br><strong>學習:</strong><br>我學會了如何設計 NoSQL 資料結構，並實作了原子性操作 (Transactions) 來確保資料一致性，這是在處理任何重要數值時的關鍵技術。`
+                },
+                { 
+                    icon: '🤖', 
+                    title: 'AI 整合', 
+                    subtitle: 'Google Gemini API',
+                    content: `<strong>應用:</strong><br>透過後端服務，根據使用者選擇的風格動態組合 Prompt，呼叫 Gemini API 生成高品質圖像。<br><br><strong>學習:</strong><br>我學到了 AI 應用的核心不僅是呼叫 API，更是有效的 Prompt Engineering。為了生成風格一致且高品質的圖像，我設計了一套 Prompt 組合邏輯。`
+                }
+            ],
+            blueprint: [
+                { title: "資料模型擴展", content: "在 Firestore 中新增 `dialogueHistory` 集合與 `personality`, `backgroundStory` 欄位。" },
+                { title: "建立後端函式", content: "建立專用 Netlify Function `generate-dialogue.cjs` 處理對話生成邏輯。" },
+                { title: "高效 Prompt 設計", content: "組合角色背景、性格與歷史對話，確保 AI 回應的角色一致性與上下文記憶。" },
+                { title: "前端介面實現", content: "在女神詳情頁新增聊天機器人 UI，呼叫後端端點並即時顯示對話。" }
+            ],
+            strengthsData: {
+                labels: ['架構設計', '安全性', '資料完整性', '開發流程', 'UI/UX', 'AI 整合'],
+                values: [9, 9, 8, 9, 8, 7] // A score out of 10 based on the 10 points
+            },
+            growthAreas: [
+                { title: "缺乏自動化測試", lesson: "對於後端關鍵邏輯，補上測試是保證長期穩定性的必要手段。" },
+                { title: "原生 JS 狀態管理", lesson: "當應用變複雜時，引入輕量級狀態管理庫或設計一個全域 Store 模式是明確信號。" },
+                { title: "手動設定檔同步", lesson: "應建立一個單一的設定來源，並在建構流程中自動分發給前後端。" },
+                { title: "前端錯誤處理", lesson: "應建立一個統一的錯誤處理中心和使用者訊息通知系統，提升使用者體驗。" },
+                { title: "缺乏 TypeScript", lesson: "引入 TypeScript 能透過類型檢查，在開發階段就避免掉許多潛在的錯誤。" },
+                { title: "資料庫查詢優化", lesson: "應利用排程函式預先計算和快取複雜查詢的結果，而非在請求時才計算。" },
+                { title: "前端元件化不足", lesson: "即使不用框架，也應將 UI 抽象成可重複使用的函式，遵循 DRY 原則。" },
+                { title: "冷啟動問題", lesson: "對於需要即時反應的功能，可以考慮設定保活策略或使用邊緣函式。" },
+                { title: "環境變數管理", lesson: "應使用 .env 檔案並結合平台設定，來清晰地分離不同環境的配置。" },
+                { title: "監控與日誌", lesson: "整合一個結構化的日誌服務對於追蹤生產環境的錯誤至關重要。" }
+            ]
+        };
+
+        const techContainer = document.getElementById('tech-cards-container');
+        interviewData.techStack.forEach(tech => {
+            const cardContainer = document.createElement('div');
+            cardContainer.className = 'tech-card-container h-64 cursor-pointer';
+            cardContainer.innerHTML = `
+                <div class="tech-card-inner">
+                    <div class="tech-card-front bg-gray-800 border border-gray-700 text-center">
+                        <div class="text-5xl mb-4">${tech.icon}</div>
+                        <h3 class="text-xl font-bold text-sky-400">${tech.title}</h3>
+                        <p class="text-gray-400">${tech.subtitle}</p>
+                    </div>
+                    <div class="tech-card-back bg-gray-800 border border-sky-500 text-left">
+                        <div class="text-gray-200 text-sm">${tech.content}</div>
+                    </div>
+                </div>
+            `;
+            techContainer.appendChild(cardContainer);
+        });
+
+        techContainer.querySelectorAll('.tech-card-container').forEach(card => {
+            card.addEventListener('click', () => {
+                card.classList.toggle('is-flipped');
+            });
+        });
+
+        const blueprintContainer = document.getElementById('blueprint-steps-container');
+        interviewData.blueprint.forEach((step, index) => {
+            const stepElement = document.createElement('div');
+            stepElement.className = 'flex flex-col items-center text-center w-full md:w-1/4';
+            stepElement.innerHTML = `
+                <div class="w-12 h-12 flex items-center justify-center bg-gray-700 border-2 border-sky-500 rounded-full text-sky-400 font-bold text-xl mb-2">${index + 1}</div>
+                <h4 class="font-bold text-white mb-1">${step.title}</h4>
+                <p class="text-gray-400 text-sm px-2">${step.content}</p>
+            `;
+            blueprintContainer.appendChild(stepElement);
+            if (index < interviewData.blueprint.length - 1) {
+                const connector = document.createElement('div');
+                connector.className = 'step-connector w-full h-0.5 md:w-auto md:h-0.5 mt-4 mb-4 md:mt-0 md:mb-0';
+                blueprintContainer.appendChild(connector);
+            }
+        });
+        
+        const growthContainer = document.getElementById('growth-areas-container');
+        interviewData.growthAreas.forEach(area => {
+            const item = document.createElement('div');
+            item.className = 'bg-gray-900/50 p-3 rounded-md';
+            item.innerHTML = `
+                <p class="font-semibold text-violet-300">${area.title}</p>
+                <p class="text-sm text-gray-400"><strong>我學到:</strong> ${area.lesson}</p>
+            `;
+            growthContainer.appendChild(item);
+        });
+
+        const ctx = document.getElementById('strengthsRadarChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: interviewData.strengthsData.labels,
+                datasets: [{
+                    label: '能力評分 (滿分10)',
+                    data: interviewData.strengthsData.values,
+                    backgroundColor: 'rgba(56, 189, 248, 0.6)',
+                    borderColor: 'rgba(56, 189, 248, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        max: 10,
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        },
+                        ticks: {
+                            color: '#9ca3af'
+                        }
+                    },
+                    y: {
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.05)'
+                        },
+                        ticks: {
+                            color: '#f9fafb'
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                             label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.x !== null) {
+                                    label += context.parsed.x + ' / 10';
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    });
+    </script>
+</body>
+</html>
+
