@@ -2,6 +2,7 @@ import os
 import re
 import shutil
 import json
+import hashlib
 from collections import OrderedDict
 
 # --- 設定 ---
@@ -34,14 +35,19 @@ def generate_pwa_files(output_path, novel_title, files_to_cache):
         "description": f"閱讀 {novel_title}",
         "icons": [
             {"src": "icon-192x192.png", "sizes": "192x192", "type": "image/png"},
-            {"src": "icon-512x512.png", "sizes": "512x512", "type": "image/png"}
+            {"src": "icon-512x512.png", "sizes": "512x512", "type": "image/png"},
+            {"src": "icon-16x16.png", "sizes": "16x16", "type": "image/png"},
+            {"src": "icon-32x32.png", "sizes": "32x32", "type": "image/png"}
         ]
     }
     with open(os.path.join(output_path, 'manifest.json'), 'w', encoding='utf-8') as f:
         json.dump(manifest, f, ensure_ascii=False, indent=2)
     print("  -> ✨ 已生成 manifest.json")
 
-    cache_version = 'v1'
+    # 動態生成快取版本號，以確保更新
+    cache_string = json.dumps(sorted(files_to_cache), ensure_ascii=False)
+    cache_version = hashlib.sha256(cache_string.encode('utf-8')).hexdigest()[:10]
+    
     files_js_array = ',\n'.join([f'    "{f}"' for f in files_to_cache])
     
     # 【修正】修正了多行字串的結束引號位置
@@ -55,7 +61,7 @@ self.addEventListener('install', event => {{
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {{
-        console.log('Opened cache');
+        console.log('Opened cache: ' + CACHE_NAME);
         return cache.addAll(urlsToCache);
       }})
   );
