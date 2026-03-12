@@ -1,0 +1,18 @@
+<svg width="600" height="400" viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <radialGradient id="grad3" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+            <stop offset="0%" style="stop-color:#0088cc;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#004466;stop-opacity:1" />
+        </radialGradient>
+    </defs>
+    <rect width="600" height="400" rx="20" fill="#0a0a1a"/>
+    <!-- Glowing Core -->
+    <circle cx="300" cy="200" r="100" fill="url(#grad3)" opacity="0.6">
+        <animate attributeName="opacity" values="0.4;0.8;0.4" dur="3s" repeatCount="indefinite" />
+    </circle>
+    <circle cx="300" cy="200" r="60" fill="#0088cc"/>
+    <!-- Claw Lines -->
+    <path d="M300 50 L320 100 M300 350 L280 300 M50 200 L100 220 M550 200 L500 180" stroke="#0088cc" stroke-width="4" opacity="0.8"/>
+    <path d="M300 200 M240 140 Q200 100 220 50 M360 140 Q400 100 380 50" fill="none" stroke="#0088cc" stroke-width="8" stroke-linecap="round"/>
+    <text x="300" y="340" font-family="Arial, sans-serif" font-size="28" fill="#0088cc" text-anchor="middle" font-weight="bold">AI Core Intelligence</text>
+</svg>

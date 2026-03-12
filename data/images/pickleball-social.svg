@@ -1,0 +1,22 @@
+<svg width="600" height="400" viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#06C755;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#05a346;stop-opacity:1" />
+        </linearGradient>
+    </defs>
+    <rect width="600" height="400" rx="20" fill="url(#grad1)"/>
+    <!-- Pickleball -->
+    <circle cx="300" cy="200" r="80" fill="#E6FF00"/>
+    <circle cx="260" cy="160" r="10" fill="#06C755" opacity="0.3"/>
+    <circle cx="300" cy="150" r="10" fill="#06C755" opacity="0.3"/>
+    <circle cx="340" cy="160" r="10" fill="#06C755" opacity="0.3"/>
+    <circle cx="250" cy="200" r="10" fill="#06C755" opacity="0.3"/>
+    <circle cx="350" cy="200" r="10" fill="#06C755" opacity="0.3"/>
+    <circle cx="260" cy="240" r="10" fill="#06C755" opacity="0.3"/>
+    <circle cx="300" cy="250" r="10" fill="#06C755" opacity="0.3"/>
+    <circle cx="340" cy="240" r="10" fill="#06C755" opacity="0.3"/>
+    <!-- Chat Bubble -->
+    <path d="M480 120 C520 120 540 140 540 170 C540 200 520 220 480 220 L460 220 L440 250 L440 220 C400 220 380 200 380 170 C380 140 400 120 440 120 Z" fill="white" opacity="0.8"/>
+    <text x="300" y="340" font-family="Arial, sans-serif" font-size="28" fill="white" text-anchor="middle" font-weight="bold">Pickleball Social</text>
+</svg>
